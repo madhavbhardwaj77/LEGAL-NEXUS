@@ -1,193 +1,65 @@
 import React from 'react';
-import {
-  Scale,
-  ShieldCheck,
-  UserCheck,
-  LogOut,
-  LogIn,
-  Activity,
-  Briefcase,
-  Sparkles,
-  Bot,
-  FileText,
-  PenTool,
-  Home,
-} from 'lucide-react';
+import { Scale, LogOut, LogIn, Menu, X } from 'lucide-react';
 
 export default function Navbar({
   user,
-  activeTab,
-  setActiveTab,
   onOpenAuth,
   onLogout,
-  healthStatus,
+  isMobileOpen,
+  onToggleMobileMenu,
+  showToggle,
 }) {
   return (
-    <header className="bg-slate-900 border-b border-slate-800 text-white sticky top-0 z-30 shadow-md">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16">
-          {/* Logo & Branding */}
-          <div
-            className="flex items-center space-x-3 cursor-pointer"
-            onClick={() => setActiveTab(user ? 'cases' : 'landing')}
-          >
-            <div className="bg-nyaya-600 p-2 rounded-2xl text-white shadow">
-              <Scale className="w-5 h-5" />
-            </div>
-            <div>
-              <span className="text-lg sm:text-xl font-bold tracking-tight text-white flex items-center gap-1.5">
-                Nyaya Setu <span className="text-[10px] bg-nyaya-700 text-nyaya-100 font-semibold px-2 py-0.5 rounded-full">न्याय सेतु</span>
-              </span>
-              <p className="text-[10px] text-slate-400 font-medium">Bridge to Justice Platform</p>
-            </div>
-          </div>
-
-          {/* Navigation Links */}
-          <nav className="hidden md:flex items-center space-x-1">
-            <button
-              onClick={() => setActiveTab('landing')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
-                activeTab === 'landing'
-                  ? 'bg-nyaya-700 text-white shadow-sm'
-                  : 'text-slate-300 hover:bg-slate-800 hover:text-white'
-              }`}
-            >
-              <span className="flex items-center gap-1.5">
-                <Home className="w-3.5 h-3.5" />
-                Home
-              </span>
-            </button>
-
-            <button
-              onClick={() => setActiveTab('cases')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
-                activeTab === 'cases'
-                  ? 'bg-nyaya-700 text-white shadow-sm'
-                  : 'text-slate-300 hover:bg-slate-800 hover:text-white'
-              }`}
-            >
-              <span className="flex items-center gap-1.5">
-                <Briefcase className="w-3.5 h-3.5" />
-                Cases
-              </span>
-            </button>
-
-            <button
-              onClick={() => setActiveTab('intake')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
-                activeTab === 'intake'
-                  ? 'bg-nyaya-700 text-white shadow-sm'
-                  : 'text-slate-300 hover:bg-slate-800 hover:text-white'
-              }`}
-            >
-              <span className="flex items-center gap-1.5">
-                <Bot className="w-3.5 h-3.5 text-nyaya-400" />
-                AI Intake
-              </span>
-            </button>
-
-            <button
-              onClick={() => setActiveTab('documents')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
-                activeTab === 'documents'
-                  ? 'bg-nyaya-700 text-white shadow-sm'
-                  : 'text-slate-300 hover:bg-slate-800 hover:text-white'
-              }`}
-            >
-              <span className="flex items-center gap-1.5">
-                <FileText className="w-3.5 h-3.5 text-nyaya-400" />
-                Document AI
-              </span>
-            </button>
-
-            <button
-              onClick={() => setActiveTab('drafts')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
-                activeTab === 'drafts'
-                  ? 'bg-nyaya-700 text-white shadow-sm'
-                  : 'text-slate-300 hover:bg-slate-800 hover:text-white'
-              }`}
-            >
-              <span className="flex items-center gap-1.5">
-                <PenTool className="w-3.5 h-3.5 text-nyaya-400" />
-                Drafting
-              </span>
-            </button>
-
-            <button
-              onClick={() => setActiveTab('research')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
-                activeTab === 'research'
-                  ? 'bg-nyaya-700 text-white shadow-sm'
-                  : 'text-slate-300 hover:bg-slate-800 hover:text-white'
-              }`}
-            >
-              <span className="flex items-center gap-1.5">
-                <Sparkles className="w-3.5 h-3.5 text-nyaya-400" />
-                Research
-              </span>
-            </button>
-
-            <button
-              onClick={() => setActiveTab('lawyers')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
-                activeTab === 'lawyers'
-                  ? 'bg-nyaya-700 text-white shadow-sm'
-                  : 'text-slate-300 hover:bg-slate-800 hover:text-white'
-              }`}
-            >
-              <span className="flex items-center gap-1.5">
-                <UserCheck className="w-3.5 h-3.5" />
-                Ecosystem
-              </span>
-            </button>
-
-            <button
-              onClick={() => setActiveTab('system')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
-                activeTab === 'system'
-                  ? 'bg-nyaya-700 text-white shadow-sm'
-                  : 'text-slate-300 hover:bg-slate-800 hover:text-white'
-              }`}
-            >
-              <span className="flex items-center gap-1.5">
-                <Activity className="w-3.5 h-3.5" />
-                Health
-              </span>
-            </button>
-          </nav>
-
-          {/* Right Action / Profile */}
-          <div className="flex items-center space-x-3">
-            {user ? (
-              <div className="flex items-center space-x-3 bg-slate-800/80 px-3 py-1.5 rounded-lg border border-slate-700">
-                <div className="flex flex-col text-right">
-                  <span className="text-xs font-medium text-white truncate max-w-[140px]">
-                    {user.email}
-                  </span>
-                  <span className="text-[10px] font-semibold uppercase tracking-wider text-nyaya-500">
-                    {user.role}
-                  </span>
-                </div>
-                <button
-                  onClick={onLogout}
-                  title="Log out"
-                  className="p-1 text-slate-400 hover:text-red-400 transition"
-                >
-                  <LogOut className="w-4 h-4" />
-                </button>
-              </div>
-            ) : (
-              <button
-                onClick={onOpenAuth}
-                className="inline-flex items-center gap-2 px-4 py-2 text-xs sm:text-sm font-medium bg-nyaya-600 hover:bg-nyaya-700 text-white rounded-xl shadow transition"
-              >
-                <LogIn className="w-4 h-4" />
-                Sign In
-              </button>
-            )}
-          </div>
+    <header className="bg-slate-900 border-b border-slate-800 text-white h-16 px-6 flex items-center justify-between sticky top-0 z-30 shadow-md">
+      {/* Branding */}
+      <div className="flex items-center space-x-3">
+        <div className="bg-nyaya-600 p-2 rounded-2xl text-white shadow-md">
+          <Scale className="w-5 h-5" />
         </div>
+        <div>
+          <span className="text-base font-bold tracking-tight text-white block">Legal Nexus</span>
+          <p className="text-[10px] text-slate-400 font-medium">Legal AI Platform</p>
+        </div>
+      </div>
+
+      {/* User Actions & Toggle */}
+      <div className="flex items-center space-x-3">
+        {user ? (
+          <div className="flex items-center space-x-3 bg-slate-800/80 px-3.5 py-1.5 rounded-xl border border-slate-700">
+            <div className="flex flex-col text-right">
+              <span className="text-xs font-semibold text-white truncate max-w-[140px]" title={user.email}>
+                {user.email}
+              </span>
+              <span className="text-[9px] text-nyaya-400 font-bold uppercase tracking-wider">
+                {user.role}
+              </span>
+            </div>
+            <button
+              onClick={onLogout}
+              title="Log out"
+              className="p-1.5 text-slate-400 hover:text-red-400 rounded-lg hover:bg-slate-800 transition"
+            >
+              <LogOut className="w-4 h-4" />
+            </button>
+          </div>
+        ) : (
+          <button
+            onClick={onOpenAuth}
+            className="inline-flex items-center gap-2 px-4 py-2 text-xs font-bold bg-nyaya-600 hover:bg-nyaya-700 text-white rounded-xl shadow transition"
+          >
+            <LogIn className="w-4 h-4" />
+            Sign In
+          </button>
+        )}
+
+        {showToggle && (
+          <button
+            onClick={onToggleMobileMenu}
+            className="md:hidden p-2 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white rounded-xl border border-slate-700 transition"
+          >
+            {isMobileOpen ? <X className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
+          </button>
+        )}
       </div>
     </header>
   );

@@ -20,7 +20,70 @@ import {
 } from 'lucide-react';
 import api from '../services/api';
 
-export default function CaseDetailModal({ selectedCase, isOpen, onClose, onCaseUpdated }) {
+const getCategoryDetails = (category) => {
+  const cat = (category || '').toLowerCase();
+  
+  if (cat.includes('consumer')) {
+    return {
+      statute: 'The Consumer Protection Act, 2019 — Section 35',
+      description: 'Defines the manner in which a complaint shall be filed electronically (e-Daakhil) before District, State, or National Consumer Commissions for defects in goods or deficiency in services.',
+      actionPlan: [
+        'Collate & Preserve Records: Gather original invoice, payment receipt, delivery photos, and correspondence with customer care.',
+        'Lodge Grievance: File a pre-litigation complaint on the National Consumer Helpline portal (NCH) by dialing 1915.',
+        'File Consumer Complaint: Register formal electronic complaint on the e-Daakhil Portal (edaakhil.nic.in) for refund and compensation.'
+      ]
+    };
+  }
+  
+  if (cat.includes('property') || cat.includes('real estate') || cat.includes('tenant') || cat.includes('rental')) {
+    return {
+      statute: 'The Model Tenancy Act, 2021 — Section 21',
+      description: 'Specifies the procedure for eviction of tenants and recovery of security deposits, detailing grounds of lease termination and refund obligations.',
+      actionPlan: [
+        'Preserve Rental Records: Collect signed rent agreement, bank deposit slips, notice period emails, and photos of vacated premises.',
+        'Issue Legal Demand Notice: Serve a formal 15-day statutory notice to refund deposit or quit possession.',
+        'File Petition: Approach local Rent Authority or Rent Court to recover the security deposit with interest.'
+      ]
+    };
+  }
+  
+  if (cat.includes('cyber') || cat.includes('privacy') || cat.includes('data')) {
+    return {
+      statute: 'The Information Technology Act, 2000 — Section 66D',
+      description: 'Imposes punishment for cheating by personation using computer resource, covering online fraud, email spoofing, and phishing transactions.',
+      actionPlan: [
+        'Block & Freeze: Contact bank immediately to freeze transactions and dispute unauthorized charges.',
+        'Call Helpline: Dial 1930 Cyber Fraud Helpline immediately to attempt account lien (freeze funds in beneficiary bank).',
+        'Lodge Cyber Complaint: File a formal complaint online at the National Cyber Crime Reporting Portal (cybercrime.gov.in) with transaction logs.'
+      ]
+    };
+  }
+  
+  if (cat.includes('employment') || cat.includes('labour') || cat.includes('wage')) {
+    return {
+      statute: 'The Payment of Wages Act, 1936 — Section 15',
+      description: 'Mandates wage settlement on due dates and authorizes the Labour Authority to order wage recovery plus statutory compensation and penalties.',
+      actionPlan: [
+        'Collate & Preserve Records: Gather employment appointment letter, salary slips, and bank statements showing unpaid months.',
+        'Issue Statutory Demand Notice: Serve formal 15-day notice under the Payment of Wages Act.',
+        'Pre-Litigation Grievance: Register online grievance on the Ministry of Labour SAMADHAN Portal (samadhan.labour.gov.in).'
+      ]
+    };
+  }
+  
+  return {
+    statute: 'The Code of Civil Procedure, 1908 — Section 89',
+    description: 'Encourages alternate dispute resolution (ADR) mechanisms, including mediation, conciliation, and arbitration, to resolve civil disputes before court trials.',
+    actionPlan: [
+      'Preserve Evidence: Collect agreement copy, transaction history, emails, and notices exchanged.',
+      'Serve Legal Notice: Send formal pre-suit notice outlining demands and giving 30 days to resolve.',
+      'Pre-Litigation Mediation: Register for pre-litigation mediation at the local District Legal Services Authority (DLSA).'
+    ]
+  };
+};
+
+export default function CaseDetailModal({ selectedCase, isOpen, onClose, onCaseUpdated, user }) {
+  const details = selectedCase ? getCategoryDetails(selectedCase.category) : null;
   const [activeTab, setActiveTab] = useState('workspace'); // workspace | timeline | documents | evidence | legalBasis
   const [timelineEvents, setTimelineEvents] = useState([]);
   const [documents, setDocuments] = useState([]);
@@ -231,36 +294,45 @@ export default function CaseDetailModal({ selectedCase, isOpen, onClose, onCaseU
               </div>
 
               {/* Layer 3: Statutory Legal Basis (Milestone 2 Grounded RAG) */}
-              <div className="p-4 bg-slate-50 rounded-2xl border border-slate-200 space-y-2">
-                <h4 className="text-xs font-bold text-slate-900 uppercase tracking-wider flex items-center gap-1.5">
-                  <Scale className="w-3.5 h-3.5 text-nyaya-600" />
-                  Authoritative Statutory Provisions
-                </h4>
-                <div className="p-3 bg-white rounded-xl border border-slate-200 text-xs space-y-1">
-                  <div className="flex items-center justify-between">
-                    <span className="font-bold text-nyaya-800">The Payment of Wages Act, 1936 — Section 15</span>
-                    <span className="text-[10px] bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded font-bold border border-emerald-200">
-                      Authoritative Gazette
-                    </span>
+              {details && user && user.role !== 'CITIZEN' && (
+                <div className="p-4 bg-slate-50 rounded-2xl border border-slate-200 space-y-2">
+                  <h4 className="text-xs font-bold text-slate-900 uppercase tracking-wider flex items-center gap-1.5">
+                    <Scale className="w-3.5 h-3.5 text-nyaya-600" />
+                    Authoritative Statutory Provisions
+                  </h4>
+                  <div className="p-3 bg-white rounded-xl border border-slate-200 text-xs space-y-1">
+                    <div className="flex items-center justify-between">
+                      <span className="font-bold text-nyaya-800">{details.statute}</span>
+                      <span className="text-[10px] bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded font-bold border border-emerald-200">
+                        Authoritative Gazette
+                      </span>
+                    </div>
+                    <p className="text-slate-600 text-[11px] leading-relaxed">
+                      {details.description}
+                    </p>
                   </div>
-                  <p className="text-slate-600 text-[11px] leading-relaxed">
-                    Mandates wage settlement on due dates and authorizes the Labour Authority to order wage recovery plus statutory compensation.
-                  </p>
                 </div>
-              </div>
+              )}
 
               {/* Layer 4: Actionable Next Steps */}
-              <div className="p-4 bg-nyaya-50 rounded-2xl border border-nyaya-200 space-y-2 text-xs">
-                <h4 className="font-bold text-nyaya-900 uppercase tracking-wider flex items-center gap-1.5">
-                  <Sparkles className="w-3.5 h-3.5 text-nyaya-600" />
-                  Recommended Action Plan
-                </h4>
-                <div className="space-y-1 text-slate-700">
-                  <p>1. <strong>Collate & Preserve Records:</strong> Gather employment appointment letter and bank statements showing unpaid months.</p>
-                  <p>2. <strong>Issue Statutory Demand Notice:</strong> Serve formal 15-day notice under the Payment of Wages Act.</p>
-                  <p>3. <strong>Pre-Litigation Grievance:</strong> Register grievance on Ministry of Labour SAMADHAN Portal or e-Daakhil if unfulfilled.</p>
+              {details && (
+                <div className="p-4 bg-nyaya-50 rounded-2xl border border-nyaya-200 space-y-2 text-xs">
+                  <h4 className="font-bold text-nyaya-900 uppercase tracking-wider flex items-center gap-1.5">
+                    <Sparkles className="w-3.5 h-3.5 text-nyaya-600" />
+                    Recommended Action Plan
+                  </h4>
+                  <div className="space-y-1 text-slate-700">
+                    {details.actionPlan.map((step, idx) => {
+                      const parts = step.split(':');
+                      return (
+                        <p key={idx}>
+                          {idx + 1}. <strong>{parts[0]}:</strong>{parts[1] || ''}
+                        </p>
+                      );
+                    })}
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
           )}
 

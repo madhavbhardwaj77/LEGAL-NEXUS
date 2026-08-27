@@ -15,6 +15,7 @@ import {
   Calendar,
   Layers,
 } from 'lucide-react';
+import { jsPDF } from 'jspdf';
 import api from '../services/api';
 
 export default function LegalDraftGenerator({ user, onOpenAuth }) {
@@ -76,13 +77,47 @@ export default function LegalDraftGenerator({ user, onOpenAuth }) {
 
   const handleDownload = () => {
     if (!generatedDraft) return;
-    const blob = new Blob([generatedDraft.contentMarkdown], { type: 'text/markdown' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `${draftType.toLowerCase()}_${Date.now()}.md`;
-    a.click();
-    URL.revokeObjectURL(url);
+    try {
+      const doc = new jsPDF();
+      doc.setFont("helvetica", "normal");
+      
+      // Document Title Header
+      doc.setFontSize(14);
+      doc.setFont("helvetica", "bold");
+      const titleText = generatedDraft.title || "Legal Notice";
+      doc.text(titleText, 15, 20);
+      
+      doc.setDrawColor(180, 180, 180);
+      doc.line(15, 25, 195, 25);
+      
+      // Body Text Formatting
+      doc.setFontSize(10);
+      doc.setFont("helvetica", "normal");
+      
+      const rawText = generatedDraft.contentMarkdown || "";
+      const cleanText = rawText
+        .replace(/^[#\s*]+/gm, '')      // Remove leading #, *
+        .replace(/^[-\s*]+/gm, '')      // Remove leading -
+        .replace(/\*\*([^*]+)\*\*/g, '$1'); // Remove bold formatting **
+      
+      const splitText = doc.splitTextToSize(cleanText, 180);
+      let y = 35;
+      const pageHeight = doc.internal.pageSize.height;
+      
+      for (let i = 0; i < splitText.length; i++) {
+        if (y > pageHeight - 20) {
+          doc.addPage();
+          y = 20;
+        }
+        doc.text(splitText[i], 15, y);
+        y += 6;
+      }
+      
+      doc.save(`${draftType.toLowerCase()}_${Date.now()}.pdf`);
+    } catch (err) {
+      console.error("PDF generation failed:", err);
+      alert("Failed to generate PDF download.");
+    }
   };
 
   return (
@@ -233,7 +268,7 @@ export default function LegalDraftGenerator({ user, onOpenAuth }) {
                     className="px-3 py-1.5 bg-nyaya-600 hover:bg-nyaya-700 text-white text-xs rounded-xl flex items-center gap-1.5 shadow transition"
                   >
                     <Download className="w-3.5 h-3.5" />
-                    Download (.md)
+                    Download (.pdf)
                   </button>
                 </div>
               </div>

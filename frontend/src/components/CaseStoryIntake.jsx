@@ -23,7 +23,7 @@ export default function CaseStoryIntake({ user, onOpenAuth, onCaseCreated }) {
   const [messages, setMessages] = useState([
     {
       sender: 'assistant',
-      text: 'Namaste! I am the Nyaya Setu Case Intelligence Assistant. Tell me your legal issue in your own words in English, हिन्दी (Hindi), or Hinglish. I will help understand your rights, build your structured case, and identify what evidence is needed.',
+      text: 'Namaste! I am the Legal Nexus AI Assistant. Tell me your legal issue in your own words in English, हिन्दी (Hindi), or Hinglish. I will help understand your rights, build your structured case, and identify what evidence is needed.',
     },
   ]);
   const [inputStory, setInputStory] = useState('');
@@ -81,7 +81,7 @@ export default function CaseStoryIntake({ user, onOpenAuth, onCaseCreated }) {
   };
 
   const handleCreateFormalCase = async () => {
-    if (!analysisResult?.case || !user) {
+    if (!analysisResult?.case || !user || successNotice) {
       if (!user) onOpenAuth();
       return;
     }
@@ -142,7 +142,7 @@ export default function CaseStoryIntake({ user, onOpenAuth, onCaseCreated }) {
             </div>
             <div>
               <h2 className="text-sm font-bold flex items-center gap-2">
-                Nyaya Setu Case Intelligence Assistant
+                Legal Nexus AI Assistant
                 <span className="text-[10px] bg-nyaya-500/30 text-nyaya-300 px-2 py-0.5 rounded-full border border-nyaya-500/30">
                   LangGraph Agentic Workflow
                 </span>
@@ -293,7 +293,7 @@ export default function CaseStoryIntake({ user, onOpenAuth, onCaseCreated }) {
               )}
 
               {/* Grounded Legal Basis */}
-              {analysisResult.research?.legalBasis && analysisResult.research.legalBasis.length > 0 && (
+              {analysisResult.research?.legalBasis && analysisResult.research.legalBasis.length > 0 && user && user.role !== 'CITIZEN' && (
                 <div>
                   <span className="text-xs font-bold text-slate-900 flex items-center gap-1 mb-2">
                     <Scale className="w-3.5 h-3.5 text-nyaya-600" />
@@ -337,8 +337,8 @@ export default function CaseStoryIntake({ user, onOpenAuth, onCaseCreated }) {
               {/* Convert to Formal Case Button */}
               <button
                 onClick={handleCreateFormalCase}
-                disabled={creatingCase}
-                className="w-full py-3 bg-nyaya-600 hover:bg-nyaya-700 text-white font-bold text-xs rounded-2xl shadow transition flex items-center justify-center gap-2"
+                disabled={creatingCase || !!successNotice}
+                className="w-full py-3 bg-nyaya-600 hover:bg-nyaya-700 disabled:opacity-50 text-white font-bold text-xs rounded-2xl shadow transition flex items-center justify-center gap-2"
               >
                 {creatingCase ? (
                   <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>

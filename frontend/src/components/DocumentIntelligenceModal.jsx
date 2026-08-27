@@ -53,6 +53,77 @@ Demised Premises: Flat 304, Green Park, New Delhi.
     },
   ];
 
+  const loadPdfJS = () => {
+    return new Promise((resolve, reject) => {
+      if (window.pdfjsLib) {
+        resolve(window.pdfjsLib);
+        return;
+      }
+      const script = document.createElement('script');
+      script.src = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js';
+      script.onload = () => {
+        window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
+        resolve(window.pdfjsLib);
+      };
+      script.onerror = reject;
+      document.head.appendChild(script);
+    });
+  };
+
+  const handleFileUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    setLoading(true);
+    setFilename(file.name);
+    setDocContent('');
+    setAnalysisResult(null);
+
+    try {
+      if (file.type === 'application/pdf' || file.name.endsWith('.pdf')) {
+        const reader = new FileReader();
+        reader.onload = async (event) => {
+          try {
+            const arrayBuffer = event.target.result;
+            const pdfjsLib = await loadPdfJS();
+            const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+            let fullText = '';
+            for (let i = 1; i <= pdf.numPages; i++) {
+              const page = await pdf.getPage(i);
+              const textContent = await page.getTextContent();
+              const pageText = textContent.items.map((item) => item.str).join(' ');
+              fullText += pageText + '\n\n';
+            }
+            if (!fullText.trim()) {
+              alert('Could not extract text. The PDF might contain images only (needs scanner OCR).');
+              setLoading(false);
+              return;
+            }
+            setDocContent(fullText);
+            handleAnalyze(fullText, file.name);
+          } catch (pdfErr) {
+            console.error('PDF parsing error:', pdfErr);
+            alert('Failed to parse PDF file text. Check file format.');
+            setLoading(false);
+          }
+        };
+        reader.readAsArrayBuffer(file);
+      } else {
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          const text = event.target.result;
+          setDocContent(text);
+          handleAnalyze(text, file.name);
+        };
+        reader.readAsText(file);
+      }
+    } catch (err) {
+      console.error(err);
+      alert('Error reading uploaded file.');
+      setLoading(false);
+    }
+  };
+
   const handleAnalyze = async (contentToAnalyze = docContent, fileToAnalyze = filename) => {
     if (!contentToAnalyze.trim()) return;
     if (!user) {
@@ -100,6 +171,23 @@ Demised Premises: Flat 304, Green Park, New Delhi.
                 <FileText className="w-4 h-4 text-nyaya-600" />
                 Input Legal Document Text
               </h3>
+            </div>
+
+            {/* File Uploader Input */}
+            <div className="space-y-1.5">
+              <span className="text-[11px] font-semibold text-slate-500 block">Upload Document (PDF, TXT, MD):</span>
+              <label className="flex flex-col items-center justify-center border-2 border-dashed border-slate-200 hover:border-nyaya-400 bg-slate-50 hover:bg-nyaya-50/20 px-4 py-5 rounded-2xl cursor-pointer transition">
+                <FileText className="w-5 h-5 text-slate-400 mb-1" />
+                <span className="text-[11px] font-bold text-slate-700">Choose file or drag & drop</span>
+                <span className="text-[9px] text-slate-400 mt-0.5">Supports PDF and Plain Text</span>
+                <input
+                  type="file"
+                  accept=".pdf,.txt,.md"
+                  onChange={handleFileUpload}
+                  className="hidden"
+                  disabled={loading}
+                />
+              </label>
             </div>
 
             {/* Quick Sample Presets */}

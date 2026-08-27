@@ -214,16 +214,28 @@ const handleConvertIntakeToCase = async (req, res, next) => {
     let cat = 'Other';
     const rawCat = (structuredCase.category || '').toLowerCase();
     if (rawCat.includes('employment') || rawCat.includes('labour')) cat = 'Employment';
-    else if (rawCat.includes('consumer')) cat = 'Consumer';
-    else if (rawCat.includes('tenan') || rawCat.includes('rent') || rawCat.includes('landlord')) cat = 'Property';
-    else if (rawCat.includes('cyber')) cat = 'Cybercrime';
-    else if (rawCat.includes('civil')) cat = 'Civil';
+    else if (rawCat.includes('consumer')) cat = 'Consumer Dispute';
+    else if (rawCat.includes('tenan') || rawCat.includes('rent') || rawCat.includes('landlord')) cat = 'Property & Real Estate';
+    else if (rawCat.includes('cyber')) cat = 'Cyber Law & Data Privacy';
+    else if (rawCat.includes('civil')) cat = 'Civil Litigation';
 
     // Map Urgency
     let urg = 'MEDIUM';
     const rawUrg = structuredCase.urgency?.urgencyLevel || '';
-    if (rawUrg === 'URGENT_ASSISTANCE') urg = 'EMERGENCY';
+    if (rawUrg === 'URGENT_ASSISTANCE') urg = 'CRITICAL';
     else if (rawUrg === 'ATTENTION_RECOMMENDED') urg = 'HIGH';
+
+    // Prevent duplicate case creation (30-second window)
+    const thirtySecondsAgo = new Date(Date.now() - 30 * 1000);
+    const existingRecentCase = await Case.findOne({
+      user: req.user._id,
+      category: cat,
+      issue: structuredCase.issue || 'Legal Grievance',
+      createdAt: { $gte: thirtySecondsAgo }
+    });
+    if (existingRecentCase) {
+      return sendSuccess(res, existingRecentCase, 'Case already registered recently (duplicate prevented)', 200);
+    }
 
     const newCase = await Case.create({
       user: req.user._id,

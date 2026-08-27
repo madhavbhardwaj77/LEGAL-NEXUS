@@ -14,6 +14,13 @@ class SourceVerifier:
         Validates whether an Act and Section exist in the authoritative database
         """
         if not self.retriever:
+            try:
+                from .hybrid_retriever import HybridRetriever
+                self.retriever = HybridRetriever.get_instance()
+            except Exception:
+                pass
+
+        if not self.retriever:
             return {"valid": False, "reason": "Retriever not initialized"}
 
         act_clean = (act or "").strip().lower()

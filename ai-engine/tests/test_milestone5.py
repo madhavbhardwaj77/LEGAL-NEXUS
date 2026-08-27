@@ -20,7 +20,7 @@ def test_ai_safety_service_disclaimer_and_pii():
     
     assert "[REDACTED_AADHAAR]" in result["safeResponse"]
     assert result["piiSanitized"] is True
-    assert "Nyaya Setu is an AI-powered legal access" in result["safeResponse"]
+    assert "Legal Nexus is an AI-powered legal access" in result["safeResponse"]
     assert result["safetyStatus"] == "APPROVED"
 
 def test_ai_safety_with_structured_case():

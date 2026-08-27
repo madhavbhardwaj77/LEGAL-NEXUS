@@ -30,7 +30,7 @@ from .matching.matcher import LawyerMatcher
 from .schemas.case_schemas import StructuredCaseState
 
 app = FastAPI(
-    title="Nyaya Setu Legal AI Engine",
+    title="Legal Nexus Legal AI Engine",
     description="Case Intelligence, Document AI, Smart Drafting, Matching, Voice & AI Safety Microservice",
     version=settings.version
 )
@@ -105,7 +105,7 @@ class VerifyCitationRequest(BaseModel):
 @app.get("/")
 def root():
     return {
-        "service": "Nyaya Setu Case Intelligence AI Engine",
+        "service": "Legal Nexus Case Intelligence AI Engine",
         "status": "OPERATIONAL",
         "version": settings.version,
         "agents": [

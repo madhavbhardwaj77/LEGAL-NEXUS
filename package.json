@@ -1,7 +1,7 @@
 {
-  "name": "nyaya-setu",
+  "name": "legal-nexus",
   "version": "1.0.0",
-  "description": "Nyaya Setu - Legal Tech & AI Case Intelligence Platform",
+  "description": "Legal Nexus - Legal Tech & AI Case Intelligence Platform",
   "private": true,
   "workspaces": [
     "backend",
@@ -10,7 +10,8 @@
   "scripts": {
     "dev:backend": "npm --prefix backend run dev",
     "dev:frontend": "npm --prefix frontend run dev",
-    "dev": "npm run dev:backend",
+    "dev:ai": "cd ai-engine && python -m uvicorn src.main:app --host 127.0.0.1 --port 8000 --reload",
+    "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\" \"npm run dev:ai\"",
     "build:frontend": "npm --prefix frontend run build",
     "test:backend": "npm --prefix backend test",
     "test": "npm run test:backend"
@@ -23,6 +24,9 @@
     "mongodb",
     "redis"
   ],
-  "author": "Nyaya Setu Team",
-  "license": "MIT"
+  "author": "Legal Nexus Team",
+  "license": "MIT",
+  "devDependencies": {
+    "concurrently": "^10.0.5"
+  }
 }

@@ -32,10 +32,10 @@ export default function SystemHealth({ healthStatus, onRefresh }) {
       <div className="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 flex items-center justify-between">
         <div>
           <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2">
-            System Health & Infrastructure Monitor
+            System Status & Infrastructure Monitor
             <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
           </h2>
-          <p className="text-sm text-slate-500">Real-time status of Nyaya Setu platform backbones</p>
+          <p className="text-sm text-slate-500">Real-time status of Legal Nexus platform backbones</p>
         </div>
 
         <button

@@ -63,9 +63,9 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess }) {
         <div className="px-6 py-5 bg-gradient-to-r from-slate-900 to-nyaya-900 text-white flex justify-between items-center">
           <div>
             <h3 className="text-lg font-bold">
-              {isSignup ? 'Create Nyaya Setu Account' : 'Sign in to Nyaya Setu'}
+              {isSignup ? 'Create Legal Nexus Account' : 'Sign in to Legal Nexus'}
             </h3>
-            <p className="text-xs text-slate-300">Access justice ecosystem services</p>
+            <p className="text-xs text-slate-300">Access legal ecosystem services</p>
           </div>
           <button onClick={onClose} className="text-slate-400 hover:text-white transition">
             <X className="w-5 h-5" />

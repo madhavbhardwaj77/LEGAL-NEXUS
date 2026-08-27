@@ -18,7 +18,7 @@ export default function LandingPage({ onGetStarted, onOpenAuth, onSelectFeature 
   const pillars = [
     {
       id: 'intake',
-      title: 'Case Intelligence Engine',
+      title: 'AI Assistance',
       desc: 'Multilingual conversational storytelling in English, Hindi, and Hinglish that builds structured legal cases with provenance tracking.',
       icon: <Bot className="w-6 h-6 text-nyaya-600" />,
       tag: 'Agentic Workflow',
@@ -39,7 +39,7 @@ export default function LandingPage({ onGetStarted, onOpenAuth, onSelectFeature 
     },
     {
       id: 'lawyers',
-      title: 'Transparent Lawyer Matching',
+      title: 'Lawyer Finder',
       desc: 'Multi-factor weighted scoring (30% Practice, 25% Exp, 15% Location) with itemized explanation checklists and verified advocates.',
       icon: <UserCheck className="w-6 h-6 text-nyaya-600" />,
       tag: '🔵 Verified Advocate',
@@ -53,7 +53,7 @@ export default function LandingPage({ onGetStarted, onOpenAuth, onSelectFeature 
         <div className="relative z-10 max-w-3xl space-y-6">
           <div className="inline-flex items-center gap-2 px-3 py-1 bg-nyaya-500/20 text-nyaya-300 border border-nyaya-500/30 text-xs font-bold rounded-full">
             <Sparkles className="w-3.5 h-3.5" />
-            Nyaya Setu (न्याय सेतु) • Bridge to Justice Platform
+            Legal Nexus • Legal AI Platform
           </div>
 
           <h1 className="text-3xl sm:text-5xl font-extrabold tracking-tight leading-tight">
@@ -135,7 +135,7 @@ export default function LandingPage({ onGetStarted, onOpenAuth, onSelectFeature 
         <div className="space-y-1">
           <h4 className="font-bold text-slate-900">Responsible AI Legal Access Standard</h4>
           <p className="leading-relaxed">
-            Nyaya Setu provides automated legal information, statutory reference retrieval, document layout segmentation, and pre-litigation drafting assistance. It is designed to navigate legal systems and bridge information asymmetry, not to substitute for licensed legal representation before a court of law.
+            Legal Nexus provides automated legal information, statutory reference retrieval, document layout segmentation, and pre-litigation drafting assistance. It is designed to navigate legal systems and bridge information asymmetry, not to substitute for licensed legal representation before a court of law.
           </p>
         </div>
       </section>
