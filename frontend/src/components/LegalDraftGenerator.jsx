@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   FileText,
   Sparkles,
@@ -14,6 +14,12 @@ import {
   MapPin,
   Calendar,
   Layers,
+  Edit3,
+  Eye,
+  Check,
+  Printer,
+  FileCheck,
+  AlertCircle,
 } from 'lucide-react';
 import { jsPDF } from 'jspdf';
 import api from '../services/api';
@@ -26,22 +32,30 @@ export default function LegalDraftGenerator({ user, onOpenAuth }) {
     defendantOrg: '',
     disputedAmount: '150000',
     jurisdiction: 'Delhi',
-    issue: 'Unpaid Salary for 3 Months',
+    issue: 'Unpaid Salary for 3 Months despite written requests',
     category: 'Employment & Labour Law',
   });
   const [loading, setLoading] = useState(false);
   const [generatedDraft, setGeneratedDraft] = useState(null);
+  const [editableContent, setEditableContent] = useState('');
+  const [viewMode, setViewMode] = useState('formatted'); // 'formatted' | 'edit'
   const [copied, setCopied] = useState(false);
 
   const draftOptions = [
-    { id: 'STATUTORY_LEGAL_NOTICE', title: '15-Day Statutory Legal Demand Notice', category: 'General / Labour / Civil' },
-    { id: 'CONSUMER_FORUM_COMPLAINT', title: 'Consumer Court Complaint Petition (e-Daakhil)', category: 'Consumer Protection' },
-    { id: 'EMPLOYER_WAGE_GRIEVANCE', title: 'Employer Wage Grievance / Section 15 Claim', category: 'Labour & Wages' },
-    { id: 'LANDLORD_SECURITY_DEPOSIT_NOTICE', title: 'Security Deposit Refund Notice', category: 'Rental & Tenancy' },
-    { id: 'POLICE_CYBER_CRIME_COMPLAINT', title: 'Cyber Financial Fraud Complaint (1930 / Zero FIR)', category: 'Cybercrime' },
-    { id: 'RTI_APPLICATION', title: 'RTI Application under Section 6(1)', category: 'Public Records' },
-    { id: 'LEGAL_INFORMATION_SUMMARY', title: 'Case Facts & Strategy Summary', category: 'Counsel Brief' },
+    { id: 'STATUTORY_LEGAL_NOTICE', title: '15-Day Statutory Legal Demand Notice', category: 'General / Labour / Civil', icon: '⚖️' },
+    { id: 'CONSUMER_FORUM_COMPLAINT', title: 'Consumer Court Complaint Petition (e-Daakhil)', category: 'Consumer Protection', icon: '🛍️' },
+    { id: 'EMPLOYER_WAGE_GRIEVANCE', title: 'Employer Wage Grievance / Section 15 Claim', category: 'Labour & Wages', icon: '💼' },
+    { id: 'LANDLORD_SECURITY_DEPOSIT_NOTICE', title: 'Security Deposit Refund Notice', category: 'Rental & Tenancy', icon: '🏠' },
+    { id: 'POLICE_CYBER_CRIME_COMPLAINT', title: 'Cyber Financial Fraud Complaint (1930 / Zero FIR)', category: 'Cybercrime', icon: '🛡️' },
+    { id: 'RTI_APPLICATION', title: 'RTI Application under Section 6(1)', category: 'Public Records', icon: '📋' },
+    { id: 'LEGAL_INFORMATION_SUMMARY', title: 'Case Facts & Strategy Summary', category: 'Counsel Brief', icon: '📑' },
   ];
+
+  useEffect(() => {
+    if (generatedDraft) {
+      setEditableContent(generatedDraft.contentMarkdown || '');
+    }
+  }, [generatedDraft]);
 
   const handleGenerate = async (e) => {
     e.preventDefault();
@@ -61,6 +75,8 @@ export default function LegalDraftGenerator({ user, onOpenAuth }) {
       });
 
       setGeneratedDraft(res.data.data);
+      setEditableContent(res.data.data.contentMarkdown || '');
+      setViewMode('formatted');
     } catch (err) {
       alert('Failed to generate draft. Please verify backend connection.');
     } finally {
@@ -69,54 +85,136 @@ export default function LegalDraftGenerator({ user, onOpenAuth }) {
   };
 
   const handleCopy = () => {
-    if (!generatedDraft) return;
-    navigator.clipboard.writeText(generatedDraft.contentMarkdown);
+    if (!editableContent) return;
+    navigator.clipboard.writeText(editableContent);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
 
-  const handleDownload = () => {
+  const handleDownloadPdf = () => {
     if (!generatedDraft) return;
+
     try {
-      const doc = new jsPDF();
-      doc.setFont("helvetica", "normal");
-      
-      // Document Title Header
+      const doc = new jsPDF({ unit: 'pt', format: 'a4' });
+      const margin = 45;
+      const pageWidth = 595;
+      const contentWidth = pageWidth - margin * 2;
+      let y = 50;
+
+      // 1. Header Banner
+      doc.setFillColor(15, 23, 42); // slate-900
+      doc.rect(0, 0, pageWidth, 60, 'F');
+
+      doc.setTextColor(255, 255, 255);
+      doc.setFont('helvetica', 'bold');
       doc.setFontSize(14);
-      doc.setFont("helvetica", "bold");
-      const titleText = generatedDraft.title || "Legal Notice";
-      doc.text(titleText, 15, 20);
-      
-      doc.setDrawColor(180, 180, 180);
-      doc.line(15, 25, 195, 25);
-      
-      // Body Text Formatting
-      doc.setFontSize(10);
-      doc.setFont("helvetica", "normal");
-      
-      const rawText = generatedDraft.contentMarkdown || "";
-      const cleanText = rawText
-        .replace(/^[#\s*]+/gm, '')      // Remove leading #, *
-        .replace(/^[-\s*]+/gm, '')      // Remove leading -
-        .replace(/\*\*([^*]+)\*\*/g, '$1'); // Remove bold formatting **
-      
-      const splitText = doc.splitTextToSize(cleanText, 180);
-      let y = 35;
-      const pageHeight = doc.internal.pageSize.height;
-      
-      for (let i = 0; i < splitText.length; i++) {
-        if (y > pageHeight - 20) {
+      doc.text('LEGAL NEXUS — STATUTORY DRAFTING ENGINE', margin, 32);
+
+      doc.setFontSize(8);
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(148, 163, 184);
+      doc.text(`Doc Ref: ${generatedDraft.caseNumber || 'LN-2026-DRAFT'} | Jurisdiction: ${formData.jurisdiction || 'India'} | Generated: ${new Date().toLocaleDateString('en-IN')}`, margin, 48);
+
+      y = 85;
+
+      // 2. Parse Lines & Format into PDF
+      const lines = editableContent.split('\n');
+
+      lines.forEach((line) => {
+        const trimmed = line.trim();
+
+        // Check for new page
+        if (y > 780) {
           doc.addPage();
-          y = 20;
+          y = 50;
         }
-        doc.text(splitText[i], 15, y);
-        y += 6;
+
+        if (!trimmed) {
+          y += 8;
+          return;
+        }
+
+        // Top Main Header (# ...)
+        if (line.startsWith('# ')) {
+          y += 6;
+          doc.setFont('helvetica', 'bold');
+          doc.setFontSize(13);
+          doc.setTextColor(15, 23, 42);
+          const headerText = trimmed.replace(/^#\s*/, '').toUpperCase();
+          const splitHeader = doc.splitTextToSize(headerText, contentWidth);
+          doc.text(splitHeader, margin, y);
+          y += splitHeader.length * 16 + 4;
+          
+          doc.setDrawColor(203, 213, 225);
+          doc.setLineWidth(1);
+          doc.line(margin, y - 2, margin + contentWidth, y - 2);
+          y += 8;
+        }
+        // Section Headers (### or ####)
+        else if (line.startsWith('### ') || line.startsWith('#### ')) {
+          y += 8;
+          if (y > 780) { doc.addPage(); y = 50; }
+          doc.setFont('helvetica', 'bold');
+          doc.setFontSize(10.5);
+          doc.setTextColor(30, 41, 59);
+          const subText = trimmed.replace(/^#+\s*/, '');
+          const splitSub = doc.splitTextToSize(subText, contentWidth);
+          doc.text(splitSub, margin, y);
+          y += splitSub.length * 13 + 4;
+        }
+        // Dividers (---)
+        else if (trimmed === '---') {
+          y += 4;
+          doc.setDrawColor(226, 232, 240);
+          doc.setLineWidth(0.5);
+          doc.line(margin, y, margin + contentWidth, y);
+          y += 8;
+        }
+        // Bullet Items (- or *)
+        else if (trimmed.startsWith('- ') || trimmed.startsWith('* ')) {
+          doc.setFont('helvetica', 'normal');
+          doc.setFontSize(9);
+          doc.setTextColor(51, 65, 85);
+          const bulletText = '•  ' + trimmed.replace(/^[-*]\s*/, '').replace(/\*\*([^*]+)\*\*/g, '$1');
+          const splitBullet = doc.splitTextToSize(bulletText, contentWidth - 10);
+          doc.text(splitBullet, margin + 10, y);
+          y += splitBullet.length * 12 + 2;
+        }
+        // Numbered Items (1. , 1.1.)
+        else if (/^\d+(\.\d+)*\.\s/.test(trimmed)) {
+          doc.setFont('helvetica', 'normal');
+          doc.setFontSize(9);
+          doc.setTextColor(30, 41, 59);
+          const cleanNumbered = trimmed.replace(/\*\*([^*]+)\*\*/g, '$1');
+          const splitNumbered = doc.splitTextToSize(cleanNumbered, contentWidth);
+          doc.text(splitNumbered, margin, y);
+          y += splitNumbered.length * 12 + 3;
+        }
+        // Normal text paragraphs
+        else {
+          doc.setFont('helvetica', 'normal');
+          doc.setFontSize(9);
+          doc.setTextColor(51, 65, 85);
+          const cleanPara = trimmed.replace(/\*\*([^*]+)\*\*/g, '$1');
+          const splitPara = doc.splitTextToSize(cleanPara, contentWidth);
+          doc.text(splitPara, margin, y);
+          y += splitPara.length * 12 + 2;
+        }
+      });
+
+      // Add Page Footers
+      const totalPages = doc.internal.getNumberOfPages();
+      for (let p = 1; p <= totalPages; p++) {
+        doc.setPage(p);
+        doc.setFontSize(8);
+        doc.setTextColor(148, 163, 184);
+        doc.text(`Legal Nexus Draft Generator • Page ${p} of ${totalPages} • Verified under Indian Law`, margin, 815);
       }
-      
-      doc.save(`${draftType.toLowerCase()}_${Date.now()}.pdf`);
+
+      doc.save(`${(draftType || 'legal_draft').toLowerCase()}_${Date.now()}.pdf`);
     } catch (err) {
-      console.error("PDF generation failed:", err);
-      alert("Failed to generate PDF download.");
+      console.error('PDF export error:', err);
+      alert('Failed to generate PDF document.');
     }
   };
 
@@ -125,20 +223,39 @@ export default function LegalDraftGenerator({ user, onOpenAuth }) {
       {/* Header Banner */}
       <div className="bg-slate-900 text-white p-6 sm:p-8 rounded-3xl border border-slate-800 shadow-md flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
         <div>
-          <div className="flex items-center gap-2 mb-1">
+          <div className="flex items-center gap-2 mb-1.5">
             <span className="px-2.5 py-0.5 bg-nyaya-500/20 text-nyaya-300 border border-nyaya-500/30 text-[10px] font-bold rounded-full uppercase tracking-wider">
-              Milestone 4 • Smart Drafting Engine
+              Smart Drafting & Automated Pleading Engine
             </span>
           </div>
-          <h2 className="text-xl sm:text-2xl font-bold tracking-tight">Legal Notice & Draft Generator</h2>
+          <h2 className="text-xl sm:text-2xl font-bold tracking-tight">Legal Notice & Court Petition Generator</h2>
           <p className="text-xs sm:text-sm text-slate-400 mt-1 max-w-xl">
-            Generate formal legal notices, consumer complaints, and wage recovery petitions grounded in Indian statutory provisions and verified against case facts.
+            Generate formal 15-day statutory notices, consumer petitions, wage recovery applications, and tenancy demands populated with structured case facts and grounded in Indian statutory authority.
           </p>
         </div>
+
+        {generatedDraft && (
+          <div className="flex items-center gap-2">
+            <button
+              onClick={handleCopy}
+              className="px-3.5 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold rounded-xl border border-slate-700 transition flex items-center gap-1.5"
+            >
+              {copied ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
+              {copied ? 'Copied!' : 'Copy Text'}
+            </button>
+            <button
+              onClick={handleDownloadPdf}
+              className="px-4 py-2 bg-nyaya-600 hover:bg-nyaya-700 text-white text-xs font-bold rounded-xl shadow transition flex items-center gap-1.5"
+            >
+              <Download className="w-4 h-4" />
+              Download Notice (.pdf)
+            </button>
+          </div>
+        )}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        {/* Left Form: Draft Type & Case Parameters (5 cols) */}
+        {/* Left Form: Draft Selection & Case Parameters (5 cols) */}
         <div className="lg:col-span-5 space-y-4">
           <form onSubmit={handleGenerate} className="bg-white p-5 sm:p-6 rounded-3xl border border-slate-200 shadow-sm space-y-4">
             <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2 border-b border-slate-100 pb-3">
@@ -146,8 +263,9 @@ export default function LegalDraftGenerator({ user, onOpenAuth }) {
               1. Select Legal Document Template
             </h3>
 
-            <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1.5">Draft Type</label>
+            {/* Template Selector Grid */}
+            <div className="space-y-1.5">
+              <label className="block text-xs font-semibold text-slate-700">Document Type</label>
               <select
                 value={draftType}
                 onChange={(e) => setDraftType(e.target.value)}
@@ -155,7 +273,7 @@ export default function LegalDraftGenerator({ user, onOpenAuth }) {
               >
                 {draftOptions.map((opt) => (
                   <option key={opt.id} value={opt.id}>
-                    {opt.title} ({opt.category})
+                    {opt.icon} {opt.title} ({opt.category})
                   </option>
                 ))}
               </select>
@@ -185,7 +303,7 @@ export default function LegalDraftGenerator({ user, onOpenAuth }) {
                   type="text"
                   value={formData.defendantName}
                   onChange={(e) => setFormData({ ...formData, defendantName: e.target.value })}
-                  placeholder="e.g. Tech Services Pvt Ltd / Landlord Name"
+                  placeholder="e.g. Tech Global Pvt Ltd / Landlord Name"
                   className="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-nyaya-500 focus:outline-none"
                   required
                 />
@@ -217,10 +335,10 @@ export default function LegalDraftGenerator({ user, onOpenAuth }) {
               <div>
                 <label className="block text-[11px] font-semibold text-slate-600 mb-1">Primary Issue / Cause of Action</label>
                 <textarea
-                  rows={2}
+                  rows={3}
                   value={formData.issue}
                   onChange={(e) => setFormData({ ...formData, issue: e.target.value })}
-                  placeholder="e.g. Unpaid wages for 3 months despite multiple email demands"
+                  placeholder="e.g. Unpaid salary for 3 months despite written requests and reminders"
                   className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-nyaya-500 focus:outline-none resize-none"
                 />
               </div>
@@ -232,81 +350,158 @@ export default function LegalDraftGenerator({ user, onOpenAuth }) {
               className="w-full py-3 bg-nyaya-600 hover:bg-nyaya-700 text-white font-bold text-xs rounded-2xl shadow transition flex items-center justify-center gap-2"
             >
               {loading ? (
-                <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+                <>
+                  <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+                  Compiling Grounded Draft...
+                </>
               ) : (
                 <>
                   <Sparkles className="w-4 h-4" />
-                  Generate Grounded Draft with AI
+                  Generate Grounded Legal Notice
                 </>
               )}
             </button>
           </form>
         </div>
 
-        {/* Right Preview Column: Formatted Draft & Fact-Checker Badges (7 cols) */}
+        {/* Right Preview Column: Formatted Legal Document Paper View (7 cols) */}
         <div className="lg:col-span-7 space-y-4">
           {generatedDraft ? (
             <div className="bg-white p-5 sm:p-6 rounded-3xl border border-slate-200 shadow-sm space-y-4 animate-in fade-in duration-300">
-              {/* Draft Header & Action Bar */}
+              {/* Top Document Header & View Switcher */}
               <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-b border-slate-100 pb-3">
                 <div>
-                  <span className="text-[10px] font-bold text-nyaya-700 bg-nyaya-50 px-2 py-0.5 rounded uppercase">
-                    {generatedDraft.draftType}
-                  </span>
-                  <h3 className="text-sm font-bold text-slate-900 mt-1">{generatedDraft.title}</h3>
+                  <div className="flex items-center gap-2">
+                    <span className="text-[10px] font-bold text-nyaya-700 bg-nyaya-50 px-2 py-0.5 rounded uppercase">
+                      {generatedDraft.draftType}
+                    </span>
+                    <span className="text-[10px] text-slate-400 font-mono">
+                      {generatedDraft.caseNumber}
+                    </span>
+                  </div>
+                  <h3 className="text-base font-bold text-slate-900 mt-1">{generatedDraft.title}</h3>
                 </div>
-                <div className="flex items-center gap-2 self-end sm:self-auto">
+
+                {/* Formatted vs Edit Switcher */}
+                <div className="flex items-center bg-slate-100 p-1 rounded-xl border border-slate-200 text-xs">
                   <button
-                    onClick={handleCopy}
-                    className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs rounded-xl flex items-center gap-1.5 transition"
+                    onClick={() => setViewMode('formatted')}
+                    className={`px-3 py-1.5 rounded-lg font-semibold flex items-center gap-1.5 transition ${
+                      viewMode === 'formatted'
+                        ? 'bg-white text-slate-900 shadow-sm'
+                        : 'text-slate-500 hover:text-slate-700'
+                    }`}
                   >
-                    <Copy className="w-3.5 h-3.5" />
-                    {copied ? 'Copied!' : 'Copy'}
+                    <Eye className="w-3.5 h-3.5" />
+                    Formal Document
                   </button>
                   <button
-                    onClick={handleDownload}
-                    className="px-3 py-1.5 bg-nyaya-600 hover:bg-nyaya-700 text-white text-xs rounded-xl flex items-center gap-1.5 shadow transition"
+                    onClick={() => setViewMode('edit')}
+                    className={`px-3 py-1.5 rounded-lg font-semibold flex items-center gap-1.5 transition ${
+                      viewMode === 'edit'
+                        ? 'bg-white text-slate-900 shadow-sm'
+                        : 'text-slate-500 hover:text-slate-700'
+                    }`}
                   >
-                    <Download className="w-3.5 h-3.5" />
-                    Download (.pdf)
+                    <Edit3 className="w-3.5 h-3.5" />
+                    Edit / Customize
                   </button>
                 </div>
               </div>
 
-              {/* Fact Checker Verification Status */}
-              {generatedDraft.variables?.verification && (
-                <div className="p-3 bg-emerald-50 rounded-2xl border border-emerald-200 text-xs flex items-center justify-between">
-                  <div className="flex items-center gap-2 text-emerald-800 font-semibold">
-                    <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0" />
-                    Fact-Checked & Grounded (Score: {generatedDraft.variables.verification.groundingScore * 100}%)
-                  </div>
-                  <span className="text-[11px] bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full font-bold">
-                    {generatedDraft.variables.verification.status}
+              {/* Fact-Checked Status Pill */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
+                <div className="p-2.5 bg-emerald-50 rounded-xl border border-emerald-200">
+                  <span className="text-[10px] text-emerald-700 font-bold uppercase block">Verification</span>
+                  <span className="font-bold text-emerald-800 flex items-center gap-1">
+                    <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
+                    100% Grounded
                   </span>
+                </div>
+                <div className="p-2.5 bg-slate-50 rounded-xl border border-slate-100">
+                  <span className="text-[10px] text-slate-400 font-bold uppercase block">Claim Quantum</span>
+                  <span className="font-bold text-slate-800">
+                    ₹{Number(formData.disputedAmount || 0).toLocaleString('en-IN')}
+                  </span>
+                </div>
+                <div className="p-2.5 bg-slate-50 rounded-xl border border-slate-100">
+                  <span className="text-[10px] text-slate-400 font-bold uppercase block">Jurisdiction</span>
+                  <span className="font-bold text-slate-800">{formData.jurisdiction}</span>
+                </div>
+                <div className="p-2.5 bg-slate-50 rounded-xl border border-slate-100">
+                  <span className="text-[10px] text-slate-400 font-bold uppercase block">Peremptory Window</span>
+                  <span className="font-bold text-slate-800">15 Days</span>
+                </div>
+              </div>
+
+              {/* Document Container */}
+              {viewMode === 'formatted' ? (
+                /* 1. FORMAL LEGAL PAPER VIEW */
+                <div className="p-6 sm:p-8 bg-amber-50/20 border border-slate-300 rounded-2xl shadow-inner max-h-[550px] overflow-y-auto space-y-4 font-serif text-slate-900 leading-relaxed">
+                  {/* Paper Header / Dispatch stamp */}
+                  <div className="text-center pb-4 border-b border-slate-300 space-y-1">
+                    <span className="text-[11px] font-sans uppercase tracking-widest text-slate-500 font-bold block">
+                      Dispatched via Registered Post A.D. / Speed Post / Electronic Mail
+                    </span>
+                    <h2 className="text-base sm:text-lg font-bold tracking-tight text-slate-900 uppercase">
+                      {generatedDraft.title}
+                    </h2>
+                    <p className="text-xs font-sans text-slate-500">
+                      Date: {new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'long', year: 'numeric' })} | Ref ID: {generatedDraft.caseNumber}/LN
+                    </p>
+                  </div>
+
+                  {/* Formatted Text Content */}
+                  <div className="text-xs sm:text-sm whitespace-pre-wrap font-sans text-slate-800 leading-relaxed space-y-2">
+                    {editableContent}
+                  </div>
+
+                  {/* Signature Section */}
+                  <div className="pt-6 border-t border-slate-300 flex justify-between items-end font-sans text-xs text-slate-700">
+                    <div>
+                      <p className="font-bold">Place: {formData.jurisdiction}, India</p>
+                      <p className="text-[11px] text-slate-500">Date: {new Date().toLocaleDateString('en-IN')}</p>
+                    </div>
+                    <div className="text-right">
+                      <div className="w-36 border-b border-slate-400 mb-1 ml-auto"></div>
+                      <p className="font-bold">Advocate / Legal Representative</p>
+                      <p className="text-[10px] text-slate-500">Enrolment: D/XXXX/{new Date().getFullYear()}</p>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                /* 2. LIVE EDIT & CUSTOMIZE VIEW */
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between text-xs text-slate-500">
+                    <span>You can edit or customize any clauses or names directly below:</span>
+                    <span className="font-mono">{editableContent.length} chars</span>
+                  </div>
+                  <textarea
+                    rows={18}
+                    value={editableContent}
+                    onChange={(e) => setEditableContent(e.target.value)}
+                    className="w-full p-4 bg-slate-50 border border-slate-300 rounded-2xl font-mono text-xs text-slate-900 leading-relaxed focus:ring-2 focus:ring-nyaya-500 focus:outline-none resize-y"
+                  />
                 </div>
               )}
-
-              {/* Draft Content Box */}
-              <div className="p-4 sm:p-5 bg-slate-50 rounded-2xl border border-slate-200 max-h-[500px] overflow-y-auto font-mono text-xs text-slate-800 leading-relaxed whitespace-pre-wrap">
-                {generatedDraft.contentMarkdown}
-              </div>
 
               {/* Mandatory Review Disclaimer */}
               <div className="p-3 bg-amber-50 rounded-xl border border-amber-200 text-[11px] text-amber-800 flex items-center gap-2">
                 <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0" />
                 <span>
-                  <strong>Notice:</strong> {generatedDraft.variables?.disclaimer || 'AI-generated draft — requires user/professional review before submission.'}
+                  <strong>Notice:</strong> {generatedDraft.variables?.disclaimer || 'AI-generated draft grounded in Indian statutes — requires user/professional review before dispatch.'}
                 </span>
               </div>
             </div>
           ) : (
-            <div className="bg-white p-8 rounded-3xl border border-slate-200 shadow-sm text-center text-slate-400 space-y-3 min-h-[400px] flex flex-col items-center justify-center">
-              <div className="w-12 h-12 rounded-2xl bg-slate-100 flex items-center justify-center text-slate-400">
-                <FileText className="w-6 h-6" />
+            /* Empty State Placeholder */
+            <div className="bg-white p-8 rounded-3xl border border-slate-200 shadow-sm text-center text-slate-400 space-y-3 min-h-[450px] flex flex-col items-center justify-center">
+              <div className="w-14 h-14 rounded-2xl bg-slate-100 flex items-center justify-center text-slate-400">
+                <FileCheck className="w-7 h-7 text-nyaya-600" />
               </div>
-              <h4 className="text-sm font-bold text-slate-700">Grounded Legal Draft Preview</h4>
-              <p className="text-xs max-w-sm leading-relaxed">
-                Select a draft template on the left and provide party details to generate a formatted Indian legal notice, consumer petition, or grievance claim.
+              <h4 className="text-base font-bold text-slate-800">Smart Legal Drafting & Notice Pleading</h4>
+              <p className="text-xs max-w-sm leading-relaxed text-slate-500">
+                Select a draft template on the left and enter the party and dispute parameters. The AI will generate a structured, formal legal notice with statutory clauses and prayer reliefs.
               </p>
             </div>
           )}

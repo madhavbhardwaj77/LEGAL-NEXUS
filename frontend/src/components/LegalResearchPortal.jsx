@@ -293,69 +293,71 @@ export default function LegalResearchPortal({ user, onOpenAuth }) {
         </div>
       )}
 
-      {/* Citation Validation Tool Widget */}
-      <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
-        <div className="flex items-center justify-between mb-3">
-          <div className="flex items-center gap-2">
-            <ShieldCheck className="w-5 h-5 text-nyaya-600" />
-            <h3 className="text-base font-bold text-slate-900">Official Citation Validator</h3>
-          </div>
-          <span className="text-xs text-slate-500 font-medium">Verify Statutory Authenticity</span>
-        </div>
-        <p className="text-xs text-slate-500 mb-4">
-          Test any Act name and Section to check whether it exists on official Indian Gazette rolls or is a hallucination.
-        </p>
-
-        <form onSubmit={handleVerifyCitation} className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-          <input
-            type="text"
-            required
-            value={verifyAct}
-            onChange={(e) => setVerifyAct(e.target.value)}
-            placeholder="e.g. The Payment of Wages Act, 1936"
-            className="px-3 py-2 border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-nyaya-500 focus:outline-none"
-          />
-          <input
-            type="text"
-            required
-            value={verifySec}
-            onChange={(e) => setVerifySec(e.target.value)}
-            placeholder="e.g. Section 15"
-            className="px-3 py-2 border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-nyaya-500 focus:outline-none"
-          />
-          <button
-            type="submit"
-            disabled={verifying}
-            className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-semibold transition flex items-center justify-center gap-1.5"
-          >
-            {verifying ? 'Verifying...' : 'Validate Citation'}
-          </button>
-        </form>
-
-        {verifyResult && (
-          <div
-            className={`mt-4 p-3.5 rounded-xl border text-xs flex items-center gap-2.5 ${
-              verifyResult.valid
-                ? 'bg-emerald-50 text-emerald-800 border-emerald-200'
-                : 'bg-red-50 text-red-800 border-red-200'
-            }`}
-          >
-            {verifyResult.valid ? (
-              <CheckCircle className="w-4 h-4 text-emerald-600 shrink-0" />
-            ) : (
-              <AlertCircle className="w-4 h-4 text-red-600 shrink-0" />
-            )}
-            <div>
-              <span className="font-bold">
-                {verifyResult.valid ? 'Verified Official Citation: ' : 'Citation Invalid: '}
-              </span>
-              {verifyResult.valid
-                ? `${verifyResult.act} (${verifyResult.section}) is authoritative under ${verifyResult.authority}.`
-                : verifyResult.message || 'Section not found on authoritative rolls.'}
+      {/* Citation Validation Tool Widget - Hidden for Citizens & Guests */}
+      {user && user.role !== 'CITIZEN' && (
+        <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-2">
+              <ShieldCheck className="w-5 h-5 text-nyaya-600" />
+              <h3 className="text-base font-bold text-slate-900">Official Citation Validator</h3>
             </div>
+            <span className="text-xs text-slate-500 font-medium">Verify Statutory Authenticity</span>
           </div>
-        )}
-      </div>
+          <p className="text-xs text-slate-500 mb-4">
+            Test any Act name and Section to check whether it exists on official Indian Gazette rolls or is a hallucination.
+          </p>
+
+          <form onSubmit={handleVerifyCitation} className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <input
+              type="text"
+              required
+              value={verifyAct}
+              onChange={(e) => setVerifyAct(e.target.value)}
+              placeholder="e.g. The Payment of Wages Act, 1936"
+              className="px-3 py-2 border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-nyaya-500 focus:outline-none"
+            />
+            <input
+              type="text"
+              required
+              value={verifySec}
+              onChange={(e) => setVerifySec(e.target.value)}
+              placeholder="e.g. Section 15"
+              className="px-3 py-2 border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-nyaya-500 focus:outline-none"
+            />
+            <button
+              type="submit"
+              disabled={verifying}
+              className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-semibold transition flex items-center justify-center gap-1.5"
+            >
+              {verifying ? 'Verifying...' : 'Validate Citation'}
+            </button>
+          </form>
+
+          {verifyResult && (
+            <div
+              className={`mt-4 p-3.5 rounded-xl border text-xs flex items-center gap-2.5 ${
+                verifyResult.valid
+                  ? 'bg-emerald-50 text-emerald-800 border-emerald-200'
+                  : 'bg-red-50 text-red-800 border-red-200'
+              }`}
+            >
+              {verifyResult.valid ? (
+                <CheckCircle className="w-4 h-4 text-emerald-600 shrink-0" />
+              ) : (
+                <AlertCircle className="w-4 h-4 text-red-600 shrink-0" />
+              )}
+              <div>
+                <span className="font-bold">
+                  {verifyResult.valid ? 'Verified Official Citation: ' : 'Citation Invalid: '}
+                </span>
+                {verifyResult.valid
+                  ? `${verifyResult.act} (${verifyResult.section}) is authoritative under ${verifyResult.authority}.`
+                  : verifyResult.message || 'Section not found on authoritative rolls.'}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }
