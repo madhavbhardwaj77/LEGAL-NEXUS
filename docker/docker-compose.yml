@@ -1,0 +1,92 @@
+version: '3.8'
+
+services:
+  # MongoDB Database
+  mongodb:
+    image: mongo:7.0
+    container_name: nyaya_setu_mongo
+    restart: always
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_DATABASE: nyaya-setu
+    volumes:
+      - mongo_data:/data/db
+    networks:
+      - nyaya_net
+
+  # Redis Cache & Background Queue
+  redis:
+    image: redis:7.2-alpine
+    container_name: nyaya_setu_redis
+    restart: always
+    ports:
+      - "6379:6379"
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - redis_data:/data
+    networks:
+      - nyaya_net
+
+  # Node.js + Express Backend API
+  backend:
+    build:
+      context: ../backend
+      dockerfile: ../docker/backend.Dockerfile
+    container_name: nyaya_setu_backend
+    restart: always
+    ports:
+      - "5000:5000"
+    environment:
+      PORT: 5000
+      NODE_ENV: production
+      MONGODB_URI: mongodb://mongodb:27017/nyaya-setu
+      REDIS_URL: redis://redis:6379
+      JWT_SECRET: super_secret_jwt_key_nyaya_setu_dev_2026
+      JWT_EXPIRES_IN: 7d
+      JWT_REFRESH_SECRET: super_secret_refresh_jwt_key_nyaya_setu_2026
+      CLIENT_URL: http://localhost:5173
+    depends_on:
+      - mongodb
+      - redis
+    networks:
+      - nyaya_net
+
+  # Python FastAPI AI Microservice
+  ai-engine:
+    build:
+      context: ../ai-engine
+      dockerfile: ../docker/ai-engine.Dockerfile
+    container_name: nyaya_setu_ai_engine
+    restart: always
+    ports:
+      - "8000:8000"
+    environment:
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+    depends_on:
+      - redis
+    networks:
+      - nyaya_net
+
+  # React Frontend
+  frontend:
+    build:
+      context: ../frontend
+      dockerfile: ../docker/frontend.Dockerfile
+    container_name: nyaya_setu_frontend
+    restart: always
+    ports:
+      - "5173:80"
+    depends_on:
+      - backend
+    networks:
+      - nyaya_net
+
+volumes:
+  mongo_data:
+  redis_data:
+
+networks:
+  nyaya_net:
+    driver: bridge

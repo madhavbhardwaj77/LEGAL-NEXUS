@@ -1,0 +1,28 @@
+{
+  "name": "nyaya-setu",
+  "version": "1.0.0",
+  "description": "Nyaya Setu - Legal Tech & AI Case Intelligence Platform",
+  "private": true,
+  "workspaces": [
+    "backend",
+    "frontend"
+  ],
+  "scripts": {
+    "dev:backend": "npm --prefix backend run dev",
+    "dev:frontend": "npm --prefix frontend run dev",
+    "dev": "npm run dev:backend",
+    "build:frontend": "npm --prefix frontend run build",
+    "test:backend": "npm --prefix backend test",
+    "test": "npm run test:backend"
+  },
+  "keywords": [
+    "legaltech",
+    "ai",
+    "express",
+    "react",
+    "mongodb",
+    "redis"
+  ],
+  "author": "Nyaya Setu Team",
+  "license": "MIT"
+}

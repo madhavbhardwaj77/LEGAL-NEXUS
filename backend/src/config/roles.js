@@ -1,0 +1,24 @@
+/**
+ * Nyaya Setu User Roles
+ */
+const ROLES = {
+  CITIZEN: 'CITIZEN',
+  LAW_STUDENT: 'LAW_STUDENT',
+  LAWYER: 'LAWYER',
+  LEGAL_ORGANIZATION: 'LEGAL_ORGANIZATION',
+  ADMIN: 'ADMIN',
+};
+
+const ALL_ROLES = Object.values(ROLES);
+
+const PROFESSIONAL_ROLES = [
+  ROLES.LAWYER,
+  ROLES.LAW_STUDENT,
+  ROLES.LEGAL_ORGANIZATION,
+];
+
+module.exports = {
+  ROLES,
+  ALL_ROLES,
+  PROFESSIONAL_ROLES,
+};
