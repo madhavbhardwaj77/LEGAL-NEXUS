@@ -2,10 +2,13 @@ FROM python:3.11-slim
 
 WORKDIR /app
 
-COPY requirements.txt .
+COPY ai-engine/requirements.txt ./requirements.txt
 RUN pip install --no-cache-dir -r requirements.txt
 
-COPY src/ ./src/
+COPY ai-engine/src/ ./src/
+COPY ingestion/ ./ingestion/
+
+ENV PYTHONPATH=/app
 
 EXPOSE 8000
 

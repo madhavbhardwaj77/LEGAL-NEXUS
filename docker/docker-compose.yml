@@ -68,8 +68,8 @@ services:
   # Python FastAPI Case Intelligence & RAG AI Engine
   ai-engine:
     build:
-      context: ../ai-engine
-      dockerfile: ../docker/ai-engine.Dockerfile
+      context: ..
+      dockerfile: docker/ai-engine.Dockerfile
     container_name: nyaya_setu_ai_engine
     restart: always
     ports:
