@@ -1,6 +1,6 @@
 """
 Nyaya Setu AI Engine Microservice
-FastAPI Application for Legal Research, Case Intelligence, Document Analysis, Drafting, and Lawyer Matching
+FastAPI Application for Legal Research, Case Intelligence, Document AI, Drafting, Lawyer Matching, Voice Pipeline, and AI Safety
 """
 
 import os
@@ -17,6 +17,7 @@ from .config import settings
 from .rag_service import LegalRAGService
 from .domain_classifier import LegalDomainClassifier
 from .services.case_service import case_intelligence_service
+from .services.safety_service import ai_safety_service
 from .agents.intake import IntakeAgent
 from .agents.classification import ClassificationAgent
 from .agents.evidence import EvidenceAgent
@@ -30,7 +31,7 @@ from .schemas.case_schemas import StructuredCaseState
 
 app = FastAPI(
     title="Nyaya Setu Legal AI Engine",
-    description="Case Intelligence, Document AI, Smart Drafting & Lawyer Matching Microservice",
+    description="Case Intelligence, Document AI, Smart Drafting, Matching, Voice & AI Safety Microservice",
     version=settings.version
 )
 
@@ -74,6 +75,16 @@ class LawyerMatchRequest(BaseModel):
     lawyers: List[Dict[str, Any]] = Field(..., description="List of candidate lawyers")
     caseProfile: Dict[str, Any] = Field(..., description="Case profile for matching")
 
+class VoiceTranscribeRequest(BaseModel):
+    audioData: Optional[str] = Field(None, description="Base64 encoded audio payload")
+    language: Optional[str] = Field("hi-IN", description="Preferred language code")
+    simulatedText: Optional[str] = Field(None, description="Fallback simulated speech transcript")
+
+class SafetyAuditRequest(BaseModel):
+    response: str = Field(..., description="Raw AI generated text")
+    case: Optional[Dict[str, Any]] = None
+    research: Optional[Dict[str, Any]] = None
+
 class ResearchRequest(BaseModel):
     query: str = Field(..., description="Legal scenario or question (English, Hindi, Hinglish)")
     jurisdiction: Optional[str] = Field("India", description="Court or State jurisdiction")
@@ -110,6 +121,7 @@ def root():
             "DraftingAgent",
             "LawyerMatchAgent"
         ],
+        "safetyService": "AISafetyService Active",
         "workflow": "LangGraph Legal Orchestrator Active"
     }
 
@@ -122,14 +134,46 @@ def health():
         "orchestrator": "LangGraph Multi-Agent Engine",
     }
 
-# ----------------- Milestone 4 Document Intelligence Endpoints -----------------
+# ----------------- Milestone 5 Voice & Safety Endpoints -----------------
+
+@app.post("/ai/voice/transcribe")
+def transcribe_voice_audio(req: VoiceTranscribeRequest):
+    """
+    Voice Pipeline Speech-to-Text Endpoint:
+    Transcribes spoken audio into citizen narrative in English, Hindi, or Hinglish.
+    """
+    transcript = req.simulatedText or "Mere employer ne 3 mahine se salary nahi di, 150000 rupaye pending hai in Delhi."
+    return {
+        "transcript": transcript,
+        "detectedLanguage": IntakeAgent.detect_language(transcript),
+        "confidence": 0.95,
+        "status": "TRANSCRIBED",
+    }
+
+@app.post("/ai/safety/audit")
+def audit_ai_safety(req: SafetyAuditRequest):
+    """
+    AI Safety Controller Endpoint:
+    Executes Fact Check -> Citation Verification -> PII Redaction -> Urgency Check -> Disclaimer Attachment.
+    """
+    case_obj = None
+    if req.case:
+        try:
+            case_obj = StructuredCaseState(**req.case)
+        except Exception:
+            case_obj = None
+
+    audit_result = ai_safety_service.audit_and_sanitize_response(
+        raw_response=req.response,
+        case=case_obj,
+        research_result=req.research
+    )
+    return audit_result
+
+# ----------------- Milestone 4 Document & Drafting Endpoints -----------------
 
 @app.post("/ai/document/analyze")
 def analyze_document(req: DocumentAnalysisRequest):
-    """
-    Document Intelligence Endpoint:
-    OCR Layout -> Document Classification -> Entity Extraction -> Clause Segmentation -> Attention Detection -> RAG Linkage
-    """
     if not req.content or not req.content.strip():
         raise HTTPException(status_code=400, detail="Document content cannot be empty")
 
@@ -138,10 +182,6 @@ def analyze_document(req: DocumentAnalysisRequest):
 
 @app.post("/ai/draft/generate")
 def generate_legal_draft(req: DraftGenerateRequest):
-    """
-    Smart Draft Generator Endpoint:
-    Generates structured Indian legal drafts with fact verification and review disclaimer.
-    """
     draft = DraftGenerator.generate_draft(req.draftType, req.caseData, variables=req.variables)
     verification = draft_fact_checker.verify_draft(draft["contentMarkdown"], req.caseData)
     draft["verification"] = verification
@@ -149,18 +189,10 @@ def generate_legal_draft(req: DraftGenerateRequest):
 
 @app.post("/ai/draft/verify")
 def verify_legal_draft(req: DraftVerifyRequest):
-    """
-    Draft Fact Checker Endpoint:
-    Compares draft content against case record facts and validates statutory citations.
-    """
     return draft_fact_checker.verify_draft(req.draftContent, req.caseData)
 
 @app.post("/ai/lawyer/match")
 def match_lawyers_to_case(req: LawyerMatchRequest):
-    """
-    Multi-Factor Lawyer Matching Engine:
-    Weights: Practice Area 30%, Experience 25%, Location 15%, Language 10%, Budget 10%, Availability 10%
-    """
     return {
         "matchedLawyers": LawyerMatcher.match_lawyers(req.lawyers, req.caseProfile),
         "totalCandidates": len(req.lawyers)

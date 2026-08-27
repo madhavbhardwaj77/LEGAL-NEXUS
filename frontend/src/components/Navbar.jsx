@@ -11,6 +11,7 @@ import {
   Bot,
   FileText,
   PenTool,
+  Home,
 } from 'lucide-react';
 
 export default function Navbar({
@@ -26,23 +27,40 @@ export default function Navbar({
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           {/* Logo & Branding */}
-          <div className="flex items-center space-x-3 cursor-pointer" onClick={() => setActiveTab('cases')}>
-            <div className="bg-nyaya-600 p-2 rounded-lg text-white shadow">
-              <Scale className="w-6 h-6" />
+          <div
+            className="flex items-center space-x-3 cursor-pointer"
+            onClick={() => setActiveTab(user ? 'cases' : 'landing')}
+          >
+            <div className="bg-nyaya-600 p-2 rounded-2xl text-white shadow">
+              <Scale className="w-5 h-5" />
             </div>
             <div>
-              <span className="text-xl font-bold tracking-tight text-white flex items-center gap-1.5">
-                Nyaya Setu <span className="text-xs bg-nyaya-700 text-nyaya-100 font-semibold px-2 py-0.5 rounded-full">न्याय सेतु</span>
+              <span className="text-lg sm:text-xl font-bold tracking-tight text-white flex items-center gap-1.5">
+                Nyaya Setu <span className="text-[10px] bg-nyaya-700 text-nyaya-100 font-semibold px-2 py-0.5 rounded-full">न्याय सेतु</span>
               </span>
-              <p className="text-[11px] text-slate-400 font-medium">Bridge to Justice Platform</p>
+              <p className="text-[10px] text-slate-400 font-medium">Bridge to Justice Platform</p>
             </div>
           </div>
 
           {/* Navigation Links */}
           <nav className="hidden md:flex items-center space-x-1">
             <button
+              onClick={() => setActiveTab('landing')}
+              className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                activeTab === 'landing'
+                  ? 'bg-nyaya-700 text-white shadow-sm'
+                  : 'text-slate-300 hover:bg-slate-800 hover:text-white'
+              }`}
+            >
+              <span className="flex items-center gap-1.5">
+                <Home className="w-3.5 h-3.5" />
+                Home
+              </span>
+            </button>
+
+            <button
               onClick={() => setActiveTab('cases')}
-              className={`px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-all ${
+              className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
                 activeTab === 'cases'
                   ? 'bg-nyaya-700 text-white shadow-sm'
                   : 'text-slate-300 hover:bg-slate-800 hover:text-white'
@@ -56,7 +74,7 @@ export default function Navbar({
 
             <button
               onClick={() => setActiveTab('intake')}
-              className={`px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-all ${
+              className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
                 activeTab === 'intake'
                   ? 'bg-nyaya-700 text-white shadow-sm'
                   : 'text-slate-300 hover:bg-slate-800 hover:text-white'
@@ -70,7 +88,7 @@ export default function Navbar({
 
             <button
               onClick={() => setActiveTab('documents')}
-              className={`px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-all ${
+              className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
                 activeTab === 'documents'
                   ? 'bg-nyaya-700 text-white shadow-sm'
                   : 'text-slate-300 hover:bg-slate-800 hover:text-white'
@@ -84,7 +102,7 @@ export default function Navbar({
 
             <button
               onClick={() => setActiveTab('drafts')}
-              className={`px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-all ${
+              className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
                 activeTab === 'drafts'
                   ? 'bg-nyaya-700 text-white shadow-sm'
                   : 'text-slate-300 hover:bg-slate-800 hover:text-white'
@@ -98,7 +116,7 @@ export default function Navbar({
 
             <button
               onClick={() => setActiveTab('research')}
-              className={`px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-all ${
+              className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
                 activeTab === 'research'
                   ? 'bg-nyaya-700 text-white shadow-sm'
                   : 'text-slate-300 hover:bg-slate-800 hover:text-white'
@@ -112,7 +130,7 @@ export default function Navbar({
 
             <button
               onClick={() => setActiveTab('lawyers')}
-              className={`px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-all ${
+              className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
                 activeTab === 'lawyers'
                   ? 'bg-nyaya-700 text-white shadow-sm'
                   : 'text-slate-300 hover:bg-slate-800 hover:text-white'
@@ -126,7 +144,7 @@ export default function Navbar({
 
             <button
               onClick={() => setActiveTab('system')}
-              className={`px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-all ${
+              className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
                 activeTab === 'system'
                   ? 'bg-nyaya-700 text-white shadow-sm'
                   : 'text-slate-300 hover:bg-slate-800 hover:text-white'
@@ -162,7 +180,7 @@ export default function Navbar({
             ) : (
               <button
                 onClick={onOpenAuth}
-                className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium bg-nyaya-600 hover:bg-nyaya-700 text-white rounded-lg shadow transition"
+                className="inline-flex items-center gap-2 px-4 py-2 text-xs sm:text-sm font-medium bg-nyaya-600 hover:bg-nyaya-700 text-white rounded-xl shadow transition"
               >
                 <LogIn className="w-4 h-4" />
                 Sign In

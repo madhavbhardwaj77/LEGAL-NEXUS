@@ -1,7 +1,7 @@
 version: '3.8'
 
 services:
-  # MongoDB Database
+  # MongoDB Database with Persistent Volume & Healthcheck
   mongodb:
     image: mongo:7.0
     container_name: nyaya_setu_mongo
@@ -12,10 +12,15 @@ services:
       MONGO_INITDB_DATABASE: nyaya-setu
     volumes:
       - mongo_data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     networks:
       - nyaya_net
 
-  # Redis Cache & Background Queue
+  # Redis Cache & Background Task Queue
   redis:
     image: redis:7.2-alpine
     container_name: nyaya_setu_redis
@@ -25,10 +30,15 @@ services:
     command: ["redis-server", "--appendonly", "yes"]
     volumes:
       - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     networks:
       - nyaya_net
 
-  # Node.js + Express Backend API
+  # Node.js + Express Core Application Gateway
   backend:
     build:
       context: ../backend
@@ -42,17 +52,22 @@ services:
       NODE_ENV: production
       MONGODB_URI: mongodb://mongodb:27017/nyaya-setu
       REDIS_URL: redis://redis:6379
-      JWT_SECRET: super_secret_jwt_key_nyaya_setu_dev_2026
+      AI_ENGINE_URL: http://ai-engine:8000
+      JWT_SECRET: super_secret_jwt_key_nyaya_setu_prod_2026
       JWT_EXPIRES_IN: 7d
-      JWT_REFRESH_SECRET: super_secret_refresh_jwt_key_nyaya_setu_2026
+      JWT_REFRESH_SECRET: super_secret_refresh_jwt_key_nyaya_setu_prod_2026
       CLIENT_URL: http://localhost:5173
     depends_on:
-      - mongodb
-      - redis
+      mongodb:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      ai-engine:
+        condition: service_started
     networks:
       - nyaya_net
 
-  # Python FastAPI AI Microservice
+  # Python FastAPI Case Intelligence & RAG AI Engine
   ai-engine:
     build:
       context: ../ai-engine
@@ -64,12 +79,14 @@ services:
     environment:
       REDIS_HOST: redis
       REDIS_PORT: 6379
+      ENVIRONMENT: production
     depends_on:
-      - redis
+      redis:
+        condition: service_healthy
     networks:
       - nyaya_net
 
-  # React Frontend
+  # React + Tailwind Production Nginx Frontend
   frontend:
     build:
       context: ../frontend
@@ -85,7 +102,9 @@ services:
 
 volumes:
   mongo_data:
+    driver: local
   redis_data:
+    driver: local
 
 networks:
   nyaya_net:

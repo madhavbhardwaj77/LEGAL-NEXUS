@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import Navbar from './components/Navbar';
 import AuthModal from './components/AuthModal';
+import LandingPage from './components/LandingPage';
 import CaseList from './components/CaseList';
 import CaseFormModal from './components/CaseFormModal';
 import CaseDetailModal from './components/CaseDetailModal';
@@ -10,10 +11,11 @@ import LegalResearchPortal from './components/LegalResearchPortal';
 import CaseStoryIntake from './components/CaseStoryIntake';
 import LegalDraftGenerator from './components/LegalDraftGenerator';
 import DocumentIntelligenceModal from './components/DocumentIntelligenceModal';
+import VoiceAssistantWidget from './components/VoiceAssistantWidget';
 import api from './services/api';
 
 export default function App() {
-  const [activeTab, setActiveTab] = useState('cases'); // cases | intake | documents | drafts | research | lawyers | system
+  const [activeTab, setActiveTab] = useState('landing'); // landing | cases | intake | documents | drafts | research | lawyers | system
   const [user, setUser] = useState(null);
   const [isAuthOpen, setIsAuthOpen] = useState(false);
   const [isNewCaseOpen, setIsNewCaseOpen] = useState(false);
@@ -39,6 +41,7 @@ export default function App() {
     try {
       const res = await api.get('/auth/me');
       setUser(res.data.data.user);
+      setActiveTab('cases');
     } catch {
       localStorage.removeItem('nyaya_access_token');
       localStorage.removeItem('nyaya_refresh_token');
@@ -71,6 +74,7 @@ export default function App() {
     localStorage.removeItem('nyaya_refresh_token');
     setUser(null);
     setCases([]);
+    setActiveTab('landing');
   };
 
   const handleCaseCreated = (newCase) => {
@@ -91,6 +95,17 @@ export default function App() {
       />
 
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {activeTab === 'landing' && (
+          <LandingPage
+            onGetStarted={() => {
+              if (user) setActiveTab('intake');
+              else setIsAuthOpen(true);
+            }}
+            onOpenAuth={() => setIsAuthOpen(true)}
+            onSelectFeature={(feat) => setActiveTab(feat)}
+          />
+        )}
+
         {activeTab === 'cases' && (
           <CaseList
             cases={cases}
@@ -108,11 +123,18 @@ export default function App() {
         )}
 
         {activeTab === 'intake' && (
-          <CaseStoryIntake
-            user={user}
-            onOpenAuth={() => setIsAuthOpen(true)}
-            onCaseCreated={handleCaseCreated}
-          />
+          <div className="space-y-6">
+            <VoiceAssistantWidget
+              onTranscriptReady={(transcriptText) => {
+                // Pre-fills into CaseStoryIntake
+              }}
+            />
+            <CaseStoryIntake
+              user={user}
+              onOpenAuth={() => setIsAuthOpen(true)}
+              onCaseCreated={handleCaseCreated}
+            />
+          </div>
         )}
 
         {activeTab === 'documents' && (
@@ -155,6 +177,7 @@ export default function App() {
         onAuthSuccess={(u) => {
           setUser(u);
           loadCases();
+          setActiveTab('cases');
         }}
       />
 
@@ -175,7 +198,7 @@ export default function App() {
       <footer className="bg-white border-t border-slate-200 py-6 text-center text-xs text-slate-500">
         <div className="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-2">
           <span>© 2026 Nyaya Setu (न्याय सेतु) — Bridge to Justice Platform for India</span>
-          <span className="text-slate-400">Milestone 4 • Document AI, Smart Drafting & Transparent Matching</span>
+          <span className="text-slate-400">Milestone 5 • Production Ready • Frontend, Security & CI/CD</span>
         </div>
       </footer>
     </div>

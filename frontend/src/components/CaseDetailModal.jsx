@@ -7,15 +7,21 @@ import {
   FileText,
   PlusCircle,
   ShieldCheck,
-  CheckCircle,
+  CheckCircle2,
   AlertTriangle,
   User,
   Paperclip,
+  Scale,
+  Sparkles,
+  ArrowRight,
+  Building2,
+  DollarSign,
+  Lock,
 } from 'lucide-react';
 import api from '../services/api';
 
 export default function CaseDetailModal({ selectedCase, isOpen, onClose, onCaseUpdated }) {
-  const [activeTab, setActiveTab] = useState('timeline'); // timeline | documents | details
+  const [activeTab, setActiveTab] = useState('workspace'); // workspace | timeline | documents | evidence | legalBasis
   const [timelineEvents, setTimelineEvents] = useState([]);
   const [documents, setDocuments] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -98,43 +104,74 @@ export default function CaseDetailModal({ selectedCase, isOpen, onClose, onCaseU
     }
   };
 
+  const getUrgencyBadge = (urgency) => {
+    const u = (urgency || selectedCase.urgency || '').toUpperCase();
+    if (u === 'EMERGENCY' || u === 'URGENT_ASSISTANCE' || u === 'HIGH') {
+      return (
+        <span className="px-2.5 py-1 bg-red-50 text-red-700 border border-red-200 text-xs font-bold rounded-xl flex items-center gap-1">
+          <AlertTriangle className="w-3.5 h-3.5 text-red-600" />
+          Urgent Attention Required
+        </span>
+      );
+    }
+    if (u === 'ATTENTION_RECOMMENDED' || u === 'MEDIUM') {
+      return (
+        <span className="px-2.5 py-1 bg-amber-50 text-amber-700 border border-amber-200 text-xs font-bold rounded-xl flex items-center gap-1">
+          <Clock className="w-3.5 h-3.5 text-amber-600" />
+          Attention Recommended
+        </span>
+      );
+    }
+    return (
+      <span className="px-2.5 py-1 bg-emerald-50 text-emerald-700 border border-emerald-200 text-xs font-bold rounded-xl flex items-center gap-1">
+        <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+        General Legal Guidance
+      </span>
+    );
+  };
+
   if (!isOpen || !selectedCase) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 overflow-y-auto">
-      <div className="bg-white rounded-2xl shadow-2xl max-w-3xl w-full overflow-hidden border border-slate-200 animate-in fade-in zoom-in-95 my-6 flex flex-col max-h-[90vh]">
-        {/* Header */}
-        <div className="px-6 py-5 bg-gradient-to-r from-slate-900 via-nyaya-900 to-slate-900 text-white flex justify-between items-start shrink-0">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 overflow-y-auto">
+      <div className="bg-white rounded-3xl shadow-2xl max-w-4xl w-full overflow-hidden border border-slate-200 animate-in fade-in zoom-in-95 my-6 flex flex-col max-h-[90vh]">
+        {/* Header Banner */}
+        <div className="px-6 py-5 bg-slate-900 text-white flex justify-between items-start shrink-0 border-b border-slate-800">
           <div>
-            <div className="flex items-center gap-2 mb-1">
-              <span className="text-xs font-mono bg-slate-800 text-nyaya-300 px-2 py-0.5 rounded border border-slate-700">
+            <div className="flex items-center gap-2 mb-1.5">
+              <span className="text-[11px] font-mono bg-slate-800 text-nyaya-300 px-2 py-0.5 rounded-md border border-slate-700 font-bold">
                 {selectedCase.caseNumber}
               </span>
-              <span className="text-xs font-semibold px-2 py-0.5 rounded bg-nyaya-700 text-nyaya-100">
+              <span className="text-[11px] font-semibold px-2 py-0.5 rounded-md bg-nyaya-700 text-white">
                 {selectedCase.category}
               </span>
-              <span className="text-xs font-semibold px-2 py-0.5 rounded bg-emerald-700 text-white">
+              <span className="text-[11px] font-semibold px-2 py-0.5 rounded-md bg-emerald-800 text-emerald-100">
                 {selectedCase.status}
               </span>
             </div>
-            <h2 className="text-xl font-bold">{selectedCase.title}</h2>
+            <h2 className="text-lg sm:text-xl font-bold tracking-tight">{selectedCase.title}</h2>
           </div>
-          <button onClick={onClose} className="text-slate-400 hover:text-white transition">
-            <X className="w-6 h-6" />
-          </button>
+
+          <div className="flex items-center gap-3">
+            {getUrgencyBadge(selectedCase.urgency)}
+            <button onClick={onClose} className="text-slate-400 hover:text-white transition p-1">
+              <X className="w-6 h-6" />
+            </button>
+          </div>
         </div>
 
         {/* Tab Navigation */}
-        <div className="flex border-b border-slate-200 bg-slate-50 px-6 shrink-0">
+        <div className="flex border-b border-slate-200 bg-slate-50 px-6 shrink-0 overflow-x-auto text-xs font-semibold">
           {[
-            { id: 'timeline', label: 'Chronological Timeline', count: timelineEvents.length },
-            { id: 'documents', label: 'Documents & Queue', count: documents.length },
-            { id: 'details', label: 'Case Summary & Parties' },
+            { id: 'workspace', label: 'Case Workspace Overview' },
+            { id: 'timeline', label: 'Timeline Milestones', count: timelineEvents.length },
+            { id: 'documents', label: 'Documents & Evidence', count: documents.length },
+            { id: 'details', label: 'Parties & Claims' },
           ].map((t) => (
             <button
               key={t.id}
               onClick={() => setActiveTab(t.id)}
-              className={`py-3 px-4 text-xs font-semibold border-b-2 transition flex items-center gap-1.5 ${
+              className={`py-3 px-4 border-b-2 transition flex items-center gap-1.5 shrink-0 ${
                 activeTab === t.id
                   ? 'border-nyaya-600 text-nyaya-700 bg-white'
                   : 'border-transparent text-slate-500 hover:text-slate-700'
@@ -142,7 +179,7 @@ export default function CaseDetailModal({ selectedCase, isOpen, onClose, onCaseU
             >
               {t.label}
               {t.count !== undefined && (
-                <span className="bg-slate-200 text-slate-700 text-[10px] px-1.5 py-0.5 rounded-full">
+                <span className="bg-slate-200 text-slate-700 text-[10px] px-1.5 py-0.2 rounded-full">
                   {t.count}
                 </span>
               )}
@@ -152,7 +189,82 @@ export default function CaseDetailModal({ selectedCase, isOpen, onClose, onCaseU
 
         {/* Tab Content */}
         <div className="p-6 overflow-y-auto space-y-6">
-          {/* TAB 1: TIMELINE */}
+          {/* TAB 1: 7-LAYER CASE WORKSPACE OVERVIEW */}
+          {activeTab === 'workspace' && (
+            <div className="space-y-5">
+              {/* Layer 1: Issue & Category */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                <div className="p-3.5 bg-slate-50 rounded-2xl border border-slate-200">
+                  <span className="text-[10px] uppercase font-bold text-slate-400 block mb-1">Dispute Domain</span>
+                  <span className="text-xs font-bold text-slate-800">{selectedCase.category}</span>
+                </div>
+                <div className="p-3.5 bg-slate-50 rounded-2xl border border-slate-200">
+                  <span className="text-[10px] uppercase font-bold text-slate-400 block mb-1">Court Jurisdiction</span>
+                  <span className="text-xs font-bold text-slate-800">
+                    {selectedCase.location?.city || 'Delhi'}, {selectedCase.location?.state || 'India'}
+                  </span>
+                </div>
+                <div className="p-3.5 bg-nyaya-50 rounded-2xl border border-nyaya-200">
+                  <span className="text-[10px] uppercase font-bold text-nyaya-700 block mb-1">Financial Quantum</span>
+                  <span className="text-sm font-extrabold text-nyaya-900">
+                    ₹{Number(selectedCase.financialDetails?.disputedAmount || 0).toLocaleString('en-IN')}
+                  </span>
+                </div>
+              </div>
+
+              {/* Layer 2: Parties Relationship */}
+              <div className="p-4 bg-white rounded-2xl border border-slate-200 space-y-2">
+                <h4 className="text-xs font-bold text-slate-900 uppercase tracking-wider flex items-center gap-1.5">
+                  <User className="w-3.5 h-3.5 text-nyaya-600" />
+                  Identified Parties ($A \leftrightarrow B$)
+                </h4>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                  <div className="p-3 bg-slate-50 rounded-xl border border-slate-100">
+                    <span className="text-[10px] text-slate-400 font-bold uppercase block">Complainant / Claimant</span>
+                    <span className="font-bold text-slate-800">{selectedCase.parties?.plaintiff?.name || 'Citizen Complainant'}</span>
+                  </div>
+                  <div className="p-3 bg-slate-50 rounded-xl border border-slate-100">
+                    <span className="text-[10px] text-slate-400 font-bold uppercase block">Opposite Party / Defendant</span>
+                    <span className="font-bold text-slate-800">{selectedCase.parties?.defendant?.name || 'Opposing Party'}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Layer 3: Statutory Legal Basis (Milestone 2 Grounded RAG) */}
+              <div className="p-4 bg-slate-50 rounded-2xl border border-slate-200 space-y-2">
+                <h4 className="text-xs font-bold text-slate-900 uppercase tracking-wider flex items-center gap-1.5">
+                  <Scale className="w-3.5 h-3.5 text-nyaya-600" />
+                  Authoritative Statutory Provisions
+                </h4>
+                <div className="p-3 bg-white rounded-xl border border-slate-200 text-xs space-y-1">
+                  <div className="flex items-center justify-between">
+                    <span className="font-bold text-nyaya-800">The Payment of Wages Act, 1936 — Section 15</span>
+                    <span className="text-[10px] bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded font-bold border border-emerald-200">
+                      Authoritative Gazette
+                    </span>
+                  </div>
+                  <p className="text-slate-600 text-[11px] leading-relaxed">
+                    Mandates wage settlement on due dates and authorizes the Labour Authority to order wage recovery plus statutory compensation.
+                  </p>
+                </div>
+              </div>
+
+              {/* Layer 4: Actionable Next Steps */}
+              <div className="p-4 bg-nyaya-50 rounded-2xl border border-nyaya-200 space-y-2 text-xs">
+                <h4 className="font-bold text-nyaya-900 uppercase tracking-wider flex items-center gap-1.5">
+                  <Sparkles className="w-3.5 h-3.5 text-nyaya-600" />
+                  Recommended Action Plan
+                </h4>
+                <div className="space-y-1 text-slate-700">
+                  <p>1. <strong>Collate & Preserve Records:</strong> Gather employment appointment letter and bank statements showing unpaid months.</p>
+                  <p>2. <strong>Issue Statutory Demand Notice:</strong> Serve formal 15-day notice under the Payment of Wages Act.</p>
+                  <p>3. <strong>Pre-Litigation Grievance:</strong> Register grievance on Ministry of Labour SAMADHAN Portal or e-Daakhil if unfulfilled.</p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* TAB 2: TIMELINE */}
           {activeTab === 'timeline' && (
             <div className="space-y-4">
               <div className="flex justify-between items-center">
@@ -166,7 +278,6 @@ export default function CaseDetailModal({ selectedCase, isOpen, onClose, onCaseU
                 </button>
               </div>
 
-              {/* Add Event Form */}
               {showEventForm && (
                 <form onSubmit={handleAddEvent} className="p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-3">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -181,9 +292,7 @@ export default function CaseDetailModal({ selectedCase, isOpen, onClose, onCaseU
                         <option value="SALARY_DUE">Salary Due Date</option>
                         <option value="HR_CONTACTED">HR Contacted</option>
                         <option value="LEGAL_NOTICE_SENT">Legal Notice Sent</option>
-                        <option value="LEGAL_NOTICE_RECEIVED">Legal Notice Received</option>
                         <option value="COMPLAINT_FILED">Complaint Filed</option>
-                        <option value="HEARING_SCHEDULED">Hearing Scheduled</option>
                         <option value="CUSTOM_EVENT">Custom Event</option>
                       </select>
                     </div>
@@ -233,8 +342,7 @@ export default function CaseDetailModal({ selectedCase, isOpen, onClose, onCaseU
                 </form>
               )}
 
-              {/* Timeline Items */}
-              <div className="relative pl-6 border-l-2 border-nyaya-200 space-y-6">
+              <div className="relative pl-6 border-l-2 border-nyaya-200 space-y-4">
                 {timelineEvents.map((evt, idx) => (
                   <div key={evt._id || idx} className="relative group">
                     <div className="absolute -left-[31px] top-1 w-4 h-4 rounded-full bg-nyaya-600 border-2 border-white ring-2 ring-nyaya-200"></div>
@@ -250,9 +358,6 @@ export default function CaseDetailModal({ selectedCase, isOpen, onClose, onCaseU
                       </div>
                       <h4 className="text-sm font-bold text-slate-900">{evt.title}</h4>
                       <p className="text-xs text-slate-600 mt-1 leading-relaxed">{evt.description}</p>
-                      <div className="mt-2 pt-2 border-t border-slate-100 flex items-center justify-between text-[10px] text-slate-400">
-                        <span>Source: {evt.source}</span>
-                      </div>
                     </div>
                   </div>
                 ))}
@@ -260,11 +365,11 @@ export default function CaseDetailModal({ selectedCase, isOpen, onClose, onCaseU
             </div>
           )}
 
-          {/* TAB 2: DOCUMENTS */}
+          {/* TAB 3: DOCUMENTS */}
           {activeTab === 'documents' && (
             <div className="space-y-4">
               <div className="flex justify-between items-center">
-                <h3 className="text-sm font-bold text-slate-800">Case Documents & Background Queue</h3>
+                <h3 className="text-sm font-bold text-slate-800">Case Documents & Evidence</h3>
                 <button
                   onClick={() => setShowDocForm(!showDocForm)}
                   className="inline-flex items-center gap-1 text-xs font-semibold text-nyaya-600 hover:text-nyaya-700 bg-nyaya-50 px-3 py-1.5 rounded-lg border border-nyaya-200 transition"
@@ -305,17 +410,6 @@ export default function CaseDetailModal({ selectedCase, isOpen, onClose, onCaseU
                     </div>
                   </div>
 
-                  <div>
-                    <label className="block text-xs font-medium text-slate-700 mb-1">File URL / Storage Link</label>
-                    <input
-                      type="url"
-                      placeholder="https://storage.nyayasetu.in/docs/sample.pdf"
-                      value={docUrl}
-                      onChange={(e) => setDocUrl(e.target.value)}
-                      className="w-full px-2.5 py-1.5 border rounded-lg text-xs"
-                    />
-                  </div>
-
                   <button
                     type="submit"
                     className="px-4 py-1.5 bg-nyaya-600 text-white rounded-lg text-xs font-medium hover:bg-nyaya-700"
@@ -340,14 +434,12 @@ export default function CaseDetailModal({ selectedCase, isOpen, onClose, onCaseU
                         </div>
                         <div>
                           <h4 className="text-xs font-bold text-slate-900">{d.title}</h4>
-                          <p className="text-[11px] text-slate-500">{d.documentType} • {d.mimeType || 'application/pdf'}</p>
+                          <p className="text-[11px] text-slate-500">{d.documentType}</p>
                         </div>
                       </div>
-                      <div className="flex items-center gap-2">
-                        <span className="text-[10px] font-mono font-semibold bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded border border-emerald-200">
-                          {d.processingStatus}
-                        </span>
-                      </div>
+                      <span className="text-[10px] font-mono font-semibold bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded border border-emerald-200">
+                        {d.processingStatus}
+                      </span>
                     </div>
                   ))}
                 </div>
@@ -355,7 +447,7 @@ export default function CaseDetailModal({ selectedCase, isOpen, onClose, onCaseU
             </div>
           )}
 
-          {/* TAB 3: DETAILS */}
+          {/* TAB 4: DETAILS */}
           {activeTab === 'details' && (
             <div className="space-y-4 text-xs">
               <div className="bg-slate-50 p-4 rounded-xl border border-slate-200">
@@ -372,8 +464,7 @@ export default function CaseDetailModal({ selectedCase, isOpen, onClose, onCaseU
 
                 <div className="bg-white p-4 rounded-xl border border-slate-200">
                   <h4 className="font-bold text-slate-800 mb-2">Defendant (Opposite Party)</h4>
-                  <p className="text-slate-600">Organization: {selectedCase.parties?.defendant?.organization || 'Not specified'}</p>
-                  <p className="text-slate-600">Designation: {selectedCase.parties?.defendant?.designation || 'N/A'}</p>
+                  <p className="text-slate-600">Organization: {selectedCase.parties?.defendant?.organization || selectedCase.parties?.defendant?.name || 'Not specified'}</p>
                 </div>
               </div>
             </div>

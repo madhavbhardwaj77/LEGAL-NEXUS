@@ -1,6 +1,7 @@
 const express = require('express');
 const { body } = require('express-validator');
 const {
+  handleVoiceTranscribe,
   handleStoryIntake,
   handleCaseAnalyze,
   handleChatIntake,
@@ -12,7 +13,7 @@ const {
   getAiTaskStatus,
   getAiWorkerStatus,
 } = require('../controllers/aiController');
-const { authenticateJWT } = require('../middleware/auth');
+const { authenticateJWT, optionalAuth } = require('../middleware/auth');
 const { validate } = require('../middleware/validate');
 const { auditLogMiddleware } = require('../middleware/auditLog');
 
@@ -23,6 +24,9 @@ router.get('/status', getAiWorkerStatus);
 
 // GET /api/ai/domains
 router.get('/domains', handleGetDomains);
+
+// POST /api/ai/voice/transcribe (Speech-to-Text)
+router.post('/voice/transcribe', optionalAuth, handleVoiceTranscribe);
 
 // POST /api/ai/intake (Parse story & clarifying questions)
 router.post(
