@@ -1,6 +1,10 @@
 const express = require('express');
 const { body } = require('express-validator');
 const {
+  handleStoryIntake,
+  handleCaseAnalyze,
+  handleChatIntake,
+  handleConvertIntakeToCase,
   handleLegalResearch,
   handleVerifyCitation,
   handleGetDomains,
@@ -20,7 +24,42 @@ router.get('/status', getAiWorkerStatus);
 // GET /api/ai/domains
 router.get('/domains', handleGetDomains);
 
-// POST /api/ai/research (Legal RAG endpoint - open to authenticated users)
+// POST /api/ai/intake (Parse story & clarifying questions)
+router.post(
+  '/intake',
+  authenticateJWT,
+  [body('story').notEmpty().withMessage('Story is required'), validate],
+  auditLogMiddleware('AI_INTAKE_PROCESSED', 'AI_CASE'),
+  handleStoryIntake
+);
+
+// POST /api/ai/analyze (Full multi-agent case analysis)
+router.post(
+  '/analyze',
+  authenticateJWT,
+  [body('story').notEmpty().withMessage('Story is required'), validate],
+  auditLogMiddleware('AI_CASE_ANALYZED', 'AI_CASE'),
+  handleCaseAnalyze
+);
+
+// POST /api/ai/chat (Conversational case intake turn)
+router.post(
+  '/chat',
+  authenticateJWT,
+  [body('message').notEmpty().withMessage('Message is required'), validate],
+  handleChatIntake
+);
+
+// POST /api/ai/intake-to-case (Convert AI intake to formal Case record)
+router.post(
+  '/intake-to-case',
+  authenticateJWT,
+  [body('structuredCase').notEmpty().withMessage('Structured case is required'), validate],
+  auditLogMiddleware('CASE_CREATED_FROM_AI_INTAKE', 'CASE'),
+  handleConvertIntakeToCase
+);
+
+// POST /api/ai/research (Legal RAG endpoint)
 router.post(
   '/research',
   authenticateJWT,
