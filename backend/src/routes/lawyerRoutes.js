@@ -1,11 +1,42 @@
 const express = require('express');
-const { searchLawyersDirectory, getLawyerDetails } = require('../controllers/lawyerController');
-const { authenticateJWT } = require('../middleware/auth');
+const { body } = require('express-validator');
+const {
+  matchLawyersForCase,
+  publishCaseStudy,
+  listCaseStudies,
+  searchLawyersDirectory,
+  getLawyerDetails,
+} = require('../controllers/lawyerController');
+const { authenticateJWT, optionalAuth } = require('../middleware/auth');
+const { validate } = require('../middleware/validate');
+const { auditLogMiddleware } = require('../middleware/auditLog');
 
 const router = express.Router();
 
-// Allow authenticated users to search directory
-router.get('/', authenticateJWT, searchLawyersDirectory);
-router.get('/:id', authenticateJWT, getLawyerDetails);
+// POST /api/lawyers/match (Multi-factor weighted lawyer matching)
+router.post('/match', authenticateJWT, matchLawyersForCase);
+
+// POST /api/lawyers/case-studies (Publish anonymized case study)
+router.post(
+  '/case-studies',
+  authenticateJWT,
+  [
+    body('title').notEmpty().withMessage('Title is required'),
+    body('summary').notEmpty().withMessage('Summary is required'),
+    body('outcome').notEmpty().withMessage('Outcome is required'),
+    validate,
+  ],
+  auditLogMiddleware('CASE_STUDY_PUBLISHED', 'CASE_STUDY'),
+  publishCaseStudy
+);
+
+// GET /api/lawyers/case-studies
+router.get('/case-studies', listCaseStudies);
+
+// GET /api/lawyers
+router.get('/', optionalAuth, searchLawyersDirectory);
+
+// GET /api/lawyers/:id
+router.get('/:id', optionalAuth, getLawyerDetails);
 
 module.exports = router;

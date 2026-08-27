@@ -1,5 +1,17 @@
 import React from 'react';
-import { Scale, ShieldCheck, UserCheck, LogOut, LogIn, Activity, Briefcase, Sparkles, Bot } from 'lucide-react';
+import {
+  Scale,
+  ShieldCheck,
+  UserCheck,
+  LogOut,
+  LogIn,
+  Activity,
+  Briefcase,
+  Sparkles,
+  Bot,
+  FileText,
+  PenTool,
+} from 'lucide-react';
 
 export default function Navbar({
   user,
@@ -30,76 +42,99 @@ export default function Navbar({
           <nav className="hidden md:flex items-center space-x-1">
             <button
               onClick={() => setActiveTab('cases')}
-              className={`px-3.5 py-2 rounded-lg text-sm font-medium transition-all ${
+              className={`px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-all ${
                 activeTab === 'cases'
                   ? 'bg-nyaya-700 text-white shadow-sm'
                   : 'text-slate-300 hover:bg-slate-800 hover:text-white'
               }`}
             >
-              <span className="flex items-center gap-2">
-                <Briefcase className="w-4 h-4" />
-                Cases & Timeline
+              <span className="flex items-center gap-1.5">
+                <Briefcase className="w-3.5 h-3.5" />
+                Cases
               </span>
             </button>
 
             <button
               onClick={() => setActiveTab('intake')}
-              className={`px-3.5 py-2 rounded-lg text-sm font-medium transition-all ${
+              className={`px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-all ${
                 activeTab === 'intake'
                   ? 'bg-nyaya-700 text-white shadow-sm'
                   : 'text-slate-300 hover:bg-slate-800 hover:text-white'
               }`}
             >
-              <span className="flex items-center gap-2">
-                <Bot className="w-4 h-4 text-nyaya-400" />
-                AI Case Intake
-                <span className="text-[10px] bg-nyaya-500/30 text-nyaya-200 border border-nyaya-400/30 px-1.5 py-0.5 rounded-full font-bold">Agentic</span>
+              <span className="flex items-center gap-1.5">
+                <Bot className="w-3.5 h-3.5 text-nyaya-400" />
+                AI Intake
+              </span>
+            </button>
+
+            <button
+              onClick={() => setActiveTab('documents')}
+              className={`px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-all ${
+                activeTab === 'documents'
+                  ? 'bg-nyaya-700 text-white shadow-sm'
+                  : 'text-slate-300 hover:bg-slate-800 hover:text-white'
+              }`}
+            >
+              <span className="flex items-center gap-1.5">
+                <FileText className="w-3.5 h-3.5 text-nyaya-400" />
+                Document AI
+              </span>
+            </button>
+
+            <button
+              onClick={() => setActiveTab('drafts')}
+              className={`px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-all ${
+                activeTab === 'drafts'
+                  ? 'bg-nyaya-700 text-white shadow-sm'
+                  : 'text-slate-300 hover:bg-slate-800 hover:text-white'
+              }`}
+            >
+              <span className="flex items-center gap-1.5">
+                <PenTool className="w-3.5 h-3.5 text-nyaya-400" />
+                Drafting
               </span>
             </button>
 
             <button
               onClick={() => setActiveTab('research')}
-              className={`px-3.5 py-2 rounded-lg text-sm font-medium transition-all ${
+              className={`px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-all ${
                 activeTab === 'research'
                   ? 'bg-nyaya-700 text-white shadow-sm'
                   : 'text-slate-300 hover:bg-slate-800 hover:text-white'
               }`}
             >
-              <span className="flex items-center gap-2">
-                <Sparkles className="w-4 h-4 text-nyaya-400" />
-                Legal Research
-                <span className="text-[10px] bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-1.5 py-0.5 rounded-full font-bold">RAG</span>
+              <span className="flex items-center gap-1.5">
+                <Sparkles className="w-3.5 h-3.5 text-nyaya-400" />
+                Research
               </span>
             </button>
 
             <button
               onClick={() => setActiveTab('lawyers')}
-              className={`px-3.5 py-2 rounded-lg text-sm font-medium transition-all ${
+              className={`px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-all ${
                 activeTab === 'lawyers'
                   ? 'bg-nyaya-700 text-white shadow-sm'
                   : 'text-slate-300 hover:bg-slate-800 hover:text-white'
               }`}
             >
-              <span className="flex items-center gap-2">
-                <UserCheck className="w-4 h-4" />
-                Legal Directory
+              <span className="flex items-center gap-1.5">
+                <UserCheck className="w-3.5 h-3.5" />
+                Ecosystem
               </span>
             </button>
 
             <button
               onClick={() => setActiveTab('system')}
-              className={`px-3.5 py-2 rounded-lg text-sm font-medium transition-all ${
+              className={`px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-all ${
                 activeTab === 'system'
                   ? 'bg-nyaya-700 text-white shadow-sm'
                   : 'text-slate-300 hover:bg-slate-800 hover:text-white'
               }`}
             >
-              <span className="flex items-center gap-2">
-                <Activity className="w-4 h-4" />
-                System Health
-                {healthStatus?.status === 'OPERATIONAL' && (
-                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-                )}
+              <span className="flex items-center gap-1.5">
+                <Activity className="w-3.5 h-3.5" />
+                Health
               </span>
             </button>
           </nav>
@@ -109,7 +144,7 @@ export default function Navbar({
             {user ? (
               <div className="flex items-center space-x-3 bg-slate-800/80 px-3 py-1.5 rounded-lg border border-slate-700">
                 <div className="flex flex-col text-right">
-                  <span className="text-xs font-medium text-white truncate max-w-[150px]">
+                  <span className="text-xs font-medium text-white truncate max-w-[140px]">
                     {user.email}
                   </span>
                   <span className="text-[10px] font-semibold uppercase tracking-wider text-nyaya-500">

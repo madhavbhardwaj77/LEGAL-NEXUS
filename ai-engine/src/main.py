@@ -1,6 +1,6 @@
 """
 Nyaya Setu AI Engine Microservice
-FastAPI Application for Legal Research, Case Intelligence, and Multi-Agent Workflow
+FastAPI Application for Legal Research, Case Intelligence, Document Analysis, Drafting, and Lawyer Matching
 """
 
 import os
@@ -22,11 +22,15 @@ from .agents.classification import ClassificationAgent
 from .agents.evidence import EvidenceAgent
 from .agents.risk import RiskUrgencyAgent
 from .agents.verification import VerificationAgent
+from .document.document_analyzer import document_analyzer
+from .drafting.draft_generator import DraftGenerator
+from .drafting.draft_fact_checker import draft_fact_checker
+from .matching.matcher import LawyerMatcher
 from .schemas.case_schemas import StructuredCaseState
 
 app = FastAPI(
     title="Nyaya Setu Legal AI Engine",
-    description="Case Intelligence Engine & Multi-Agent Legal Workflow Microservice",
+    description="Case Intelligence, Document AI, Smart Drafting & Lawyer Matching Microservice",
     version=settings.version
 )
 
@@ -52,6 +56,23 @@ class ChatTurnRequest(BaseModel):
     message: str = Field(..., description="User message")
     conversationHistory: Optional[List[Dict[str, str]]] = Field(default_factory=list)
     currentCase: Optional[Dict[str, Any]] = None
+
+class DocumentAnalysisRequest(BaseModel):
+    content: str = Field(..., description="Document text or OCR extracted content")
+    filename: Optional[str] = Field("document.pdf", description="File name")
+
+class DraftGenerateRequest(BaseModel):
+    draftType: str = Field(..., description="Draft type e.g. STATUTORY_LEGAL_NOTICE, CONSUMER_FORUM_COMPLAINT")
+    caseData: Dict[str, Any] = Field(..., description="Structured case parameters")
+    variables: Optional[Dict[str, Any]] = Field(default_factory=dict)
+
+class DraftVerifyRequest(BaseModel):
+    draftContent: str = Field(..., description="Generated draft markdown content")
+    caseData: Dict[str, Any] = Field(..., description="Structured case parameters")
+
+class LawyerMatchRequest(BaseModel):
+    lawyers: List[Dict[str, Any]] = Field(..., description="List of candidate lawyers")
+    caseProfile: Dict[str, Any] = Field(..., description="Case profile for matching")
 
 class ResearchRequest(BaseModel):
     query: str = Field(..., description="Legal scenario or question (English, Hindi, Hinglish)")
@@ -101,13 +122,54 @@ def health():
         "orchestrator": "LangGraph Multi-Agent Engine",
     }
 
+# ----------------- Milestone 4 Document Intelligence Endpoints -----------------
+
+@app.post("/ai/document/analyze")
+def analyze_document(req: DocumentAnalysisRequest):
+    """
+    Document Intelligence Endpoint:
+    OCR Layout -> Document Classification -> Entity Extraction -> Clause Segmentation -> Attention Detection -> RAG Linkage
+    """
+    if not req.content or not req.content.strip():
+        raise HTTPException(status_code=400, detail="Document content cannot be empty")
+
+    analysis = document_analyzer.analyze_document(req.content, filename=req.filename)
+    return analysis
+
+@app.post("/ai/draft/generate")
+def generate_legal_draft(req: DraftGenerateRequest):
+    """
+    Smart Draft Generator Endpoint:
+    Generates structured Indian legal drafts with fact verification and review disclaimer.
+    """
+    draft = DraftGenerator.generate_draft(req.draftType, req.caseData, variables=req.variables)
+    verification = draft_fact_checker.verify_draft(draft["contentMarkdown"], req.caseData)
+    draft["verification"] = verification
+    return draft
+
+@app.post("/ai/draft/verify")
+def verify_legal_draft(req: DraftVerifyRequest):
+    """
+    Draft Fact Checker Endpoint:
+    Compares draft content against case record facts and validates statutory citations.
+    """
+    return draft_fact_checker.verify_draft(req.draftContent, req.caseData)
+
+@app.post("/ai/lawyer/match")
+def match_lawyers_to_case(req: LawyerMatchRequest):
+    """
+    Multi-Factor Lawyer Matching Engine:
+    Weights: Practice Area 30%, Experience 25%, Location 15%, Language 10%, Budget 10%, Availability 10%
+    """
+    return {
+        "matchedLawyers": LawyerMatcher.match_lawyers(req.lawyers, req.caseProfile),
+        "totalCandidates": len(req.lawyers)
+    }
+
 # ----------------- Milestone 3 Case Intelligence Endpoints -----------------
 
 @app.post("/ai/intake")
 def process_intake(req: StoryIntakeRequest):
-    """
-    Intake Agent Endpoint: Parses narrative, extracts structured facts, identifies missing fields, and formulates clarifying questions.
-    """
     if not req.story or not req.story.strip():
         raise HTTPException(status_code=400, detail="Story narrative cannot be empty")
 
@@ -119,19 +181,12 @@ def process_intake(req: StoryIntakeRequest):
 
 @app.post("/ai/classify")
 def classify_dispute(req: StoryIntakeRequest):
-    """
-    Classification Agent Endpoint: Determines domain, issue, case type, jurisdiction, and initial urgency.
-    """
     intake_res = case_intelligence_service.process_story_intake(req.story)
     classification = case_intelligence_service.classify_story(intake_res)
     return classification
 
 @app.post("/ai/case/analyze")
 def analyze_case_end_to_end(req: CaseAnalyzeRequest):
-    """
-    End-to-End Multi-Agent Legal Workflow Endpoint:
-    Privacy -> Intake -> Classification -> Case Builder -> Research -> Evidence -> Urgency -> Verification -> Synthesis
-    """
     if not req.story or not req.story.strip():
         raise HTTPException(status_code=400, detail="Case story cannot be empty")
 
@@ -150,10 +205,6 @@ def analyze_case_end_to_end(req: CaseAnalyzeRequest):
 
 @app.post("/ai/chat")
 def handle_chat_intake(req: ChatTurnRequest):
-    """
-    Conversational Case-Building Endpoint:
-    Each turn updates the structured case object and returns an assistant response with tailored clarifying questions.
-    """
     if not req.message or not req.message.strip():
         raise HTTPException(status_code=400, detail="Message cannot be empty")
 
@@ -166,9 +217,6 @@ def handle_chat_intake(req: ChatTurnRequest):
 
 @app.post("/ai/evidence")
 def audit_evidence(case_data: Dict[str, Any]):
-    """
-    Evidence Agent Endpoint: Generates evidence checklist and identifies missing proof for a given structured case.
-    """
     try:
         case_obj = StructuredCaseState(**case_data)
     except Exception as e:
@@ -179,9 +227,6 @@ def audit_evidence(case_data: Dict[str, Any]):
 
 @app.post("/ai/urgency")
 def evaluate_urgency(case_data: Dict[str, Any]):
-    """
-    Legal Urgency & Attention Indicator Endpoint: Evaluates 🟢 General / 🟡 Attention / 🔴 Urgent level.
-    """
     try:
         case_obj = StructuredCaseState(**case_data)
     except Exception as e:
@@ -192,9 +237,6 @@ def evaluate_urgency(case_data: Dict[str, Any]):
 
 @app.post("/ai/verify")
 def verify_case_grounding(case_data: Dict[str, Any]):
-    """
-    Verification Agent Endpoint: Validates citation existence and ensures no hallucinated claims.
-    """
     try:
         case_obj = StructuredCaseState(**case_data.get("case", case_data))
     except Exception as e:

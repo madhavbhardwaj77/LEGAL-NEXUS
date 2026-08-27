@@ -35,6 +35,24 @@ const authenticateJWT = async (req, res, next) => {
   }
 };
 
+const optionalAuth = async (req, res, next) => {
+  try {
+    const authHeader = req.headers.authorization;
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      const token = authHeader.split(' ')[1];
+      const decoded = verifyAccessToken(token);
+      const user = await User.findById(decoded.id);
+      if (user && user.isActive) {
+        req.user = user;
+      }
+    }
+    next();
+  } catch {
+    next();
+  }
+};
+
 module.exports = {
   authenticateJWT,
+  optionalAuth,
 };

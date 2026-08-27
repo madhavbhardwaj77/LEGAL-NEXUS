@@ -1,16 +1,12 @@
 """
-Document Analysis & OCR Agent Stub (Milestone 4 Integration Hook)
+Document Intelligence Agent
+Performs OCR, layout extraction, document classification, entity parsing, and clause risk analysis
 """
 
 from typing import Dict, Any, List
+from ..document.document_analyzer import document_analyzer
 
 class DocumentAgent:
     @classmethod
-    def plan_document_tasks(cls, case_id: str, document_list: List[Dict[str, Any]]) -> Dict[str, Any]:
-        return {
-            "caseId": case_id,
-            "documentCount": len(document_list),
-            "pendingOcrJobs": [d.get("id") for d in document_list if d.get("status") == "QUEUED"],
-            "clauseAnalysisTarget": "COMPLIANCE_AND_RISK_AUDIT",
-            "status": "READY_FOR_OCR_PIPELINE"
-        }
+    def analyze_document_content(cls, file_content: str, filename: str = "document.pdf") -> Dict[str, Any]:
+        return document_analyzer.analyze_document(file_content, filename=filename)

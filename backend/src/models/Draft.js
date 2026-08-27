@@ -16,19 +16,25 @@ const draftSchema = new mongoose.Schema(
     draftType: {
       type: String,
       enum: [
+        'STATUTORY_LEGAL_NOTICE',
+        'CONSUMER_FORUM_COMPLAINT',
+        'EMPLOYER_WAGE_GRIEVANCE',
+        'LANDLORD_SECURITY_DEPOSIT_NOTICE',
+        'POLICE_CYBER_CRIME_COMPLAINT',
+        'RTI_APPLICATION',
+        'LEGAL_INFORMATION_SUMMARY',
         'LEGAL_NOTICE_EMPLOYMENT',
         'LEGAL_NOTICE_CHEQUE_BOUNCE',
         'LEGAL_NOTICE_CONSUMER',
         'LEGAL_NOTICE_PROPERTY',
         'WRITTEN_STATEMENT',
         'CONSUMER_COMPLAINT',
-        'RTI_APPLICATION',
         'BAIL_APPLICATION',
         'AFFIDAVIT',
         'GENERAL_LEGAL_NOTICE',
-        'CUSTOM_DRAFT'
+        'CUSTOM_DRAFT',
       ],
-      default: 'GENERAL_LEGAL_NOTICE',
+      default: 'STATUTORY_LEGAL_NOTICE',
       required: true,
     },
     templateId: {
@@ -44,7 +50,7 @@ const draftSchema = new mongoose.Schema(
     },
     generatedBy: {
       type: String,
-      enum: ['USER', 'LAWYER', 'AI_ENGINE'],
+      enum: ['USER', 'LAWYER', 'AI', 'AI_ENGINE'],
       default: 'USER',
     },
     createdBy: {
@@ -63,8 +69,8 @@ const draftSchema = new mongoose.Schema(
       index: true,
     },
     variables: {
-      type: Map,
-      of: String,
+      type: mongoose.Schema.Types.Mixed,
+      default: {},
     },
   },
   {

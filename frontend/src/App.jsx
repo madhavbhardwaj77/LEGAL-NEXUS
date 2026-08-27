@@ -8,10 +8,12 @@ import LawyerDirectory from './components/LawyerDirectory';
 import SystemHealth from './components/SystemHealth';
 import LegalResearchPortal from './components/LegalResearchPortal';
 import CaseStoryIntake from './components/CaseStoryIntake';
+import LegalDraftGenerator from './components/LegalDraftGenerator';
+import DocumentIntelligenceModal from './components/DocumentIntelligenceModal';
 import api from './services/api';
 
 export default function App() {
-  const [activeTab, setActiveTab] = useState('cases'); // cases | intake | research | lawyers | system
+  const [activeTab, setActiveTab] = useState('cases'); // cases | intake | documents | drafts | research | lawyers | system
   const [user, setUser] = useState(null);
   const [isAuthOpen, setIsAuthOpen] = useState(false);
   const [isNewCaseOpen, setIsNewCaseOpen] = useState(false);
@@ -113,6 +115,20 @@ export default function App() {
           />
         )}
 
+        {activeTab === 'documents' && (
+          <DocumentIntelligenceModal
+            user={user}
+            onOpenAuth={() => setIsAuthOpen(true)}
+          />
+        )}
+
+        {activeTab === 'drafts' && (
+          <LegalDraftGenerator
+            user={user}
+            onOpenAuth={() => setIsAuthOpen(true)}
+          />
+        )}
+
         {activeTab === 'research' && (
           <LegalResearchPortal
             user={user}
@@ -120,7 +136,12 @@ export default function App() {
           />
         )}
 
-        {activeTab === 'lawyers' && <LawyerDirectory />}
+        {activeTab === 'lawyers' && (
+          <LawyerDirectory
+            user={user}
+            onOpenAuth={() => setIsAuthOpen(true)}
+          />
+        )}
 
         {activeTab === 'system' && (
           <SystemHealth healthStatus={healthStatus} onRefresh={checkHealth} />
@@ -154,7 +175,7 @@ export default function App() {
       <footer className="bg-white border-t border-slate-200 py-6 text-center text-xs text-slate-500">
         <div className="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-2">
           <span>© 2026 Nyaya Setu (न्याय सेतु) — Bridge to Justice Platform for India</span>
-          <span className="text-slate-400">Milestone 3 • Case Intelligence Engine + Agentic AI</span>
+          <span className="text-slate-400">Milestone 4 • Document AI, Smart Drafting & Transparent Matching</span>
         </div>
       </footer>
     </div>

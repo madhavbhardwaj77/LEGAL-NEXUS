@@ -1,18 +1,11 @@
 """
-Lawyer Matching Recommendation Agent Stub (Milestone 6 Integration Hook)
+Lawyer Matching Recommendation Agent
 """
 
 from typing import Dict, Any, List
-from ..schemas.case_schemas import StructuredCaseState
+from ..matching.matcher import LawyerMatcher
 
 class LawyerMatchAgent:
     @classmethod
-    def plan_recommendations(cls, case: StructuredCaseState) -> Dict[str, Any]:
-        return {
-            "caseNumber": case.caseNumber,
-            "targetPracticeArea": case.category,
-            "targetJurisdiction": case.jurisdiction,
-            "recommendedExperienceMin": 3,
-            "proBonoEligible": case.financialDetails.get("disputedAmount", 0) < 50000,
-            "status": "CRITERIA_ESTABLISHED"
-        }
+    def match_case_to_lawyers(cls, lawyers: List[Dict[str, Any]], case_profile: Dict[str, Any]) -> List[Dict[str, Any]]:
+        return LawyerMatcher.match_lawyers(lawyers, case_profile)

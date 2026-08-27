@@ -1,6 +1,7 @@
 const express = require('express');
 const { body } = require('express-validator');
 const {
+  generateAiDraft,
   createDraft,
   listDrafts,
   getDraftById,
@@ -12,15 +13,22 @@ const { auditLogMiddleware } = require('../middleware/auditLog');
 
 const router = express.Router();
 
-router.use(authenticateJWT);
+// POST /api/drafts/generate-ai (AI Draft Generation)
+router.post(
+  '/generate-ai',
+  authenticateJWT,
+  [body('draftType').notEmpty().withMessage('Draft type is required'), validate],
+  auditLogMiddleware('AI_DRAFT_GENERATED', 'DRAFT'),
+  generateAiDraft
+);
 
 // POST /api/drafts
 router.post(
   '/',
+  authenticateJWT,
   [
-    body('title').notEmpty().withMessage('Draft title is required'),
+    body('title').notEmpty().withMessage('Title is required'),
     body('draftType').notEmpty().withMessage('Draft type is required'),
-    body('contentMarkdown').notEmpty().withMessage('Draft content is required'),
     validate,
   ],
   auditLogMiddleware('DRAFT_CREATED', 'DRAFT'),
@@ -28,16 +36,12 @@ router.post(
 );
 
 // GET /api/drafts
-router.get('/', listDrafts);
+router.get('/', authenticateJWT, listDrafts);
 
 // GET /api/drafts/:id
-router.get('/:id', getDraftById);
+router.get('/:id', authenticateJWT, getDraftById);
 
 // PATCH /api/drafts/:id
-router.patch(
-  '/:id',
-  auditLogMiddleware('DRAFT_UPDATED', 'DRAFT'),
-  updateDraft
-);
+router.patch('/:id', authenticateJWT, updateDraft);
 
 module.exports = router;
