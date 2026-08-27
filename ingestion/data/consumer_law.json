@@ -1,0 +1,130 @@
+{
+  "domain": "Consumer Protection Law",
+  "statutes": [
+    {
+      "act": "The Consumer Protection Act, 2019",
+      "actNumber": "Act No. 35 of 2019",
+      "authority": "Department of Consumer Affairs, Ministry of Consumer Affairs, Food and Public Distribution, Government of India",
+      "jurisdiction": "India",
+      "sourceUrl": "https://www.indiacode.nic.in/handle/123456789/15256",
+      "effectiveDate": "2020-07-20",
+      "chapters": [
+        {
+          "chapterNumber": "Chapter I",
+          "chapterTitle": "Preliminary Definitions",
+          "sections": [
+            {
+              "section": "Section 2(7)",
+              "sectionTitle": "Definition of Consumer",
+              "content": "Consumer means any person who: (i) buys any goods for a consideration which has been paid or promised or partly paid and partly promised; (ii) hires or avails of any service for a consideration. It includes offline and online transactions through electronic means or teleshopping or direct selling. Does not include a person who obtains goods for commercial resale purposes.",
+              "keywords": ["consumer definition", "online buyer", "ecommerce buyer", "service hirer", "consideration"],
+              "remedy": "Qualifies all individual buyers (online and offline) for consumer dispute protection."
+            },
+            {
+              "section": "Section 2(11)",
+              "sectionTitle": "Deficiency in Service",
+              "content": "Deficiency means any fault, imperfection, shortcoming or inadequacy in the quality, nature and manner of performance which is required to be maintained by or under any law for the time being in force or has been undertaken to be performed by a person in pursuance of a contract or otherwise in relation to any service. Includes: (i) any act of negligence or omission or commission by such person which causes loss or injury to the consumer; and (ii) deliberate withholding of relevant information by such person to the consumer.",
+              "keywords": ["deficiency in service", "faulty service", "service negligence", "incomplete service", "airline delay", "hospital negligence", "telecom fault", "builder delay", "warranty refund"],
+              "remedy": "Right to claim replacement, refund, and compensation for deficiency in service."
+            },
+            {
+              "section": "Section 2(47)",
+              "sectionTitle": "Unfair Trade Practice and Counterfeit / Fake Goods",
+              "content": "Unfair trade practice means a trade practice which, for the purpose of promoting the sale, use or supply of any goods or for the provision of any service, adopts any unfair method or deceptive practice. Includes: (i) falsely representing goods/services of particular standard/quality or brand; (ii) false warranty or guarantee; (iii) refusing to refund or replace defective or counterfeit goods within promised timeline; (iv) selling duplicate/fake products or disclosing consumer personal information without consent.",
+              "keywords": ["unfair trade practice", "misleading advertisement", "fake product", "counterfeit goods", "counterfeit shoes", "no refund policy", "false warranty", "deceptive pricing", "refused return"],
+              "remedy": "Prohibits deceptive trade practices and empowers commissions to award punitive damages and full refund."
+            }
+          ]
+        },
+        {
+          "chapterNumber": "Chapter IV",
+          "chapterTitle": "Consumer Disputes Redressal Commission",
+          "sections": [
+            {
+              "section": "Section 34",
+              "sectionTitle": "Jurisdiction of District Commission",
+              "content": "Subject to the other provisions of this Act, the District Commission shall have jurisdiction to entertain complaints where the value of the goods or services paid as consideration does not exceed fifty lakh rupees. A complaint may be instituted in a District Commission within the local limits of whose jurisdiction the complainant resides or personally works for gain.",
+              "keywords": ["district commission", "pecuniary jurisdiction", "place of filing", "residence filing", "local jurisdiction"],
+              "remedy": "File complaint in the District Commission where the consumer currently resides, without traveling to seller's location."
+            },
+            {
+              "section": "Section 35",
+              "sectionTitle": "Manner in which complaint shall be made",
+              "content": "A complaint, in relation to any goods sold or delivered or agreed to be sold or delivered or any service provided or agreed to be provided, may be filed with a District Commission by: (a) the consumer to whom such goods are sold or delivered or service provided; (b) any recognized consumer association; (c) central authority. The complaint may also be filed electronically (e-Daakhil). Every complaint shall be accompanied by such fee as may be specified.",
+              "keywords": ["filing consumer complaint", "e-daakhil", "online complaint filing", "manner of complaint", "consumer case procedure", "e-daakhil portal"],
+              "remedy": "Submit consumer complaint online via e-Daakhil without physical presence."
+            },
+            {
+              "section": "Section 38",
+              "sectionTitle": "Procedure on admission of complaint",
+              "content": "The District Commission shall refer a copy of the admitted complaint within twenty-one days to the opposite party directing him to give his version of the case within a period of thirty days or such extended period not exceeding fifteen days. Where the complaint alleges a defect in goods which cannot be determined without proper analysis or test, sample shall be sent to an appropriate laboratory.",
+              "keywords": ["admission procedure", "notice to opposite party", "30 days response time", "laboratory test", "sample analysis"],
+              "remedy": "Opposite party must respond within 30 days of notice."
+            },
+            {
+              "section": "Section 39",
+              "sectionTitle": "Findings of District Commission and Reliefs",
+              "content": "Where the District Commission is satisfied that the goods or services suffer from any of the defects or deficiencies specified in the complaint, it shall issue an order to the opposite party directing him to: (a) remove the defect; (b) replace goods with new goods of similar description; (c) return to complainant the price/charges paid along with interest; (d) pay compensation to consumer for loss or injury suffered due to negligence or mental harassment; (e) pay punitive damages; (f) cease and desist unfair trade practices.",
+              "keywords": ["consumer relief", "full refund", "replacement", "compensation for mental harassment", "punitive damages", "interest on refund", "litigation costs", "refund and compensation"],
+              "remedy": "Orders full refund with interest, mental harassment compensation, and litigation costs."
+            },
+            {
+              "section": "Section 69",
+              "sectionTitle": "Limitation period for filing consumer complaint",
+              "content": "The District Commission, State Commission or National Commission shall not admit a complaint unless it is filed within two years from the date on which the cause of action has arisen. A complaint may be entertained after period of two years if complainant satisfies the Commission that he had sufficient cause for not filing within such period.",
+              "keywords": ["consumer limitation period", "2 years limitation", "time limit to file consumer complaint", "condonation of delay", "limitation period time limit"],
+              "remedy": "Consumer complaint must be filed within 2 years from date of deficiency/defect."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "act": "Consumer Protection (E-Commerce) Rules, 2020",
+      "actNumber": "G.S.R. 458(E)",
+      "authority": "Central Consumer Protection Authority (CCPA), Government of India",
+      "jurisdiction": "India",
+      "sourceUrl": "https://consumeraffairs.nic.in/acts-and-rules/consumer-protection/consumer-protection-e-commerce-rules-2020",
+      "effectiveDate": "2020-07-23",
+      "chapters": [
+        {
+          "chapterNumber": "General Rules",
+          "chapterTitle": "Duties of E-Commerce Entities and Marketplace Sellers",
+          "sections": [
+            {
+              "section": "Rule 4",
+              "sectionTitle": "Mandatory Grievance Officer and Nodal Officer for E-Commerce Platforms",
+              "content": "Every e-commerce entity shall appoint a Grievance Officer for consumer grievance redressal and display his name, designation and contact details prominently on its platform. The Grievance Officer shall acknowledge receipt of any consumer complaint within forty-eight hours and redress the complaint within one month from date of receipt.",
+              "keywords": ["grievance officer", "ecommerce nodal officer", "48 hours acknowledgment", "1 month redressal", "amazon complaint", "flipkart complaint"],
+              "remedy": "E-commerce platform must acknowledge complaint within 48 hours and resolve within 30 days."
+            },
+            {
+              "section": "Rule 5",
+              "sectionTitle": "Liabilities of Marketplace and Inventory E-Commerce Entities",
+              "content": "No e-commerce entity shall adopt any unfair trade practice, whether in the course of business on its platform or otherwise. Every e-commerce entity shall effect all refunds within a reasonable period of time or as prescribed by the Reserve Bank of India or any other competent authority.",
+              "keywords": ["ecommerce refund", "fake product return", "marketplace liability", "return policy", "seller details"],
+              "remedy": "Platforms cannot deny refunds for defective, counterfeit, or misdescribed products."
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "grievanceSystems": [
+    {
+      "name": "National Consumer Helpline (NCH) / INGRAM Portal",
+      "authority": "Department of Consumer Affairs, Government of India",
+      "portalUrl": "https://consumerhelpline.gov.in",
+      "helpline": "1915 or 1800-11-4000",
+      "description": "Pre-litigation fast track resolution portal enabling consumers to lodge grievances against registered companies and e-commerce platforms with automated escalation and 85%+ pre-litigation resolution rate.",
+      "remedy": "Call toll-free 1915 or register grievance on consumerhelpline.gov.in for immediate company response within 15-30 days."
+    },
+    {
+      "name": "e-Daakhil Portal — Electronic Consumer Court Filing",
+      "authority": "National Consumer Disputes Redressal Commission (NCDRC)",
+      "portalUrl": "https://edaakhil.nic.in",
+      "description": "Government online portal for hassle-free electronic filing of consumer complaints before District, State, and National Consumer Commissions across India.",
+      "remedy": "File digital complaint with digital payment of nominal court fees directly online."
+    }
+  ]
+}

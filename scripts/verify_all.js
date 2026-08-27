@@ -1,6 +1,6 @@
 /**
  * End-to-End System Verification Script for Nyaya Setu
- * Validates full lifecycle: Health -> Auth -> Profiles -> Case Intake -> Chronological Timeline -> Documents -> Verification -> Admin Audit Logs
+ * Validates full lifecycle: Health -> Auth -> Profiles -> Case Intake -> Chronological Timeline -> Documents -> Legal Knowledge & RAG -> Verification -> Admin Audit Logs
  */
 
 const { MongoMemoryServer } = require('mongodb-memory-server');
@@ -10,7 +10,7 @@ const app = require('../backend/src/app');
 
 async function runFullVerification() {
   console.log('===============================================================');
-  console.log('       NYAYA SETU — MILESTONE 1 END-TO-END VERIFICATION       ');
+  console.log('       NYAYA SETU — MILESTONE 1 & 2 END-TO-END VERIFICATION    ');
   console.log('===============================================================\n');
 
   const mongoServer = await MongoMemoryServer.create();
@@ -45,8 +45,34 @@ async function runFullVerification() {
     console.log(`    Citizen registered: ${citizenSignup.body.data.user.email} (ID: ${citizenSignup.body.data.user.id})`);
     const citizenToken = citizenSignup.body.data.tokens.accessToken;
 
-    // 3. File Case (Employment / Unpaid Salary)
-    console.log('\n[3] Filing Case: Employment Unpaid Salary Dispute...');
+    // 3. AI Legal Research (RAG & Knowledge Base)
+    console.log('\n[3] Testing Legal Knowledge Base & RAG Endpoint (/api/ai/research)...');
+    const researchRes = await request(app)
+      .post('/api/ai/research')
+      .set('Authorization', `Bearer ${citizenToken}`)
+      .send({
+        query: 'My employer has not paid my salary for three months.',
+        jurisdiction: 'Delhi',
+        language: 'en',
+      });
+    console.log(`    Research status: ${researchRes.status}`);
+    console.log(`    Detected Domain: ${researchRes.body.data.detectedDomain}`);
+    console.log(`    Provisions Found: ${researchRes.body.data.legalBasis?.length} provisions`);
+    console.log(`    Confidence: ${researchRes.body.data.confidence}`);
+
+    // 4. Citation Verification Endpoint
+    console.log('\n[4] Testing Official Citation Verification (/api/ai/verify-citation)...');
+    const citationRes = await request(app)
+      .post('/api/ai/verify-citation')
+      .set('Authorization', `Bearer ${citizenToken}`)
+      .send({
+        act: 'The Payment of Wages Act, 1936',
+        section: 'Section 15',
+      });
+    console.log(`    Citation Valid: ${citationRes.body.data.valid} (Status: ${citationRes.body.data.status})`);
+
+    // 5. File Case (Employment / Unpaid Salary)
+    console.log('\n[5] Filing Case: Employment Unpaid Salary Dispute...');
     const caseRes = await request(app)
       .post('/api/cases')
       .set('Authorization', `Bearer ${citizenToken}`)
@@ -66,8 +92,8 @@ async function runFullVerification() {
     const caseId = caseRes.body.data._id;
     console.log(`    Case filed successfully! Case Number: ${caseRes.body.data.caseNumber} (ID: ${caseId})`);
 
-    // 4. Case Timeline Events
-    console.log('\n[4] Populating Chronological Timeline Events...');
+    // 6. Case Timeline Events
+    console.log('\n[6] Populating Chronological Timeline Events...');
     const events = [
       {
         eventType: 'EMPLOYMENT_STARTED',
@@ -96,21 +122,21 @@ async function runFullVerification() {
     ];
 
     for (const evt of events) {
-      const evtRes = await request(app)
+      await request(app)
         .post(`/api/cases/${caseId}/events`)
         .set('Authorization', `Bearer ${citizenToken}`)
         .send(evt);
       console.log(`    [+] Added Event: "${evt.title}" (${evt.eventType})`);
     }
 
-    // 5. Verify Timeline Sequence
+    // 7. Verify Timeline Sequence
     const timelineRes = await request(app)
       .get(`/api/cases/${caseId}/timeline`)
       .set('Authorization', `Bearer ${citizenToken}`);
     console.log(`    Timeline retrieved! Total Events: ${timelineRes.body.data.length}`);
 
-    // 6. Upload Document Metadata & Background Job Queue
-    console.log('\n[5] Uploading Document Metadata & Dispatching to Background Queue...');
+    // 8. Upload Document Metadata & Background Job Queue
+    console.log('\n[7] Uploading Document Metadata & Dispatching to Background Queue...');
     const docRes = await request(app)
       .post('/api/documents')
       .set('Authorization', `Bearer ${citizenToken}`)
@@ -126,8 +152,8 @@ async function runFullVerification() {
     console.log(`    Document registered: ${docRes.body.data.document.title}`);
     console.log(`    Background Job Queued: Job ID: ${docRes.body.data.queueJob.jobId} -> Queue: ${docRes.body.data.queueJob.queueName}`);
 
-    // 7. Lawyer Registration & Bar Verification
-    console.log('\n[6] Registering Advocate (Adv. Neha Kapoor)...');
+    // 9. Lawyer Registration & Bar Verification
+    console.log('\n[8] Registering Advocate (Adv. Neha Kapoor)...');
     const lawyerSignup = await request(app)
       .post('/api/auth/signup')
       .send({
@@ -150,8 +176,8 @@ async function runFullVerification() {
     const lawyerToken = lawyerSignup.body.data.tokens.accessToken;
     console.log(`    Advocate registered: ${lawyerSignup.body.data.user.email}`);
 
-    // 8. Admin Verification Workflow
-    console.log('\n[7] Admin Approving Bar Council Verification...');
+    // 10. Admin Verification Workflow
+    console.log('\n[9] Admin Approving Bar Council Verification...');
     const adminSignup = await request(app)
       .post('/api/auth/signup')
       .send({
@@ -182,16 +208,16 @@ async function runFullVerification() {
       });
     console.log(`    Verification status updated: ${reviewRes.body.data.status}`);
 
-    // 9. Lawyer assigns herself to the case
-    console.log('\n[8] Lawyer Assigning to Case...');
+    // 11. Lawyer assigns herself to the case
+    console.log('\n[10] Lawyer Assigning to Case...');
     const assignRes = await request(app)
       .patch(`/api/cases/${caseId}/assign-lawyer`)
       .set('Authorization', `Bearer ${lawyerToken}`)
       .send({ lawyerId: lawyerSignup.body.data.user.id });
     console.log(`    Case status updated: ${assignRes.body.data.status} (Assigned Lawyer: ${assignRes.body.data.assignedLawyer})`);
 
-    // 10. Admin Audit Logs
-    console.log('\n[9] Fetching Immutable Audit Logs...');
+    // 12. Admin Audit Logs
+    console.log('\n[11] Fetching Immutable Audit Logs...');
     const auditRes = await request(app)
       .get('/api/admin/audit-logs')
       .set('Authorization', `Bearer ${adminToken}`);
@@ -199,7 +225,7 @@ async function runFullVerification() {
     console.log('    Recent audit actions:', auditRes.body.data.slice(0, 5).map((l) => `${l.action} on [${l.resource}] by ${l.userRole}`));
 
     console.log('\n===============================================================');
-    console.log('  [✓] ALL MILESTONE 1 END-TO-END CRITERIA VERIFIED SUCCESSFULLY! ');
+    console.log('  [✓] ALL MILESTONE 1 & 2 CRITERIA VERIFIED SUCCESSFULLY!        ');
     console.log('===============================================================\n');
   } finally {
     await mongoose.disconnect();

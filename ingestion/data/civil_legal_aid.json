@@ -1,0 +1,112 @@
+{
+  "domain": "Civil Law & Legal Aid",
+  "statutes": [
+    {
+      "act": "The Specific Relief Act, 1963",
+      "actNumber": "Act No. 47 of 1963",
+      "authority": "Legislative Department, Ministry of Law and Justice, Government of India",
+      "jurisdiction": "India",
+      "sourceUrl": "https://www.indiacode.nic.in/handle/123456789/1583",
+      "effectiveDate": "1964-03-01",
+      "chapters": [
+        {
+          "chapterNumber": "Part II",
+          "chapterTitle": "Specific Relief and Recovery of Possession",
+          "sections": [
+            {
+              "section": "Section 6",
+              "sectionTitle": "Suit by person dispossessed of immovable property",
+              "content": "If any person is dispossessed without his consent of immovable property otherwise than in due course of law, he or any person through whom he has been in possession or any person claiming through him may, by suit, recover possession thereof, notwithstanding any other title that may be set up in such suit. No suit under this section shall be brought: (a) after the expiry of six months from the date of dispossession; or (b) against the Government.",
+              "keywords": ["summary possession suit", "illegal dispossession", "forceful eviction", "6 months limitation", "specific relief"],
+              "remedy": "File summary suit within 6 months to instantly recover physical possession without proving title."
+            },
+            {
+              "section": "Section 10",
+              "sectionTitle": "Specific performance in respect of contracts",
+              "content": "The specific performance of a contract shall be enforced by the court subject to the provisions contained in sub-section (2) of section 11, section 14 and section 16. Specific performance is now a mandatory statutory right rather than an equitable discretion.",
+              "keywords": ["specific performance", "breach of contract", "property agreement to sell", "commercial contract breach"],
+              "remedy": "Court compels the defaulting party to execute sale deed or perform specific contractual duties."
+            },
+            {
+              "section": "Section 38",
+              "sectionTitle": "Perpetual injunction when granted",
+              "content": "Subject to the other provisions contained in or referred to by this Chapter, a perpetual injunction may be granted to the plaintiff to prevent the breach of an obligation existing in his favour, whether expressly or by implication. When the defendant invades or threatens to invade the plaintiff's right to, or enjoyment of, property.",
+              "keywords": ["stay order", "permanent injunction", "restraining order", "property interference", "encroachment"],
+              "remedy": "Obtain permanent stay order / injunction against property encroachment or harassment."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "act": "The Limitation Act, 1963",
+      "actNumber": "Act No. 36 of 1963",
+      "authority": "Ministry of Law and Justice, Government of India",
+      "jurisdiction": "India",
+      "sourceUrl": "https://www.indiacode.nic.in/handle/123456789/1572",
+      "effectiveDate": "1964-01-01",
+      "chapters": [
+        {
+          "chapterNumber": "Part II & Schedule",
+          "chapterTitle": "Limitation of Suits, Appeals and Applications",
+          "sections": [
+            {
+              "section": "Section 3",
+              "sectionTitle": "Bar of limitation",
+              "content": "Subject to the provisions contained in sections 4 to 24 (inclusive), every suit instituted, appeal preferred, and application made after the prescribed period shall be dismissed, although limitation has not been set up as a defence.",
+              "keywords": ["limitation bar", "time-barred suit", "prescribed period", "filing deadline"],
+              "remedy": "Legal suits must strictly be instituted within statutory limitation periods."
+            },
+            {
+              "section": "Article 7 & 113",
+              "sectionTitle": "Limitation period for recovery of wages and general money claims (3 Years)",
+              "content": "The period of limitation for a suit for wages in the case of any other person not otherwise specifically provided for is three years from the date when the wages accrue due. For any suit for which no period of limitation is provided elsewhere in the Schedule, the period is three years from when the right to sue accrues.",
+              "keywords": ["3 years limitation", "salary limitation period", "money suit limitation", "debt recovery period"],
+              "remedy": "Civil suits for recovery of unpaid salary or debt must be filed within 3 years from due date."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "act": "The Legal Services Authorities Act, 1987",
+      "actNumber": "Act No. 39 of 1987",
+      "authority": "National Legal Services Authority (NALSA), Department of Justice, Government of India",
+      "jurisdiction": "India",
+      "sourceUrl": "https://nalsa.gov.in/acts-rules",
+      "effectiveDate": "1995-11-09",
+      "chapters": [
+        {
+          "chapterNumber": "Chapter IV & VI",
+          "chapterTitle": "Criteria for Giving Legal Services and Lok Adalats",
+          "sections": [
+            {
+              "section": "Section 12",
+              "sectionTitle": "Criteria for giving free legal services / Free Legal Aid",
+              "content": "Every person who has to file or defend a case shall be entitled to legal services under this Act if that person, is: (a) a member of a Scheduled Caste or Scheduled Tribe; (b) a victim of trafficking in human beings or beggar; (c) a woman or a child; (d) a person with disability; (e) an industrial workman; (f) a person in custody; (g) a person with annual income less than prescribed ceiling (₹3,00,000 in Delhi/States). Free legal aid includes payment of court fees, drafting charges, advocate fees, and process expenses.",
+              "keywords": ["free legal aid", "nalsa eligibility", "dlsa lawyer", "free advocate", "pro bono counsel", "legal aid criteria"],
+              "remedy": "Eligible citizens receive 100% free advocate appointment, court fee payment, and drafting support."
+            },
+            {
+              "section": "Section 19 & 21",
+              "sectionTitle": "Organization of Lok Adalats and Finality of Award",
+              "content": "Every award of the Lok Adalat shall be deemed to be a decree of a civil court and no appeal shall lie to any court against the award of the Lok Adalat. Lok Adalats facilitate fast, binding, amicable settlements without court fee.",
+              "keywords": ["lok adalat", "court fee refund", "binding settlement", "amicable resolution", "no appeal"],
+              "remedy": "Lok Adalat awards are final, non-appealable, and trigger 100% refund of court fees already deposited."
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "grievanceSystems": [
+    {
+      "name": "National Legal Services Authority (NALSA) & Tele-Law Portal",
+      "authority": "Department of Justice & NALSA",
+      "portalUrl": "https://nalsa.gov.in / https://tele-law.in",
+      "helpline": "15100 (National Legal Aid Toll-Free Helpline)",
+      "description": "Government network providing free panel lawyers and pre-litigation video advice through District Legal Services Authorities (DLSA) in all district courts across India.",
+      "remedy": "Dial 15100 or visit local District Court DLSA office for immediate assignment of a free advocate."
+    }
+  ]
+}

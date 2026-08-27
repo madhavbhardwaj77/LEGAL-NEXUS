@@ -1,0 +1,152 @@
+{
+  "domain": "Employment & Labour Law",
+  "statutes": [
+    {
+      "act": "The Payment of Wages Act, 1936",
+      "actNumber": "Act No. 4 of 1936",
+      "authority": "Ministry of Labour and Employment, Government of India",
+      "jurisdiction": "India",
+      "sourceUrl": "https://www.indiacode.nic.in/handle/123456789/2387",
+      "effectiveDate": "1936-04-23",
+      "chapters": [
+        {
+          "chapterNumber": "Chapter II",
+          "chapterTitle": "Payment of Wages and Deductions from Wages",
+          "sections": [
+            {
+              "section": "Section 3",
+              "sectionTitle": "Responsibility for payment of wages",
+              "content": "Every employer shall be responsible for the payment to persons employed by him of all wages required to be paid under this Act. In the case of persons employed in factories or industrial establishments, the manager or person responsible to the employer shall be liable.",
+              "subsections": [
+                { "clause": "(1)", "text": "Every employer shall be responsible for the payment to persons employed by him of all wages required to be paid under this Act." }
+              ],
+              "keywords": ["responsibility for wages", "employer liability", "manager responsibility", "payment obligations"],
+              "remedy": "Hold employer and designated manager directly liable for wage arrears."
+            },
+            {
+              "section": "Section 4",
+              "sectionTitle": "Fixation of wage-periods",
+              "content": "Every person responsible for the payment of wages under section 3 shall fix periods (in this Act referred to as wage-periods) in respect of which such wages shall be payable. No wage-period shall exceed one month.",
+              "subsections": [
+                { "clause": "(1)", "text": "Fix periods in respect of which wages shall be payable." },
+                { "clause": "(2)", "text": "No wage-period shall exceed one month." }
+              ],
+              "keywords": ["wage period", "monthly salary", "salary cycle", "wage fixation"],
+              "remedy": "Employers cannot fix a wage period exceeding 30 days."
+            },
+            {
+              "section": "Section 5",
+              "sectionTitle": "Time of payment of wages and settlement on termination / resignation",
+              "content": "The wages of every person employed upon or in any railway, factory or industrial or other establishment shall be paid before the expiry of the seventh day after the last day of the wage-period where less than 1000 persons are employed, and before the tenth day where 1000 or more persons are employed. Where the employment of any person is terminated or resigned by or on behalf of the employee or employer, the wages earned and all final settlement dues shall be paid before the expiry of the second working day from the day on which employment ceased.",
+              "subsections": [
+                { "clause": "(1)(a)", "text": "Wages to be paid before 7th day where <1000 employees, 10th day otherwise." },
+                { "clause": "(2)", "text": "On termination or resignation of employment, all earned wages and full and final settlement must be cleared before the expiry of the second working day." }
+              ],
+              "keywords": ["time of payment", "salary due date", "termination dues", "full and final settlement", "unpaid salary", "delayed wages", "resignation settlement", "fnf clearance"],
+              "remedy": "Full and final settlement and unpaid wages must be paid within 2 working days of resignation or termination."
+            },
+            {
+              "section": "Section 7",
+              "sectionTitle": "Deductions which may be made from wages",
+              "content": "The wages of an employed person shall be paid to him without deductions of any kind except those authorized by or under this Act. Unlawful deductions, penalties without show-cause, or unauthorized salary cuts are strictly prohibited.",
+              "subsections": [
+                { "clause": "(1)", "text": "Wages must be paid without unauthorized deductions." }
+              ],
+              "keywords": ["unauthorized deductions", "salary cut", "withholding salary", "penalty deduction"],
+              "remedy": "Illegal salary deductions can be recovered with up to 10x penalty."
+            },
+            {
+              "section": "Section 15",
+              "sectionTitle": "Claims arising out of deductions from wages or delay in payment of wages",
+              "content": "Where contrary to the provisions of this Act any deduction has been made from the wages of an employed person, or any payment of wages has been delayed, such person himself, or any legal practitioner or registered trade union, may apply to the Authority appointed by the State Government for a direction under sub-section (3). The Authority may direct the refund of the deduction or the payment of the delayed wages, together with such compensation as the Authority may think fit, not exceeding ten times the amount deducted or up to three thousand rupees in case of delayed wages.",
+              "subsections": [
+                { "clause": "(1)", "text": "State Government appoints Authority to hear claims." },
+                { "clause": "(2)", "text": "Application to be filed within 12 months of deduction or due date." },
+                { "clause": "(3)", "text": "Authority may order payment plus compensation up to 10 times the deducted amount." }
+              ],
+              "keywords": ["wage claim application", "labour authority", "compensation for delayed wages", "10x penalty", "unpaid wages recovery", "payment of wages authority", "recovery petition"],
+              "remedy": "File an application under Section 15 before the Labour Authority within 12 months for wage recovery plus compensation."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "act": "The Industrial Disputes Act, 1947",
+      "actNumber": "Act No. 14 of 1947",
+      "authority": "Ministry of Labour and Employment, Government of India",
+      "jurisdiction": "India",
+      "sourceUrl": "https://www.indiacode.nic.in/handle/123456789/2411",
+      "effectiveDate": "1947-04-01",
+      "chapters": [
+        {
+          "chapterNumber": "Chapter V-A",
+          "chapterTitle": "Lay-off and Retrenchment",
+          "sections": [
+            {
+              "section": "Section 2A",
+              "sectionTitle": "Dismissal of an individual workman to be deemed an industrial dispute",
+              "content": "Where any employer discharges, dismisses, retrenches or otherwise terminates the services of an individual workman, any dispute or difference between that workman and his employer connected with such discharge, dismissal, retrenchment or termination shall be deemed to be an industrial dispute notwithstanding that no other workman or union is a party to the dispute. The workman may make an application directly to the Labour Court or Industrial Tribunal after 45 days from approaching Conciliation Officer.",
+              "keywords": ["wrongful termination", "illegal dismissal", "individual dispute", "labour court application"],
+              "remedy": "Approach Conciliation Officer or directly apply to Labour Court for reinstatement and back-wages."
+            },
+            {
+              "section": "Section 25F",
+              "sectionTitle": "Conditions precedent to retrenchment of workmen",
+              "content": "No workman employed in any industry who has been in continuous service for not less than one year under an employer shall be retrenched by that employer until: (a) the workman has been given one month's notice in writing indicating the reasons for retrenchment and the period of notice has expired, or the workman has been paid in lieu of such notice, wages for the period of the notice; (b) the workman has been paid, at the time of retrenchment, compensation which shall be equivalent to fifteen days' average pay for every completed year of continuous service or any part thereof in excess of six months; and (c) notice in the prescribed manner is served on the appropriate Government.",
+              "keywords": ["retrenchment compensation", "one month notice pay", "15 days average pay per year", "severance pay", "illegal retrenchment", "terminated without notice"],
+              "remedy": "Retrenchment without 1 month notice pay and 15 days/year severance compensation is void ab initio."
+            },
+            {
+              "section": "Section 33C",
+              "sectionTitle": "Recovery of money due from an employer",
+              "content": "Where any money is due to a workman from an employer under a settlement or an award or under the provisions of Chapter VA or Chapter VB, the workman himself or any other person authorized by him in writing may make an application to the appropriate Government for the recovery of the money due to him, and if the appropriate Government is satisfied that any money is so due, it shall issue a certificate for that amount to the Collector, who shall proceed to recover the same in the same manner as an arrear of land revenue.",
+              "keywords": ["recovery of dues", "execution of award", "revenue recovery certificate", "arrears of salary"],
+              "remedy": "Apply to Labour Commissioner for Revenue Recovery Certificate (RRC) executable via District Collector."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "act": "Maternity Benefit Act, 1961",
+      "actNumber": "Act No. 53 of 1961",
+      "authority": "Ministry of Women and Child Development & Ministry of Labour",
+      "jurisdiction": "India",
+      "sourceUrl": "https://www.indiacode.nic.in/handle/123456789/1681",
+      "effectiveDate": "1961-12-12",
+      "chapters": [
+        {
+          "chapterNumber": "Chapter I",
+          "chapterTitle": "Maternity Rights and Protections",
+          "sections": [
+            {
+              "section": "Section 5",
+              "sectionTitle": "Right to payment of maternity benefit",
+              "content": "Every woman shall be entitled to, and her employer shall be liable for, the payment of maternity benefit at the rate of the average daily wage for the period of her actual absence, including the period immediately preceding the day of her delivery and the period immediately following that day. The maximum period for which any woman shall be entitled to maternity benefit shall be twenty-six weeks.",
+              "keywords": ["maternity leave", "26 weeks paid leave", "pregnancy benefits", "maternity wages"],
+              "remedy": "Entitled to 26 weeks fully paid maternity leave if worked for 80 days in past 12 months."
+            },
+            {
+              "section": "Section 12",
+              "sectionTitle": "Dismissal during absence of pregnancy",
+              "content": "When a woman absents herself from work in accordance with the provisions of this Act, it shall be unlawful for her employer to discharge or dismiss her during or on account of such absence, or to give notice of discharge or dismissal on such a day that the notice will expire during such absence, or to vary to her disadvantage any of the conditions of her service.",
+              "keywords": ["pregnancy dismissal", "maternity termination", "unlawful discharge", "discrimination", "fired during maternity leave"],
+              "remedy": "Termination during maternity leave is illegal; employer liable for prosecution and payment of full benefits."
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "grievanceSystems": [
+    {
+      "name": "SAMADHAN Portal — Ministry of Labour and Employment",
+      "authority": "Chief Labour Commissioner (Central)",
+      "portalUrl": "https://samadhan.labour.gov.in",
+      "description": "Online dedicated dispute resolution and grievance filing platform for workmen and employees against employers for delayed wages, wrongful termination, and non-payment of retrenchment dues.",
+      "helpline": "1800-180-1555",
+      "remedy": "Register grievance online under Payment of Wages / Industrial Disputes Act for conciliation."
+    }
+  ]
+}

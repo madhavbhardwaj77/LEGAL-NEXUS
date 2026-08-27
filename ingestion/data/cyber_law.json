@@ -1,0 +1,96 @@
+{
+  "domain": "Cybercrime & Data Privacy",
+  "statutes": [
+    {
+      "act": "The Information Technology Act, 2000",
+      "actNumber": "Act No. 21 of 2000",
+      "authority": "Ministry of Electronics and Information Technology (MeitY), Government of India",
+      "jurisdiction": "India",
+      "sourceUrl": "https://www.indiacode.nic.in/handle/123456789/1999",
+      "effectiveDate": "2000-10-17",
+      "chapters": [
+        {
+          "chapterNumber": "Chapter IX & XI",
+          "chapterTitle": "Penalties, Compensation and Offences",
+          "sections": [
+            {
+              "section": "Section 43A",
+              "sectionTitle": "Compensation for failure to protect sensitive personal data",
+              "content": "Where a body corporate, possessing, dealing or handling any sensitive personal data or information in a computer resource which it owns, controls or operates, is negligent in implementing and maintaining reasonable security practices and procedures and thereby causes wrongful loss or wrongful gain to any person, such body corporate shall be liable to pay damages by way of compensation to the person so affected.",
+              "keywords": ["data breach compensation", "sensitive personal data", "corporate negligence", "unauthorized data leak", "bank data breach"],
+              "remedy": "Claim financial damages against companies or financial institutions failing to protect personal data."
+            },
+            {
+              "section": "Section 66",
+              "sectionTitle": "Computer related offences / Hacking",
+              "content": "If any person, dishonestly or fraudulently, does any act referred to in section 43, he shall be punishable with imprisonment for a term which may extend to three years or with fine which may extend to five lakh rupees or with both.",
+              "keywords": ["hacking", "computer damage", "unauthorized access", "data theft", "malware injection"],
+              "remedy": "Cognizable offence punishable with up to 3 years imprisonment and ₹5,00,000 fine."
+            },
+            {
+              "section": "Section 66C",
+              "sectionTitle": "Punishment for identity theft",
+              "content": "Whoever, fraudulently or dishonestly make use of the electronic signature, password or any other unique identification feature of any other person, shall be punished with imprisonment of either description for a term which may extend to three years and shall also be liable to fine which may extend to one lakh rupees.",
+              "keywords": ["identity theft", "password theft", "otp fraud", "stolen credentials", "cloned sim", "digital impersonation"],
+              "remedy": "Imprisonment up to 3 years and fine for stealing passwords, OTPs, or biometric identification."
+            },
+            {
+              "section": "Section 66D",
+              "sectionTitle": "Punishment for cheating by personation by using computer resource",
+              "content": "Whoever, by means of any communication device or computer resource, cheats by personation, shall be punished with imprisonment of either description for a term which may extend to three years and shall also be liable to fine which may extend to one lakh rupees.",
+              "keywords": ["online fraud", "financial cyber fraud", "fake caller", "upi fraud", "phishing", "part time job scam", "impersonation", "bank fraud"],
+              "remedy": "Direct criminal provision for UPI fraud, fake bank KYC calls, investment scams, and phishing."
+            },
+            {
+              "section": "Section 67",
+              "sectionTitle": "Punishment for publishing or transmitting obscene material in electronic form",
+              "content": "Whoever publishes or transmits or causes to be published or transmitted in the electronic form, any material which is lascivious or appeals to the prurient interest shall be punished on first conviction with imprisonment for a term which may extend to three years and with fine which may extend to five lakh rupees.",
+              "keywords": ["cyber harassment", "cyber stalking", "obscene messages", "non-consensual images", "blackmail"],
+              "remedy": "Cognizable and non-bailable offence on repeat conviction for non-consensual cyber harassment."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "act": "Digital Personal Data Protection Act, 2023",
+      "actNumber": "Act No. 22 of 2023",
+      "authority": "Ministry of Electronics and Information Technology (MeitY), Government of India",
+      "jurisdiction": "India",
+      "sourceUrl": "https://www.meity.gov.in/content/digital-personal-data-protection-act-2023",
+      "effectiveDate": "2023-08-11",
+      "chapters": [
+        {
+          "chapterNumber": "Chapter II & VI",
+          "chapterTitle": "Obligations of Data Fiduciary and Penalties",
+          "sections": [
+            {
+              "section": "Section 6",
+              "sectionTitle": "Consent requirements for processing personal data",
+              "content": "Consent given by the Data Principal shall be free, specific, informed, unconditional and unambiguous with a clear affirmative action, and shall signify an agreement to the processing of her personal data for the specified purpose.",
+              "keywords": ["data consent", "personal data protection", "unauthorized marketing calls", "spam calls", "data fiduciary"],
+              "remedy": "Withdraw consent anytime; data fiduciary must cease processing and erase personal data."
+            },
+            {
+              "section": "Section 27",
+              "sectionTitle": "Penalties for breach of personal data and security failure",
+              "content": "The Data Protection Board may impose significant monetary penalties for breach in observing obligations: up to two hundred and fifty crore rupees (₹250 Cr) for failure to take reasonable security safeguards to prevent personal data breach.",
+              "keywords": ["data breach penalty", "dpdp penalty", "data protection board", "250 crore penalty"],
+              "remedy": "File grievance before Data Protection Board for stringent financial penalties on negligent companies."
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "grievanceSystems": [
+    {
+      "name": "National Cyber Crime Reporting Portal (NCRP) & 1930 Helpline",
+      "authority": "Indian Cyber Crime Coordination Centre (I4C), Ministry of Home Affairs",
+      "portalUrl": "https://cybercrime.gov.in",
+      "helpline": "1930 (Citizen Financial Cyber Fraud Helpline)",
+      "description": "National portal for immediate reporting of cyber financial frauds and cyber crimes against women/children. Dialing 1930 within the 'Golden Hour' (first 2-4 hours) triggers immediate lien / freeze on fraudulent beneficiary bank accounts through the Citizen Financial Cyber Fraud Reporting and Management System (CFCFRMS).",
+      "remedy": "Call 1930 immediately with transaction UTR/reference number to freeze stolen money before withdrawal."
+    }
+  ]
+}

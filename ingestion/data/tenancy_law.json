@@ -1,0 +1,88 @@
+{
+  "domain": "Landlord & Tenant / Rental Law",
+  "statutes": [
+    {
+      "act": "Model Tenancy Act, 2021",
+      "actNumber": "Model Act / Gazette Notification 2021",
+      "authority": "Ministry of Housing and Urban Affairs, Government of India",
+      "jurisdiction": "India",
+      "sourceUrl": "https://mohua.gov.in/upload/uploadfiles/files/Model_Tenancy_Act_English.pdf",
+      "effectiveDate": "2021-06-02",
+      "chapters": [
+        {
+          "chapterNumber": "Chapter II",
+          "chapterTitle": "Tenancy Agreement and Security Deposit",
+          "sections": [
+            {
+              "section": "Section 4",
+              "sectionTitle": "Mandatory written tenancy agreement and registration with Rent Authority",
+              "content": "No person shall, after the commencement of this Act, let or take on rent any premises except by an agreement in writing, which shall be informed to the Rent Authority by the landlord and tenant jointly, in the form specified, within a period of two months from the date of tenancy agreement.",
+              "keywords": ["tenancy agreement", "written rent agreement", "rent authority registration", "tenant rights"],
+              "remedy": "Mandates formal written agreement preventing arbitrary verbal tenancy disputes."
+            },
+            {
+              "section": "Section 10",
+              "sectionTitle": "Security Deposit limits and refund timeline",
+              "content": "The security deposit to be paid by the tenant in advance shall: (a) not exceed two months' rent, in case of residential premises; and (b) not exceed six months' rent, in case of non-residential premises. The security deposit shall be refunded to the tenant on vacating the premises after making lawful deduction of liability with proper accounting.",
+              "keywords": ["security deposit limit", "two months rent cap", "refund of security deposit", "security deduction", "withholding deposit"],
+              "remedy": "Landlord cannot demand more than 2 months rent as security deposit and must refund it on handover."
+            },
+            {
+              "section": "Section 14",
+              "sectionTitle": "Prohibition of cutting off or withholding essential services",
+              "content": "No landlord or property manager shall, either by himself or through any person, cut off or withhold any essential supply or service in the premises occupied by the tenant. Essential services include supply of water, electricity, passages, staircase light, conservancy and sanitary services. On application by tenant, Rent Authority may pass immediate interim order restoring supply and impose penalty on landlord.",
+              "keywords": ["essential services", "electricity disconnection", "water supply cutoff", "harassment by landlord", "illegal disconnection"],
+              "remedy": "Immediate restoration of electricity/water and financial penalty against landlord for illegal disconnection."
+            },
+            {
+              "section": "Section 21",
+              "sectionTitle": "Protection against arbitrary eviction and procedure for repossession",
+              "content": "No landlord shall evict any tenant during the subsistence of tenancy agreement except by filing an application before the Rent Court on specified grounds: (a) tenant refuses to pay agreed rent for two consecutive months; (b) tenant has parted with possession without consent; (c) misuse of premises causing public nuisance; (d) structural alteration without consent. A landlord cannot forcibly lock out a tenant without a decree from the Rent Court.",
+              "keywords": ["protection against eviction", "arbitrary eviction", "forceful lockout", "rent court eviction", "illegal eviction"],
+              "remedy": "Landlord cannot forcibly evict or throw out belongings without a court decree."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "act": "The Transfer of Property Act, 1882",
+      "actNumber": "Act No. 4 of 1882",
+      "authority": "Legislative Department, Ministry of Law and Justice, Government of India",
+      "jurisdiction": "India",
+      "sourceUrl": "https://www.indiacode.nic.in/handle/123456789/2338",
+      "effectiveDate": "1882-07-01",
+      "chapters": [
+        {
+          "chapterNumber": "Chapter V",
+          "chapterTitle": "Leases of Immovable Property",
+          "sections": [
+            {
+              "section": "Section 106",
+              "sectionTitle": "Duration of certain leases in absence of written contract and statutory notice to quit",
+              "content": "In the absence of a contract or local law to the contrary, a lease of immovable property for agricultural or manufacturing purposes shall be deemed to be a lease from year to year, terminable by six months' notice; and a lease of immovable property for any other purpose shall be deemed to be a lease from month to month, terminable, on the part of either lessor or lessee, by fifteen days' notice in writing.",
+              "keywords": ["section 106 notice", "15 days notice to quit", "notice period", "eviction notice", "month to month lease"],
+              "remedy": "Statutory 15-day written notice required before tenancy termination."
+            },
+            {
+              "section": "Section 108",
+              "sectionTitle": "Rights and liabilities of lessor and lessee",
+              "content": "In the absence of a contract to the contrary: (a) lessor is bound to disclose material defects in property; (b) lessor is bound to put lessee in possession; (c) if lessor fails to make repairs after reasonable notice, lessee may make the same himself and deduct expenses from rent with interest.",
+              "keywords": ["repairs deduction", "structural repairs", "lessee rights", "quiet possession", "withholding repairs"],
+              "remedy": "Tenant can carry out urgent essential repairs and deduct reasonable expenses from upcoming monthly rent."
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "grievanceSystems": [
+    {
+      "name": "Rent Authority / Rent Court",
+      "authority": "State Urban Development & Revenue Department",
+      "portalUrl": "https://delhi.gov.in/rent-authority",
+      "description": "Statutory quasi-judicial authority established for expeditious adjudication of tenancy disputes, unreturned security deposits, and illegal eviction without long civil court delays.",
+      "remedy": "File a direct petition before the Rent Authority for recovery of security deposit with 18% per annum interest."
+    }
+  ]
+}
