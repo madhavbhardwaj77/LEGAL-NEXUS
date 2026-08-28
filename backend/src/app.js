@@ -12,10 +12,25 @@ const app = express();
 // Security Headers
 app.use(helmet());
 
+// Allowed origins for CORS (supports dynamic dev ports like 5173, 5174 and clientUrl)
+const allowedOrigins = [
+  config.clientUrl,
+  'http://localhost:5173',
+  'http://localhost:5174',
+  'http://localhost:3000',
+  'http://127.0.0.1:5173',
+  'http://127.0.0.1:5174',
+].filter(Boolean);
+
 // CORS configuration
 app.use(
   cors({
-    origin: config.clientUrl || '*',
+    origin: (origin, callback) => {
+      if (!origin || allowedOrigins.includes(origin) || config.env === 'development') {
+        return callback(null, true);
+      }
+      return callback(new Error(`Origin ${origin} not allowed by CORS`));
+    },
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],

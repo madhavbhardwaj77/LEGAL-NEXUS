@@ -11,6 +11,7 @@ const connectDB = async (customUri = null) => {
     });
     
     logger.info(`MongoDB Connected: ${conn.connection.host}/${conn.connection.name}`);
+    global.__MONGO_STORAGE_MODE__ = 'PERSISTENT_DISK';
 
     mongoose.connection.on('error', (err) => {
       logger.error('MongoDB connection error:', err);
@@ -36,6 +37,7 @@ const connectDB = async (customUri = null) => {
         logger.info('MongoDB Connected to Local In-Memory Fallback Database! Ready to save users/cases.');
         
         global.__MONGO_MEMORY_SERVER__ = mongod;
+        global.__MONGO_STORAGE_MODE__ = 'EPHEMERAL_IN_MEMORY';
         return conn;
       } catch (memErr) {
         logger.error(`Failed to spawn MongoMemoryServer fallback: ${memErr.message}`);

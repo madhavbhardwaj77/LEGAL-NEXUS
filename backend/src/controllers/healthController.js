@@ -16,6 +16,7 @@ const getHealthStatus = async (req, res) => {
     uptimeSeconds: Math.floor(process.uptime()),
     database: {
       mongo: mongoStatus,
+      mongoStorageMode: global.__MONGO_STORAGE_MODE__ || (global.__MONGO_MEMORY_SERVER__ ? 'EPHEMERAL_IN_MEMORY' : 'PERSISTENT_DISK'),
       redis: redisStatus,
     },
     system: {

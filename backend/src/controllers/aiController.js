@@ -70,6 +70,8 @@ const handleVoiceTranscribe = async (req, res, next) => {
         detectedLanguage: 'hi',
         confidence: 0.95,
         status: 'TRANSCRIBED',
+        _fallback: true,
+        aiEngineStatus: 'STANDBY_FALLBACK_ACTIVE',
       });
     }
   } catch (error) {
@@ -103,6 +105,8 @@ const handleStoryIntake = async (req, res, next) => {
         missingFields: ['salary_duration'],
         clarifyingQuestions: ['For how many months has the salary been withheld?'],
         redactedText: story,
+        _fallback: true,
+        aiEngineStatus: 'STANDBY_FALLBACK_ACTIVE',
       });
     }
   } catch (error) {
@@ -158,6 +162,8 @@ const handleCaseAnalyze = async (req, res, next) => {
         verification: { valid: true, status: 'APPROVED' },
         responseExplanation: 'Your issue falls under the Payment of Wages Act, 1936.',
         actionPlan: [{ step: 'Statutory Action', detail: 'Issue 15-day demand notice.' }],
+        _fallback: true,
+        aiEngineStatus: 'STANDBY_FALLBACK_ACTIVE',
       });
     }
   } catch (error) {
@@ -192,6 +198,8 @@ const handleChatIntake = async (req, res, next) => {
         clarifyingQuestions: ['Do you have salary slips or bank statements?'],
         structuredCase: currentCase || {},
         urgency: { urgencyLevel: 'GENERAL_GUIDANCE', colorCode: 'GREEN' },
+        _fallback: true,
+        aiEngineStatus: 'STANDBY_FALLBACK_ACTIVE',
       });
     }
   } catch (error) {

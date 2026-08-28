@@ -121,7 +121,12 @@ const generateAiDraft = async (req, res, next) => {
         case: caseId || undefined,
         title: `Legal Notice - ${caseData.issue}`,
         draftType: draftType || 'STATUTORY_LEGAL_NOTICE',
-        contentMarkdown: `# STATUTORY LEGAL NOTICE\n\nTo: ${caseData.parties.defendant}\nFrom: ${caseData.parties.plaintiff}\n\nDemanding resolution of ${caseData.issue} amounting to INR ${caseData.financialDetails.disputedAmount}.\n\n⚠️ AI-generated draft — requires user/professional review before submission.`,
+        contentMarkdown: `# STATUTORY LEGAL NOTICE\n\nTo: ${caseData.parties.defendant}\nFrom: ${caseData.parties.plaintiff}\n\nDemanding resolution of ${caseData.issue} amounting to INR ${caseData.financialDetails.disputedAmount}.\n\n⚠️ Standby Template Notice — Generated in standby mode while AI Engine is offline. Professional legal review required before formal submission.`,
+        variables: {
+          ...variables,
+          _fallback: true,
+          aiEngineStatus: 'STANDBY_TEMPLATE_ACTIVE',
+        },
         generatedBy: 'AI',
         createdBy: req.user._id,
         status: 'DRAFT',
