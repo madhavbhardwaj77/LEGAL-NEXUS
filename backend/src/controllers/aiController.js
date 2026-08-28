@@ -210,6 +210,10 @@ const handleConvertIntakeToCase = async (req, res, next) => {
       return sendError(res, 'Structured case object is required', 400);
     }
 
+    if (structuredCase.status === 'BLOCKED' || structuredCase.caseNumber === 'BLOCKED-SECURITY' || structuredCase.blocked) {
+      return sendError(res, 'Cannot register a case from an input blocked by the Guardrail Layer.', 400);
+    }
+
     // Map Category to standard enum
     let cat = 'Other';
     const rawCat = (structuredCase.category || '').toLowerCase();

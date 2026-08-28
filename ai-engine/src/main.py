@@ -28,6 +28,7 @@ from .drafting.draft_generator import DraftGenerator
 from .drafting.draft_fact_checker import draft_fact_checker
 from .matching.matcher import LawyerMatcher
 from .schemas.case_schemas import StructuredCaseState
+from .guardrails.manager import guardrail_manager
 
 app = FastAPI(
     title="Legal Nexus Legal AI Engine",
@@ -100,6 +101,21 @@ class VerifyCitationRequest(BaseModel):
     act: str = Field(..., description="Official Act Name (e.g. Payment of Wages Act, 1936)")
     section: str = Field(..., description="Section Number (e.g. Section 15)")
 
+class GuardrailProcessInputRequest(BaseModel):
+    inputText: str = Field(..., description="Raw citizen narrative or prompt")
+    role: Optional[str] = Field("GUEST", description="User role (CITIZEN, LAWYER, ADMIN, GUEST)")
+    userId: Optional[str] = Field(None, description="User identifier")
+    toolName: Optional[str] = Field("PUBLIC_LEGAL_RESEARCH", description="Target tool name")
+    financialAmount: Optional[float] = Field(0.0, description="Disputed financial amount")
+
+class GuardrailProcessOutputRequest(BaseModel):
+    rawOutput: str = Field(..., description="Raw generated AI response")
+    retrievedSources: Optional[List[Dict[str, Any]]] = Field(default_factory=list)
+    disputedAmount: Optional[float] = Field(0.0, description="Disputed financial amount")
+    domain: Optional[str] = Field("General", description="Legal domain")
+    userId: Optional[str] = Field(None, description="User identifier")
+    role: Optional[str] = Field("GUEST", description="User role")
+
 # ----------------- Root & Health Endpoints -----------------
 
 @app.get("/")
@@ -169,6 +185,55 @@ def audit_ai_safety(req: SafetyAuditRequest):
         research_result=req.research
     )
     return audit_result
+
+# ----------------- Centralized Guardrail Layer Endpoints -----------------
+
+@app.post("/ai/guardrails/process-input")
+def guardrail_process_input(req: GuardrailProcessInputRequest):
+    """
+    Input Guardrail Endpoint:
+    Inspects input for Role Authorization -> Prompt Injection -> PII Redaction -> Emergency Risk.
+    """
+    return guardrail_manager.process_input(
+        input_text=req.inputText,
+        role=req.role,
+        user_id=req.userId,
+        tool_name=req.toolName,
+        financial_amount=req.financialAmount or 0.0
+    )
+
+@app.post("/ai/guardrails/process-output")
+def guardrail_process_output(req: GuardrailProcessOutputRequest):
+    """
+    Output Guardrail Endpoint:
+    Validates output for PII Leakage -> Citation Grounding -> Claim Calibration -> Version Currency -> Disclaimers.
+    """
+    return guardrail_manager.process_output(
+        raw_output=req.rawOutput,
+        retrieved_sources=req.retrievedSources,
+        disputed_amount=req.disputedAmount or 0.0,
+        domain=req.domain,
+        user_id=req.userId,
+        role=req.role
+    )
+
+@app.get("/ai/guardrails/audit-logs")
+def guardrail_get_audit_logs(limit: int = 50, filter: Optional[str] = None):
+    """
+    Audit Logs Inspection Endpoint:
+    Returns sanitized, privacy-preserving security event logs.
+    """
+    return {
+        "total": len(guardrail_manager.get_audit_logs(limit=limit, event_filter=filter)),
+        "logs": guardrail_manager.get_audit_logs(limit=limit, event_filter=filter)
+    }
+
+@app.get("/ai/guardrails/metrics")
+def guardrail_get_metrics():
+    """
+    Guardrail Health & Enforcement Metrics Endpoint.
+    """
+    return guardrail_manager.get_metrics()
 
 # ----------------- Milestone 4 Document & Drafting Endpoints -----------------
 

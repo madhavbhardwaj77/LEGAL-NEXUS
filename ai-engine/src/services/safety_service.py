@@ -1,59 +1,31 @@
 """
 AI Safety, Privacy, and Grounding Service
-Enforces strict pre-response checks: Fact Check -> Citation Verification -> Privacy Redaction -> Urgency Evaluation -> Statutory Disclaimers
+Delegates to the Centralized Guardrail Layer: Fact Check -> Citation Verification -> Privacy Redaction -> Urgency Evaluation -> Statutory Disclaimers
 """
 
 import re
 from typing import Dict, Any, List, Tuple
-from ..agents.privacy import PrivacyAgent
-from ..agents.risk import RiskUrgencyAgent
 from ..agents.verification import VerificationAgent
 from ..schemas.case_schemas import StructuredCaseState
+from ..guardrails.manager import guardrail_manager
 
 class AISafetyService:
     DISCLAIMER = "⚠️ Legal Nexus is an AI-powered legal access and case navigation system. This output provides legal information and guidance based on Indian statutes and does not constitute professional legal advice."
 
     def __init__(self, verification_agent: VerificationAgent = None):
         self.verification_agent = verification_agent or VerificationAgent()
+        self.guardrails = guardrail_manager
 
     def verify_text_citations(self, text: str) -> Tuple[str, List[Dict[str, Any]], bool]:
         """
-        Parses text for citations (e.g., Section 15 of the Payment of Wages Act)
-        and cross-references them against the statutory database.
+        Parses text for citations and cross-references them against the statutory database using CitationGuard.
         """
-        # Match patterns like: Section X of the Y Act
-        pattern = r"(?:Section|Sec\.)\s+([0-9A-Za-z\(\)]+)\s+(?:of\s+the\s+|of\s+)?([A-Za-z\s&,]+Act(?:,\s+\d{4})?)"
-        matches = list(re.finditer(pattern, text, re.IGNORECASE))
-        
-        has_fabricated = False
-        unsupported = []
-        modified_text = text
-        
-        for m in matches:
-            full_match_text = m.group(0)
-            sec = m.group(1).strip()
-            act = m.group(2).strip()
-            
-            verifier = self.verification_agent.source_verifier
-            # Check Section X
-            verification = verifier.verify_citation(act=act, section=f"Section {sec}")
-            if not verification.get("valid", False):
-                # Fallback to check just X
-                verification = verifier.verify_citation(act=act, section=sec)
-                
-            if not verification.get("valid", False):
-                has_fabricated = True
-                unsupported.append({
-                    "act": act,
-                    "section": sec,
-                    "status": "UNVERIFIED_FABRICATED"
-                })
-                # Handle uncertainty by substituting text with an unverified placeholder
-                modified_text = modified_text.replace(
-                    full_match_text,
-                    f"[Unverified Statutory Citation: Section {sec} of {act}]"
-                )
-                
+        modified_text, report = self.guardrails.citation_guard.verify_citations_in_text(text)
+        unsupported = [
+            {"act": c["act"], "section": c["section"], "status": "UNVERIFIED_FABRICATED"}
+            for c in report.get("unverified_citations", [])
+        ]
+        has_fabricated = len(unsupported) > 0
         return modified_text, unsupported, has_fabricated
 
     def audit_and_sanitize_response(
@@ -63,51 +35,59 @@ class AISafetyService:
         research_result: Dict[str, Any] = None
     ) -> Dict[str, Any]:
         """
-        Runs comprehensive pre-flight safety checks on AI response before delivery to user.
+        Runs comprehensive pre-flight safety checks on AI response through GuardrailManager.
         """
-        # 1. PII Redaction Check
-        redacted_text, pii_counts = PrivacyAgent.redact_pii(raw_response)
-        has_pii = sum(pii_counts.values()) > 0
+        sources = research_result.get("legalBasis", []) if research_result else []
+        disputed_amount = case.financialDetails.get("disputedAmount", 0.0) if case and hasattr(case, 'financialDetails') else 0.0
+        domain = case.category if case and hasattr(case, 'category') else "General"
 
-        # 2. Extract & verify explicit citations from response
-        sanitized_text, fabricated_citations, has_fabricated = self.verify_text_citations(redacted_text)
+        # Execute centralized output guardrail pipeline
+        guard_res = self.guardrails.process_output(
+            raw_output=raw_response,
+            retrieved_sources=sources,
+            disputed_amount=disputed_amount,
+            domain=domain
+        )
 
-        # 3. Citation & Fact Verification Check
+        # Verification report
         verification_report = None
         if case:
             verification_report = self.verification_agent.verify_response_and_case(
                 case=case,
                 research_result=research_result
             )
-            
-            # Incorporate text-based fabricated citation findings
-            if has_fabricated:
+            if not guard_res["verification"]["valid"]:
                 verification_report.valid = False
                 verification_report.status = "NEEDS_REVIEW"
                 if not hasattr(verification_report, 'unsupportedClaims') or verification_report.unsupportedClaims is None:
                     verification_report.unsupportedClaims = []
-                for fc in fabricated_citations:
-                    msg = f"Fabricated statutory citation: Section {fc['section']} of {fc['act']}"
+                for fc in guard_res["verification"].get("unverified_citations", []):
+                    msg = f"Fabricated statutory citation: {fc.get('section')} of {fc.get('act')}"
                     if msg not in verification_report.unsupportedClaims:
                         verification_report.unsupportedClaims.append(msg)
                 verification_report.groundingScore = max(0.0, round(verification_report.groundingScore - 0.3, 2))
 
-        # 4. Urgency Evaluation Check
+        # Urgency check
         urgency_assessment = None
         if case:
+            from ..agents.risk import RiskUrgencyAgent
             urgency_assessment = RiskUrgencyAgent.evaluate_urgency(case)
 
-        # 5. Attach Mandatory Disclaimer
-        safe_response = f"{sanitized_text.strip()}\n\n---\n*{self.DISCLAIMER}*"
-
         return {
-            "safeResponse": safe_response,
-            "piiSanitized": has_pii,
-            "piiCounts": pii_counts,
-            "verification": verification_report.model_dump() if verification_report else {"valid": not has_fabricated, "status": "NEEDS_REVIEW" if has_fabricated else "APPROVED"},
+            "safeResponse": guard_res["safe_response"],
+            "piiSanitized": guard_res["pii_sanitized"],
+            "piiCounts": guard_res["pii_counts"],
+            "verification": verification_report.model_dump() if verification_report else guard_res["verification"],
             "urgency": urgency_assessment.model_dump() if urgency_assessment else None,
             "disclaimer": self.DISCLAIMER,
-            "safetyStatus": "APPROVED" if (not has_fabricated and (not verification_report or verification_report.valid)) else "NEEDS_REVIEW",
+            "safetyStatus": "APPROVED" if guard_res["status"] == "APPROVED" and (not verification_report or verification_report.valid) else "NEEDS_REVIEW",
+            "guardrailAuditId": guard_res.get("audit_id"),
+            "guardrailSummary": {
+                "groundingScore": guard_res.get("grounding_score"),
+                "calibrated": guard_res.get("claim_calibration", {}).get("calibrated", False),
+                "versionAlerts": guard_res.get("versioning", {}).get("version_alerts_count", 0),
+                "escalation": guard_res.get("escalation")
+            }
         }
 
 ai_safety_service = AISafetyService()

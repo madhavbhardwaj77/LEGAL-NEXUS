@@ -1,6 +1,6 @@
 """
 LangGraph Legal Workflow Orchestrator
-Coordinates multi-agent execution with state management and conditional branching
+Coordinates multi-agent execution with state management, conditional branching, and centralized Guardrail Layer enforcement
 """
 
 from typing import Dict, Any
@@ -13,19 +13,29 @@ from ..agents.research import ResearchAgent
 from ..agents.evidence import EvidenceAgent
 from ..agents.risk import RiskUrgencyAgent
 from ..agents.verification import VerificationAgent
-from ..schemas.case_schemas import LegalWorkflowOutput
+from ..guardrails.manager import guardrail_manager
+from ..schemas.case_schemas import (
+    LegalWorkflowOutput,
+    StructuredCaseState,
+    IntakeResult,
+    EvidenceChecklist,
+    UrgencyAssessment,
+    VerificationReport
+)
 
 class LegalWorkflowEngine:
     def __init__(self, research_agent: ResearchAgent = None, verification_agent: VerificationAgent = None):
         self.research_agent = research_agent or ResearchAgent()
         self.verification_agent = verification_agent or VerificationAgent()
 
-    # 1. Privacy Node
+    # 1. Privacy & Input Guardrail Node
     def privacy_node(self, state: LegalGraphState) -> LegalGraphState:
         raw_text = state.get("raw_input", "")
-        redacted, pii_counts = PrivacyAgent.redact_pii(raw_text)
-        state["redacted_input"] = redacted
-        state["pii_counts"] = pii_counts
+        # Process through Guardrail Layer for PII and injection
+        guard_res = guardrail_manager.process_input(raw_text, tool_name="CASE_INTAKE")
+        state["redacted_input"] = guard_res["sanitized_text"]
+        state["pii_counts"] = guard_res.get("pii_counts", {})
+        state["guardrail_result"] = guard_res
         return state
 
     # 2. Intake Node
@@ -117,10 +127,17 @@ class LegalWorkflowEngine:
         if urgency.recommendation:
             action_plan.insert(0, {"step": "Urgency Guidance", "detail": urgency.recommendation})
 
-        explanation = (
+        raw_explanation = (
             f"Based on your statement regarding {case_state.issue} ({case_state.category}), "
             f"we have established structured case {case_state.caseNumber}. "
             f"{research_res.get('explanation', '')}"
+        )
+
+        # Run output guardrail validation
+        output_guard_res = guardrail_manager.process_output(
+            raw_output=raw_explanation,
+            retrieved_sources=research_res.get("legalBasis", []),
+            domain=case_state.category
         )
 
         output = LegalWorkflowOutput(
@@ -130,7 +147,7 @@ class LegalWorkflowEngine:
             evidence=evidence,
             urgency=urgency,
             verification=verification,
-            responseExplanation=explanation,
+            responseExplanation=output_guard_res["safe_response"],
             actionPlan=action_plan
         )
         state["workflow_output"] = output
@@ -138,6 +155,45 @@ class LegalWorkflowEngine:
 
     # Orchestrator Execution Pipeline
     def execute(self, raw_input: str, existing_case=None) -> LegalWorkflowOutput:
+        # Reset any previously corrupted/blocked case state
+        if existing_case and (getattr(existing_case, 'status', '') == 'BLOCKED' or getattr(existing_case, 'caseNumber', '') == 'BLOCKED-SECURITY'):
+            existing_case = None
+
+        # Pre-execution Guardrail Check for Malicious Prompt Injections / Harm / Blocks
+        input_guard_res = guardrail_manager.process_input(raw_input, tool_name="CASE_INTAKE")
+        if input_guard_res.get("blocked", False):
+            err_msg = input_guard_res.get("error_message") or "⚠️ Security Alert: Input blocked by Legal Nexus Guardrail Layer."
+            return LegalWorkflowOutput(
+                case=StructuredCaseState(
+                    caseNumber="BLOCKED-SECURITY",
+                    category="Security & Safety Violation",
+                    issue=input_guard_res.get("status", "Blocked"),
+                    jurisdiction="N/A",
+                    status="BLOCKED"
+                ),
+                intake=IntakeResult(
+                    extractedFacts={},
+                    detectedLanguage="en",
+                    domain="Security & Safety Violation",
+                    issue=input_guard_res.get("status", "Blocked"),
+                    missingFields=[],
+                    clarifyingQuestions=[],
+                    redactedText=input_guard_res.get("sanitized_text", "")
+                ),
+                research={"legalBasis": [], "explanation": err_msg},
+                evidence=EvidenceChecklist(available=[], missing=[], recommended=[]),
+                urgency=UrgencyAssessment(
+                    urgencyLevel="ATTENTION_RECOMMENDED",
+                    score=0.95,
+                    triggers=["Security or Safety Guardrail triggered."],
+                    recommendation=err_msg,
+                    colorCode="RED"
+                ),
+                verification=VerificationReport(valid=False, status="BLOCKED_BY_GUARDRAIL"),
+                responseExplanation=err_msg,
+                actionPlan=[{"step": "Guardrail Alert", "detail": err_msg}]
+            )
+
         state: LegalGraphState = {
             "raw_input": raw_input,
             "case_state": existing_case,

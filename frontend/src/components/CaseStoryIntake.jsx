@@ -60,10 +60,14 @@ export default function CaseStoryIntake({ user, onOpenAuth, onCaseCreated }) {
       });
 
       const data = res.data.data;
-      setAnalysisResult(data);
+      if (data.case?.status === 'BLOCKED' || data.blocked || data.case?.caseNumber === 'BLOCKED-SECURITY') {
+        setAnalysisResult(null);
+      } else {
+        setAnalysisResult(data);
+      }
 
       // 2. Add assistant response to conversation
-      const assistantText = data.responseExplanation || 'I have analyzed your statement and updated your structured case details.';
+      const assistantText = data.responseExplanation || data.reply || 'I have analyzed your statement and updated your structured case details.';
       const assistantMsg = {
         sender: 'assistant',
         text: assistantText,

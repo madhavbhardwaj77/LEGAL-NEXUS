@@ -10,6 +10,7 @@ const {
 const { authenticateJWT } = require('../middleware/auth');
 const { validate } = require('../middleware/validate');
 const { auditLogMiddleware } = require('../middleware/auditLog');
+const { guardrailCheck } = require('../middleware/guardrail');
 
 const router = express.Router();
 
@@ -18,6 +19,7 @@ router.post(
   '/generate-ai',
   authenticateJWT,
   [body('draftType').notEmpty().withMessage('Draft type is required'), validate],
+  guardrailCheck,
   auditLogMiddleware('AI_DRAFT_GENERATED', 'DRAFT'),
   generateAiDraft
 );
