@@ -9,6 +9,7 @@ from .query_expander import QueryExpander
 from .hybrid_retriever import HybridRetriever
 from .reranker import LegalReranker
 from .source_verifier import SourceVerifier
+from .services.gemini_service import gemini_legal_service
 
 class LegalRAGService:
     def __init__(self, data_dir: str = None):
@@ -23,7 +24,7 @@ class LegalRAGService:
         top_k: int = 4
     ) -> Dict[str, Any]:
         """
-        Executes end-to-end legal research with authoritative citations
+        Executes end-to-end legal research with authoritative citations and LLM grounding
         """
         # 1. Domain Detection
         domain_name, domain_conf, matched_tags = LegalDomainClassifier.classify_domain(query)
@@ -54,12 +55,29 @@ class LegalRAGService:
             query=query
         )
 
-        # 6. Synthesize Plain-Language Explanation & Actionable Remedies
-        explanation, remedies = self._synthesize_explanation_and_remedies(
+        # 6. Synthesize Plain-Language Explanation & Actionable Remedies via Gemini LLM
+        gemini_res = gemini_legal_service.generate_grounded_legal_response(
             query=query,
+            provisions=verified_provisions,
             domain=domain_name,
-            provisions=verified_provisions
+            language=language
         )
+
+        if gemini_res and gemini_res.get("explanation"):
+            explanation = gemini_res["explanation"]
+            _, remedies = self._synthesize_explanation_and_remedies(
+                query=query,
+                domain=domain_name,
+                provisions=verified_provisions
+            )
+            llm_synthesized = True
+        else:
+            explanation, remedies = self._synthesize_explanation_and_remedies(
+                query=query,
+                domain=domain_name,
+                provisions=verified_provisions
+            )
+            llm_synthesized = False
 
         # Compute Overall Confidence
         if any(p.get("confidence") == "HIGH" for p in verified_provisions):

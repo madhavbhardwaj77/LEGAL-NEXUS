@@ -427,27 +427,40 @@ class StreamChatRequest(BaseModel):
 @app.post("/chat/stream")
 async def stream_chat_response(req: StreamChatRequest):
     """
-    Streams progressive tokens via Server-Sent Events (SSE)
+    Streams progressive tokens via Server-Sent Events (SSE) with Gemini LLM Grounding & Dual-Guardrails
     """
+    # 1. Pre-Guardrail Check
+    input_guard = guardrail_manager.process_input(req.message)
+    if input_guard.get("blocked", False):
+        async def safety_generator():
+            yield f"data: {json.dumps({'type': 'start', 'domain': 'Safety & Compliance'})}\n\n"
+            yield f"data: {json.dumps({'type': 'token', 'content': input_guard.get('message', 'Query restricted by legal safety policy. If you need victim assistance, please dial 1930 or 112.')})}\n\n"
+            yield f"data: {json.dumps({'type': 'end', 'citations': [], 'confidence': 'RESTRICTED'})}\n\n"
+        return StreamingResponse(safety_generator(), media_type="text/event-stream")
+
     async def event_generator():
-        # First generate the domain & structured response using existing service
+        # 2. RAG Retrieval & Gemini LLM Synthesis
         rag_service = LegalRAGService()
         research_result = rag_service.conduct_research(query=req.message, top_k=3)
-        summary = research_result.get("responseSummary", "Analyzing legal provisions...")
-        statutory_refs = research_result.get("citations", [])
+        domain = research_result.get("detectedDomain", "General Law")
+        explanation = research_result.get("explanation", "Analyzing applicable statutory provisions...")
+        
+        statutory_refs = [
+            f"{p.get('act', '')} ({p.get('section', '')})" for p in research_result.get("legalBasis", [])
+        ]
 
-        yield f"data: {json.dumps({'type': 'start', 'domain': research_result.get('domain', 'General')})}\n\n"
-        await asyncio.sleep(0.05)
+        yield f"data: {json.dumps({'type': 'start', 'domain': domain})}\n\n"
+        await asyncio.sleep(0.04)
 
-        # Stream the response word by word
-        words = summary.split(" ")
+        # 3. Stream token by token
+        words = explanation.split(" ")
         for i, word in enumerate(words):
             chunk = word + (" " if i < len(words) - 1 else "")
             yield f"data: {json.dumps({'type': 'token', 'content': chunk})}\n\n"
-            await asyncio.sleep(0.02)
+            await asyncio.sleep(0.015)
 
-        # Stream final metadata and citations
-        yield f"data: {json.dumps({'type': 'end', 'citations': statutory_refs, 'confidence': research_result.get('confidenceScore', 0.92)})}\n\n"
+        # 4. Stream final metadata & verified citations
+        yield f"data: {json.dumps({'type': 'end', 'citations': statutory_refs, 'remedies': research_result.get('actionableRemedies', []), 'confidence': research_result.get('confidence', 'HIGH')})}\n\n"
 
     return StreamingResponse(event_generator(), media_type="text/event-stream")
 
