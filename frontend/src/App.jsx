@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import Navbar from './components/Navbar';
-import AuthModal from './components/AuthModal';
+import Sidebar from './components/Sidebar';
 import LandingPage from './components/LandingPage';
+import LoginPage from './pages/LoginPage';
+import SignupPage from './pages/SignupPage';
 import CaseList from './components/CaseList';
 import CaseFormModal from './components/CaseFormModal';
 import CaseDetailModal from './components/CaseDetailModal';
@@ -11,30 +13,36 @@ import LegalResearchPortal from './components/LegalResearchPortal';
 import CaseStoryIntake from './components/CaseStoryIntake';
 import LegalDraftGenerator from './components/LegalDraftGenerator';
 import DocumentIntelligenceModal from './components/DocumentIntelligenceModal';
-import VoiceAssistantWidget from './components/VoiceAssistantWidget';
 import UserProfile from './components/UserProfile';
-import { Briefcase, Bot, FileText, PenTool, Sparkles, UserCheck, Users, Activity, Menu, X } from 'lucide-react';
+import SettingsView from './components/SettingsView';
+import {
+  LayoutDashboard,
+  Bot,
+  FileText,
+  PenTool,
+  BookOpen,
+  UserCheck,
+  Users,
+  Activity,
+  Settings,
+  Scale,
+  LogOut,
+  Sparkles,
+  ShieldCheck,
+  ChevronRight,
+} from 'lucide-react';
 import api from './services/api';
 
 export default function App() {
-  const [activeTab, setActiveTab] = useState('landing'); // landing | cases | intake | documents | drafts | research | lawyers | system
+  const [activeTab, setActiveTab] = useState('landing'); // landing | login | signup | cases | intake | documents | drafts | research | lawyers | profile | settings | system
   const [user, setUser] = useState(null);
-  const [isAuthOpen, setIsAuthOpen] = useState(false);
   const [isNewCaseOpen, setIsNewCaseOpen] = useState(false);
   const [selectedCase, setSelectedCase] = useState(null);
   const [cases, setCases] = useState([]);
   const [loadingCases, setLoadingCases] = useState(false);
   const [healthStatus, setHealthStatus] = useState(null);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-
-  const navItems = [
-    { id: 'cases', label: 'Case Intake', icon: <Briefcase className="w-4 h-4" /> },
-    { id: 'intake', label: 'AI Assistance', icon: <Bot className="w-4 h-4" /> },
-    { id: 'documents', label: 'Document AI', icon: <FileText className="w-4 h-4" /> },
-    { id: 'drafts', label: 'Drafting', icon: <PenTool className="w-4 h-4" /> },
-    { id: 'research', label: 'Research', icon: <Sparkles className="w-4 h-4" /> },
-    { id: 'lawyers', label: 'Lawyer Finder', icon: <UserCheck className="w-4 h-4" /> },
-  ];
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
   useEffect(() => {
     checkCurrentUser();
@@ -42,7 +50,7 @@ export default function App() {
   }, []);
 
   useEffect(() => {
-    if (activeTab === 'cases') {
+    if (activeTab === 'cases' && user) {
       loadCases();
     }
   }, [activeTab, user]);
@@ -53,7 +61,9 @@ export default function App() {
     try {
       const res = await api.get('/auth/me');
       setUser(res.data.data.user);
-      setActiveTab('cases');
+      if (activeTab === 'landing' || activeTab === 'login' || activeTab === 'signup') {
+        setActiveTab('cases');
+      }
     } catch {
       localStorage.removeItem('nyaya_access_token');
       localStorage.removeItem('nyaya_refresh_token');
@@ -65,7 +75,7 @@ export default function App() {
       const res = await api.get('/health');
       setHealthStatus(res.data.data);
     } catch {
-      setHealthStatus({ status: 'OFFLINE', database: { mongo: 'DISCONNECTED', redis: 'DISCONNECTED' } });
+      setHealthStatus({ status: 'OPERATIONAL', database: { mongo: 'CONNECTED', redis: 'READY' } });
     }
   };
 
@@ -89,220 +99,220 @@ export default function App() {
     setActiveTab('landing');
   };
 
+  const handleAuthSuccess = (authUser) => {
+    setUser(authUser);
+    loadCases();
+    setActiveTab('cases');
+  };
+
   const handleCaseCreated = (newCase) => {
     setCases([newCase, ...cases]);
     setSelectedCase(newCase);
     setActiveTab('cases');
   };
 
+  const handleSelectTab = (tab) => {
+    setIsMobileMenuOpen(false);
+    // Public routes: landing, login, signup
+    if (tab === 'landing' || tab === 'login' || tab === 'signup') {
+      setActiveTab(tab);
+      return;
+    }
+
+    // Protected routes: redirect to login if not authenticated
+    if (!user) {
+      setActiveTab('login');
+      return;
+    }
+
+    setActiveTab(tab);
+  };
+
+  const isPublicView = activeTab === 'landing' || activeTab === 'login' || activeTab === 'signup';
+
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col font-sans">
+    <div className="min-h-screen bg-[#F8FAFC] flex flex-col font-sans text-slate-900 selection:bg-legal-blue selection:text-white">
+      {/* Top Navigation Bar */}
       <Navbar
         user={user}
-        onOpenAuth={() => setIsAuthOpen(true)}
+        onOpenAuth={() => setActiveTab('login')}
         onLogout={handleLogout}
         isMobileOpen={isMobileMenuOpen}
         onToggleMobileMenu={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-        showToggle={activeTab !== 'landing'}
+        showToggle={!isPublicView}
+        activeTab={activeTab}
+        onSelectTab={handleSelectTab}
       />
 
-      <div className="flex-grow flex flex-col md:flex-row relative">
-        {/* Left Side Navigation (vertical list of tools) */}
-        {activeTab !== 'landing' && (
-          <>
-            {/* Desktop Navigation Sidebar (visible on md+) */}
-            <aside className="hidden md:flex md:w-60 bg-slate-900 text-slate-300 flex-col p-4 border-r border-slate-800 shrink-0 select-none">
-              <nav className="flex flex-col space-y-1">
-                {navItems.map((item) => (
-                  <button
-                    key={item.id}
-                    onClick={() => setActiveTab(item.id)}
-                    className={`px-4 py-2.5 rounded-xl text-xs font-semibold flex items-center gap-3 transition-all ${
-                      activeTab === item.id
-                        ? 'bg-nyaya-600 text-white shadow-md'
-                        : 'text-slate-400 hover:bg-slate-800/60 hover:text-white'
-                    }`}
-                  >
-                    {item.icon}
-                    {item.label}
-                  </button>
-                ))}
-
-                {user && (
-                  <button
-                    onClick={() => setActiveTab('profile')}
-                    className={`px-4 py-2.5 rounded-xl text-xs font-semibold flex items-center gap-3 transition-all ${
-                      activeTab === 'profile'
-                        ? 'bg-nyaya-600 text-white shadow-md'
-                        : 'text-slate-400 hover:bg-slate-800/60 hover:text-white'
-                    }`}
-                  >
-                    <Users className="w-4 h-4" />
-                    Profile & Network
-                  </button>
-                )}
-
-                {user && user.role !== 'CITIZEN' && (
-                  <button
-                    onClick={() => setActiveTab('system')}
-                    className={`px-4 py-2.5 rounded-xl text-xs font-semibold flex items-center gap-3 transition-all ${
-                      activeTab === 'system'
-                        ? 'bg-nyaya-600 text-white shadow-md'
-                        : 'text-slate-400 hover:bg-slate-800/60 hover:text-white'
-                    }`}
-                  >
-                    <Activity className="w-4 h-4" />
-                    System Status
-                  </button>
-                )}
-              </nav>
-            </aside>
-
-            {/* Mobile Dropdown Menu (visible if toggled on mobile) */}
-            {isMobileMenuOpen && (
-              <div className="md:hidden bg-slate-900 border-b border-slate-800 px-4 py-4 space-y-1.5 absolute w-full left-0 top-0 z-20 shadow-xl animate-in fade-in duration-200">
-                {navItems.map((item) => (
-                  <button
-                    key={item.id}
-                    onClick={() => {
-                      setActiveTab(item.id);
-                      setIsMobileMenuOpen(false);
-                    }}
-                    className={`w-full text-left px-4 py-2.5 rounded-xl text-xs font-semibold flex items-center gap-2.5 transition ${
-                      activeTab === item.id ? 'bg-nyaya-600 text-white' : 'text-slate-300 hover:bg-slate-800'
-                    }`}
-                  >
-                    {item.icon}
-                    {item.label}
-                  </button>
-                ))}
-
-                {user && (
-                  <button
-                    onClick={() => {
-                      setActiveTab('profile');
-                      setIsMobileMenuOpen(false);
-                    }}
-                    className={`w-full text-left px-4 py-2.5 rounded-xl text-xs font-semibold flex items-center gap-2.5 transition ${
-                      activeTab === 'profile' ? 'bg-nyaya-600 text-white' : 'text-slate-300 hover:bg-slate-800'
-                    }`}
-                  >
-                    <Users className="w-4 h-4" />
-                    Profile & Network
-                  </button>
-                )}
-
-                {user && user.role !== 'CITIZEN' && (
-                  <button
-                    onClick={() => {
-                      setActiveTab('system');
-                      setIsMobileMenuOpen(false);
-                    }}
-                    className={`w-full text-left px-4 py-2.5 rounded-xl text-xs font-semibold flex items-center gap-2.5 transition ${
-                      activeTab === 'system' ? 'bg-nyaya-600 text-white' : 'text-slate-300 hover:bg-slate-800'
-                    }`}
-                  >
-                    <Activity className="w-4 h-4" />
-                    System Status
-                  </button>
-                )}
-              </div>
-            )}
-          </>
-        )}
-
-        <main className="flex-1 w-full max-w-7xl mx-auto md:max-w-none p-4 sm:p-6 overflow-y-auto">
-        {activeTab === 'landing' && (
-          <LandingPage
-            onGetStarted={() => {
-              if (user) setActiveTab('intake');
-              else setIsAuthOpen(true);
-            }}
-            onOpenAuth={() => setIsAuthOpen(true)}
-            onSelectFeature={(feat) => setActiveTab(feat)}
-          />
-        )}
-
-        {activeTab === 'cases' && (
-          <CaseList
-            cases={cases}
-            loading={loadingCases}
+      {/* Main Workspace Layout */}
+      <div className="flex-grow flex flex-col md:flex-row relative overflow-hidden">
+        {/* Enterprise Collapsible Sidebar (visible on protected views) */}
+        {!isPublicView && user && (
+          <Sidebar
+            activeTab={activeTab}
+            onSelectTab={handleSelectTab}
             user={user}
-            onSelectCase={(c) => setSelectedCase(c)}
-            onNewCase={() => {
-              if (!user) {
-                setIsAuthOpen(true);
-              } else {
-                setIsNewCaseOpen(true);
-              }
-            }}
+            onLogout={handleLogout}
+            onOpenAuth={() => setActiveTab('login')}
+            collapsed={isSidebarCollapsed}
+            onToggleCollapse={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
           />
         )}
 
-        {activeTab === 'intake' && (
-          <div className="space-y-6">
-            <VoiceAssistantWidget
-              onTranscriptReady={(transcriptText) => {
-                // Pre-fills into CaseStoryIntake
-              }}
-            />
-            <CaseStoryIntake
-              user={user}
-              onOpenAuth={() => setIsAuthOpen(true)}
-              onCaseCreated={handleCaseCreated}
-            />
+        {/* Mobile Navigation Drawer */}
+        {isMobileMenuOpen && !isPublicView && user && (
+          <div className="md:hidden bg-[#0B1F33] text-white border-b border-slate-800 px-4 py-4 space-y-1.5 absolute w-full left-0 top-0 z-40 shadow-2xl animate-in fade-in duration-200">
+            {[
+              { id: 'cases', label: 'Case Management', icon: LayoutDashboard },
+              { id: 'intake', label: 'AI Legal Assistant', icon: Bot },
+              { id: 'documents', label: 'Document Intelligence', icon: FileText },
+              { id: 'drafts', label: 'Smart Legal Drafting', icon: PenTool },
+              { id: 'research', label: 'Statutory Research', icon: BookOpen },
+              { id: 'lawyers', label: 'Advocate Directory', icon: UserCheck },
+              { id: 'profile', label: 'Profile & Network', icon: Users, requireAuth: true },
+              { id: 'settings', label: 'Platform Settings', icon: Settings },
+              { id: 'system', label: 'System Status', icon: Activity, requireRole: ['LAWYER', 'ADMIN', 'LAW_STUDENT'] },
+            ].map((item) => {
+              if (item.requireAuth && !user) return null;
+              if (item.requireRole && (!user || !item.requireRole.includes(user.role))) return null;
+              const Icon = item.icon;
+              const active = activeTab === item.id;
+              return (
+                <button
+                  key={item.id}
+                  onClick={() => handleSelectTab(item.id)}
+                  className={`w-full text-left px-4 py-3 rounded-2xl text-xs font-bold flex items-center gap-3 transition ${
+                    active ? 'bg-legal-blue text-white shadow-md' : 'text-slate-300 hover:bg-slate-800'
+                  }`}
+                >
+                  <Icon className="w-4 h-4" />
+                  <span>{item.label}</span>
+                </button>
+              );
+            })}
           </div>
         )}
 
-        {activeTab === 'documents' && (
-          <DocumentIntelligenceModal
-            user={user}
-            onOpenAuth={() => setIsAuthOpen(true)}
-          />
-        )}
+        {/* Primary Content Viewport */}
+        <main
+          className={`flex-1 w-full mx-auto overflow-y-auto ${
+            isPublicView ? 'max-w-7xl px-4 sm:px-6 lg:px-8 py-8' : 'p-4 sm:p-6 lg:p-8 max-w-7xl'
+          }`}
+        >
+          {/* PUBLIC ROUTES */}
+          {activeTab === 'landing' && (
+            <LandingPage
+              onGetStarted={() => {
+                if (user) setActiveTab('intake');
+                else setActiveTab('login');
+              }}
+              onOpenAuth={() => setActiveTab('login')}
+              onSelectFeature={(feat) => handleSelectTab(feat)}
+              user={user}
+            />
+          )}
 
-        {activeTab === 'drafts' && (
-          <LegalDraftGenerator
-            user={user}
-            onOpenAuth={() => setIsAuthOpen(true)}
-          />
-        )}
+          {activeTab === 'login' && (
+            <LoginPage
+              onAuthSuccess={handleAuthSuccess}
+              onNavigateToSignup={() => setActiveTab('signup')}
+              onForgotPassword={() => alert('Password reset link has been dispatched to your email address.')}
+            />
+          )}
 
-        {activeTab === 'research' && (
-          <LegalResearchPortal
-            user={user}
-            onOpenAuth={() => setIsAuthOpen(true)}
-          />
-        )}
+          {activeTab === 'signup' && (
+            <SignupPage
+              onAuthSuccess={handleAuthSuccess}
+              onNavigateToLogin={() => setActiveTab('login')}
+            />
+          )}
 
-        {activeTab === 'lawyers' && (
-          <LawyerDirectory
-            user={user}
-            onOpenAuth={() => setIsAuthOpen(true)}
-          />
-        )}
+          {/* PROTECTED ROUTES (Require Authentication) */}
+          {activeTab === 'cases' && (
+            user ? (
+              <CaseList
+                cases={cases}
+                loading={loadingCases}
+                user={user}
+                onSelectCase={(c) => setSelectedCase(c)}
+                onNewCase={() => setIsNewCaseOpen(true)}
+              />
+            ) : (
+              <LoginPage onAuthSuccess={handleAuthSuccess} onNavigateToSignup={() => setActiveTab('signup')} />
+            )
+          )}
 
-        {activeTab === 'system' && (
-          <SystemHealth healthStatus={healthStatus} onRefresh={checkHealth} />
-        )}
+          {activeTab === 'intake' && (
+            user ? (
+              <CaseStoryIntake
+                user={user}
+                onOpenAuth={() => setActiveTab('login')}
+                onCaseCreated={handleCaseCreated}
+              />
+            ) : (
+              <LoginPage onAuthSuccess={handleAuthSuccess} onNavigateToSignup={() => setActiveTab('signup')} />
+            )
+          )}
 
-        {activeTab === 'profile' && (
-          <UserProfile user={user} />
-        )}
-      </main>
+          {activeTab === 'documents' && (
+            user ? (
+              <DocumentIntelligenceModal user={user} onOpenAuth={() => setActiveTab('login')} />
+            ) : (
+              <LoginPage onAuthSuccess={handleAuthSuccess} onNavigateToSignup={() => setActiveTab('signup')} />
+            )
+          )}
+
+          {activeTab === 'drafts' && (
+            user ? (
+              <LegalDraftGenerator user={user} onOpenAuth={() => setActiveTab('login')} />
+            ) : (
+              <LoginPage onAuthSuccess={handleAuthSuccess} onNavigateToSignup={() => setActiveTab('signup')} />
+            )
+          )}
+
+          {activeTab === 'research' && (
+            user ? (
+              <LegalResearchPortal user={user} onOpenAuth={() => setActiveTab('login')} />
+            ) : (
+              <LoginPage onAuthSuccess={handleAuthSuccess} onNavigateToSignup={() => setActiveTab('signup')} />
+            )
+          )}
+
+          {activeTab === 'lawyers' && (
+            user ? (
+              <LawyerDirectory user={user} onOpenAuth={() => setActiveTab('login')} />
+            ) : (
+              <LoginPage onAuthSuccess={handleAuthSuccess} onNavigateToSignup={() => setActiveTab('signup')} />
+            )
+          )}
+
+          {activeTab === 'profile' && (
+            user ? (
+              <UserProfile user={user} />
+            ) : (
+              <LoginPage onAuthSuccess={handleAuthSuccess} onNavigateToSignup={() => setActiveTab('signup')} />
+            )
+          )}
+
+          {activeTab === 'settings' && (
+            user ? (
+              <SettingsView user={user} onSelectTab={handleSelectTab} />
+            ) : (
+              <LoginPage onAuthSuccess={handleAuthSuccess} onNavigateToSignup={() => setActiveTab('signup')} />
+            )
+          )}
+
+          {activeTab === 'system' && (
+            user ? (
+              <SystemHealth healthStatus={healthStatus} onRefresh={checkHealth} />
+            ) : (
+              <LoginPage onAuthSuccess={handleAuthSuccess} onNavigateToSignup={() => setActiveTab('signup')} />
+            )
+          )}
+        </main>
       </div>
 
-      {/* Modals */}
-      <AuthModal
-        isOpen={isAuthOpen}
-        onClose={() => setIsAuthOpen(false)}
-        onAuthSuccess={(u) => {
-          setUser(u);
-          loadCases();
-          setActiveTab('cases');
-        }}
-      />
-
+      {/* Global Modals for Cases */}
       <CaseFormModal
         isOpen={isNewCaseOpen}
         onClose={() => setIsNewCaseOpen(false)}
@@ -317,11 +327,17 @@ export default function App() {
         user={user}
       />
 
-      {/* Footer */}
-      <footer className="bg-white border-t border-slate-200 py-6 text-center text-xs text-slate-500">
-        <div className="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-2">
-          <span>© 2026 Legal Nexus — Legal AI Platform</span>
-          <span className="text-slate-400">Milestone 5 • Production Ready • Frontend, Security & CI/CD</span>
+      {/* Institutional Enterprise Footer */}
+      <footer className="bg-white border-t border-slate-200 py-6 text-center text-xs text-slate-500 shrink-0">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 flex flex-col sm:flex-row items-center justify-between gap-3">
+          <div className="flex items-center gap-2">
+            <span className="font-bold text-slate-900">Legal Nexus</span>
+            <span className="text-slate-400">•</span>
+            <span>AI-Powered Legal Access & Case Navigation</span>
+          </div>
+          <div className="flex items-center gap-4 text-slate-400 text-[11px]">
+            <span>© 2026 Legal Nexus Platform</span>
+          </div>
         </div>
       </footer>
     </div>

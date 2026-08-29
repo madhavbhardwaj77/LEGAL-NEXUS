@@ -43,3 +43,6 @@ Thumbs.db
 # Testing
 coverage/
 .nyc_output/
+
+# Backups & Local Scratch
+_backup_local_untracked/

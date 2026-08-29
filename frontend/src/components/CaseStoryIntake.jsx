@@ -16,6 +16,14 @@ import {
   Send,
   Building2,
   Calendar,
+  Layers,
+  Info,
+  DollarSign,
+  Mic,
+  MicOff,
+  Volume2,
+  Globe,
+  X,
 } from 'lucide-react';
 import api from '../services/api';
 
@@ -23,7 +31,7 @@ export default function CaseStoryIntake({ user, onOpenAuth, onCaseCreated }) {
   const [messages, setMessages] = useState([
     {
       sender: 'assistant',
-      text: 'Namaste! I am the Legal Nexus AI Assistant. Tell me your legal issue in your own words in English, हिन्दी (Hindi), or Hinglish. I will help understand your rights, build your structured case, and identify what evidence is needed.',
+      text: 'Namaste! I am the Legal Nexus AI Assistant. Tell me your legal dispute in your own words in English, हिन्दी (Hindi), or Hinglish.\n\nI will extract structured case facts, verify applicable Indian statutory provisions, audit necessary evidence, and prepare your formal case dossier.',
     },
   ]);
   const [inputStory, setInputStory] = useState('');
@@ -32,11 +40,60 @@ export default function CaseStoryIntake({ user, onOpenAuth, onCaseCreated }) {
   const [analysisResult, setAnalysisResult] = useState(null);
   const [successNotice, setSuccessNotice] = useState(null);
 
+  // Floating Voice Assistant State (Bottom Right)
+  const [isVoiceOpen, setIsVoiceOpen] = useState(false);
+  const [isRecording, setIsRecording] = useState(false);
+  const [voiceTranscript, setVoiceTranscript] = useState('');
+  const [voiceLang, setVoiceLang] = useState('hi-IN');
+  const [isSpeaking, setIsSpeaking] = useState(false);
+  const [recognition, setRecognition] = useState(null);
+
+  React.useEffect(() => {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (SpeechRecognition) {
+      const recog = new SpeechRecognition();
+      recog.continuous = false;
+      recog.interimResults = true;
+
+      recog.onresult = (event) => {
+        let currentText = '';
+        for (let i = event.resultIndex; i < event.results.length; i++) {
+          currentText += event.results[i][0].transcript;
+        }
+        setVoiceTranscript(currentText);
+        setInputStory(currentText);
+      };
+
+      recog.onerror = (err) => {
+        console.error('Speech recognition error:', err);
+        setIsRecording(false);
+      };
+
+      recog.onend = () => {
+        setIsRecording(false);
+      };
+
+      setRecognition(recog);
+    }
+  }, []);
+
   const sampleStarters = [
-    'Employer withheld 3 months salary of 1.5 lakhs in Delhi without notice.',
-    'Landlord refused to return 50000 security deposit after I vacated the flat.',
-    'Lost 45000 in online UPI phishing fraud after a fake bank KYC call.',
-    'Flipkart delivered a fake duplicate phone and refused replacement.',
+    {
+      label: '💼 Unpaid Salary',
+      text: 'Employer withheld 3 months salary of 1.5 lakhs in Delhi without notice.',
+    },
+    {
+      label: '🏠 Security Deposit',
+      text: 'Landlord refused to return 50000 security deposit after I vacated the flat.',
+    },
+    {
+      label: '🛡️ UPI Cyber Fraud',
+      text: 'Lost 45000 in online UPI phishing fraud after a fake bank KYC call.',
+    },
+    {
+      label: '🛍️ Counterfeit Product',
+      text: 'Flipkart seller delivered a fake duplicate phone and refused refund.',
+    },
   ];
 
   const handleSendMessage = async (textToSend = inputStory) => {
@@ -50,6 +107,7 @@ export default function CaseStoryIntake({ user, onOpenAuth, onCaseCreated }) {
     const userMsg = { sender: 'user', text: textToSend };
     setMessages((prev) => [...prev, userMsg]);
     setInputStory('');
+    setVoiceTranscript('');
     setLoading(true);
 
     try {
@@ -67,7 +125,10 @@ export default function CaseStoryIntake({ user, onOpenAuth, onCaseCreated }) {
       }
 
       // 2. Add assistant response to conversation
-      const assistantText = data.responseExplanation || data.reply || 'I have analyzed your statement and updated your structured case details.';
+      const assistantText =
+        data.responseExplanation ||
+        data.reply ||
+        'I have analyzed your statement and updated your structured case details with statutory references.';
       const assistantMsg = {
         sender: 'assistant',
         text: assistantText,
@@ -85,14 +146,21 @@ export default function CaseStoryIntake({ user, onOpenAuth, onCaseCreated }) {
             title: err.response.data.message || '⚠️ Guardrail Warning: Query Blocked',
             category: warningData.categoryLabel || warningData.category || 'Security Policy Violation',
             incidentId: warningData.incidentId,
-            text: warningData.detail || 'This query was flagged by the Guardrail layer.',
-            guidance: warningData.guidance || 'If you are seeking legal protection as a victim, please rephrase your query.',
+            text: warningData.detail || 'This query was flagged by the platform guardrail layer.',
+            guidance:
+              warningData.guidance ||
+              'If you are seeking legal protection as a victim, please rephrase your query.',
           },
         ]);
       } else {
         setMessages((prev) => [
           ...prev,
-          { sender: 'assistant', text: err.response?.data?.message || 'Sorry, I encountered an error analyzing your case. Please try again.' },
+          {
+            sender: 'assistant',
+            text:
+              err.response?.data?.message ||
+              'Sorry, I encountered an issue analyzing your case. Please try again.',
+          },
         ]);
       }
     } finally {
@@ -110,9 +178,12 @@ export default function CaseStoryIntake({ user, onOpenAuth, onCaseCreated }) {
     try {
       const res = await api.post('/ai/intake-to-case', {
         structuredCase: analysisResult.case,
-        intakeNarrative: messages.filter((m) => m.sender === 'user').map((m) => m.text).join('\n\n'),
+        intakeNarrative: messages
+          .filter((m) => m.sender === 'user')
+          .map((m) => m.text)
+          .join('\n\n'),
       });
-      setSuccessNotice(`Case ${res.data.data.caseNumber} formally filed and recorded in the database!`);
+      setSuccessNotice(`Case ${res.data.data.caseNumber} formally recorded in the database!`);
       if (onCaseCreated) {
         onCaseCreated(res.data.data);
       }
@@ -123,309 +194,474 @@ export default function CaseStoryIntake({ user, onOpenAuth, onCaseCreated }) {
     }
   };
 
+  const toggleVoiceRecording = () => {
+    if (isRecording) {
+      if (recognition) recognition.stop();
+      setIsRecording(false);
+    } else {
+      setVoiceTranscript('');
+      setIsRecording(true);
+      if (recognition) {
+        recognition.lang = voiceLang;
+        try {
+          recognition.start();
+        } catch {
+          simulateVoiceInput();
+        }
+      } else {
+        simulateVoiceInput();
+      }
+    }
+  };
+
+  const simulateVoiceInput = async () => {
+    setIsRecording(true);
+    setVoiceTranscript('Simulating voice input...');
+    try {
+      const res = await api.post('/ai/voice/transcribe', {
+        language: voiceLang,
+        simulatedText:
+          voiceLang === 'hi-IN'
+            ? 'Mere boss ne 3 mahine se salary nahi di, 150000 rupaye pending hai in Delhi.'
+            : 'My employer withheld 3 months salary of 1.5 lakhs in Delhi without notice.',
+      });
+      setTimeout(() => {
+        const text = res.data.data?.transcript || '';
+        setVoiceTranscript(text);
+        setInputStory(text);
+        setIsRecording(false);
+      }, 1200);
+    } catch {
+      setIsRecording(false);
+      setVoiceTranscript('Simulated connection failed.');
+    }
+  };
+
+  const speakText = (text) => {
+    if (!window.speechSynthesis) return;
+    if (isSpeaking) {
+      window.speechSynthesis.cancel();
+      setIsSpeaking(false);
+      return;
+    }
+
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = voiceLang;
+    utterance.onend = () => setIsSpeaking(false);
+    setIsSpeaking(true);
+    window.speechSynthesis.speak(utterance);
+  };
+
   const getUrgencyBadge = (urgency) => {
     if (!urgency) return null;
-    const level = urgency.urgencyLevel;
-    if (level === 'URGENT_ASSISTANCE') {
+    const level = urgency.urgencyLevel || urgency;
+    if (level === 'URGENT_ASSISTANCE' || level === 'HIGH' || level === 'CRITICAL') {
       return (
-        <span className="px-2.5 py-1 bg-red-50 text-red-700 border border-red-200 text-xs font-bold rounded-lg flex items-center gap-1">
+        <span className="px-2.5 py-1 bg-red-50 text-red-800 border border-red-200 text-xs font-bold rounded-xl flex items-center gap-1">
           <AlertTriangle className="w-3.5 h-3.5 text-red-600" />
-          Urgent Assistance Required
+          Urgent Attention
         </span>
       );
     }
-    if (level === 'ATTENTION_RECOMMENDED') {
+    if (level === 'ATTENTION_RECOMMENDED' || level === 'MEDIUM') {
       return (
-        <span className="px-2.5 py-1 bg-amber-50 text-amber-700 border border-amber-200 text-xs font-bold rounded-lg flex items-center gap-1">
+        <span className="px-2.5 py-1 bg-amber-50 text-amber-800 border border-amber-200 text-xs font-bold rounded-xl flex items-center gap-1">
           <Clock className="w-3.5 h-3.5 text-amber-600" />
           Attention Recommended
         </span>
       );
     }
     return (
-      <span className="px-2.5 py-1 bg-emerald-50 text-emerald-700 border border-emerald-200 text-xs font-bold rounded-lg flex items-center gap-1">
+      <span className="px-2.5 py-1 bg-emerald-50 text-emerald-800 border border-emerald-200 text-xs font-bold rounded-xl flex items-center gap-1">
         <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
-        General Legal Guidance
+        General Guidance
       </span>
     );
   };
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-      {/* Left Chat & Intake Interaction Column (7 Cols) */}
-      <div className="lg:col-span-7 flex flex-col bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden min-h-[600px]">
-        {/* Assistant Header */}
-        <div className="bg-slate-900 text-white p-4 sm:p-5 flex items-center justify-between border-b border-slate-800">
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-2xl bg-nyaya-600 flex items-center justify-center text-white shadow">
-              <Bot className="w-5 h-5" />
+    <div className="relative">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        {/* Main Center Chatbot Column (7 Cols) */}
+        <div className="lg:col-span-7 flex flex-col bg-white rounded-3xl border border-slate-200/90 shadow-subtle overflow-hidden min-h-[640px]">
+          {/* Assistant Header */}
+          <div className="bg-[#0B1F33] text-white p-5 flex items-center justify-between border-b border-slate-800">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-legal-blue to-sky-400 flex items-center justify-center text-white shadow-md shadow-legal-blue/20">
+                <Bot className="w-5 h-5" />
+              </div>
+              <div>
+                <h2 className="text-sm font-bold text-white flex items-center gap-2">
+                  Legal Nexus AI Assistant
+                  <span className="text-[10px] bg-legal-blue/20 text-sky-300 px-2 py-0.5 rounded-full border border-legal-blue/30 font-semibold">
+                    Multi-Agent Reasoning
+                  </span>
+                </h2>
+                <p className="text-[11px] text-slate-400 font-medium">
+                  Continuous fact extraction & grounded statutory legal reasoning
+                </p>
+              </div>
             </div>
-            <div>
-              <h2 className="text-sm font-bold flex items-center gap-2">
-                Legal Nexus AI Assistant
-                <span className="text-[10px] bg-nyaya-500/30 text-nyaya-300 px-2 py-0.5 rounded-full border border-nyaya-500/30">
-                  LangGraph Agentic Workflow
-                </span>
-              </h2>
-              <p className="text-[11px] text-slate-400">Continuous fact extraction & grounded legal reasoning</p>
+
+            <span className="hidden sm:flex items-center gap-1.5 text-[11px] text-legal-gold font-semibold bg-legal-gold/10 px-2.5 py-1 rounded-full border border-legal-gold/20">
+              <Sparkles className="w-3.5 h-3.5" />
+              AI Grounding
+            </span>
+          </div>
+
+          {/* Message Stream */}
+          <div className="flex-1 p-5 sm:p-6 overflow-y-auto space-y-4 max-h-[520px]">
+            {messages.map((m, i) => (
+              <div
+                key={i}
+                className={`flex gap-3 ${m.sender === 'user' ? 'justify-end' : 'justify-start'} animate-in fade-in duration-150`}
+              >
+                {m.sender === 'assistant' && (
+                  <div className="w-8 h-8 rounded-xl bg-navy-50 text-legal-blue border border-navy-100 flex items-center justify-center shrink-0 shadow-sm mt-0.5">
+                    <Bot className="w-4 h-4 text-legal-blue" />
+                  </div>
+                )}
+
+                {/* USER MESSAGES: Clean Royal Blue Box with Crisp White Text */}
+                <div
+                  className={`max-w-[85%] rounded-3xl p-4 text-xs sm:text-sm leading-relaxed ${
+                    m.sender === 'user'
+                      ? 'bg-blue-600 text-white rounded-tr-sm shadow-md font-medium'
+                      : m.isWarning
+                      ? 'bg-red-50 text-red-950 border-2 border-red-300 rounded-tl-sm shadow-sm'
+                      : 'bg-slate-50 text-slate-800 border border-slate-200/90 rounded-tl-sm shadow-subtle'
+                  }`}
+                >
+                  {m.isWarning ? (
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between gap-2 border-b border-red-200 pb-2">
+                        <div className="flex items-center gap-1.5 font-bold text-red-700 text-xs sm:text-sm">
+                          <ShieldAlert className="w-4 h-4 text-red-600 shrink-0" />
+                          <span>{m.title}</span>
+                        </div>
+                        <span className="px-2 py-0.5 bg-red-100 text-red-800 border border-red-300 rounded-full text-[10px] font-bold uppercase tracking-wider">
+                          {m.category}
+                        </span>
+                      </div>
+
+                      <p className="text-xs sm:text-sm text-red-900 leading-relaxed font-medium">{m.text}</p>
+
+                      <div className="bg-white/80 p-3 rounded-xl border border-red-200 space-y-1.5">
+                        <span className="text-[11px] font-bold text-red-900 flex items-center gap-1">
+                          <Scale className="w-3.5 h-3.5 text-red-600" />
+                          Lawful Guidance & Victim Redirection:
+                        </span>
+                        <p className="text-xs text-slate-700 leading-relaxed">{m.guidance}</p>
+                      </div>
+
+                      {m.incidentId && (
+                        <div className="text-[10px] text-red-600/80 font-mono pt-1">
+                          Incident Reference ID: {m.incidentId}
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <p className={`whitespace-pre-line ${m.sender === 'user' ? 'text-white' : 'text-slate-800'}`}>
+                      {m.text}
+                    </p>
+                  )}
+
+                  {/* Clarifying Questions Quick Chips */}
+                  {m.clarifyingQuestions && m.clarifyingQuestions.length > 0 && (
+                    <div className="mt-3 pt-3 border-t border-slate-200/80 space-y-2">
+                      <span className="text-[11px] font-bold text-slate-700 flex items-center gap-1">
+                        <HelpCircle className="w-3.5 h-3.5 text-legal-blue" />
+                        Key Clarifying Questions (Click to Answer):
+                      </span>
+                      <div className="flex flex-col gap-1.5">
+                        {m.clarifyingQuestions.map((q, idx) => (
+                          <button
+                            key={idx}
+                            onClick={() => setInputStory(`Answering: ${q} — `)}
+                            className="text-left px-3 py-2 bg-white hover:bg-blue-50/60 text-slate-700 hover:text-legal-blue text-xs rounded-xl border border-slate-200 transition shadow-subtle"
+                          >
+                            → {q}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {m.sender === 'user' && (
+                  <div className="w-8 h-8 rounded-xl bg-blue-700 text-white flex items-center justify-center shrink-0 border border-blue-600 shadow-sm mt-0.5">
+                    <User className="w-4 h-4" />
+                  </div>
+                )}
+              </div>
+            ))}
+
+            {loading && (
+              <div className="flex items-center gap-2 text-xs text-slate-600 italic p-3.5 bg-blue-50/60 border border-blue-100 rounded-2xl w-fit animate-pulse">
+                <span className="w-3.5 h-3.5 border-2 border-legal-blue border-t-transparent rounded-full animate-spin"></span>
+                <span>Agents executing: Intake → Classification → Case Builder → RAG → Evidence Audit...</span>
+              </div>
+            )}
+          </div>
+
+          {/* Story Input Bar & Quick Scenario Starters */}
+          <div className="p-4 sm:p-5 bg-slate-50 border-t border-slate-200 space-y-2.5">
+            <div className="flex items-center gap-2 overflow-x-auto pb-1 text-xs">
+              <span className="text-slate-400 text-[11px] font-bold uppercase tracking-wider shrink-0">
+                Quick Scenarios:
+              </span>
+              {sampleStarters.map((s, idx) => (
+                <button
+                  key={idx}
+                  onClick={() => handleSendMessage(s.text)}
+                  className="px-3 py-1 bg-white hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-semibold border border-slate-200 shrink-0 transition shadow-subtle"
+                >
+                  {s.label}
+                </button>
+              ))}
+            </div>
+
+            <div className="relative">
+              <textarea
+                rows={2}
+                value={inputStory}
+                onChange={(e) => setInputStory(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    handleSendMessage();
+                  }
+                }}
+                placeholder="Describe your legal situation in English, Hindi, or Hinglish (e.g. 'Mere boss ne salary rok li hai')..."
+                className="w-full pl-4 pr-12 py-3 bg-white border border-slate-200 rounded-2xl text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-legal-blue shadow-subtle resize-none leading-relaxed"
+              />
+              <button
+                onClick={() => handleSendMessage()}
+                disabled={loading || !inputStory.trim()}
+                className="absolute right-2.5 bottom-3 p-2 bg-legal-blue hover:bg-blue-700 disabled:bg-slate-300 text-white rounded-xl transition shadow-md"
+              >
+                <Send className="w-4 h-4 text-legal-gold" />
+              </button>
+            </div>
+
+            {/* Microcopy disclaimer */}
+            <div className="flex items-center gap-1.5 text-[10px] text-slate-400 pt-0.5">
+              <Info className="w-3 h-3 text-legal-gold shrink-0" />
+              <span>AI-generated information grounded in Indian statutes. Verify important decisions with an advocate.</span>
             </div>
           </div>
         </div>
 
-        {/* Message Stream */}
-        <div className="flex-1 p-4 sm:p-6 overflow-y-auto space-y-4 max-h-[500px]">
-          {messages.map((m, i) => (
-            <div
-              key={i}
-              className={`flex gap-3 ${m.sender === 'user' ? 'justify-end' : 'justify-start'}`}
-            >
-              {m.sender === 'assistant' && (
-                <div className="w-8 h-8 rounded-xl bg-nyaya-50 text-nyaya-700 border border-nyaya-200 flex items-center justify-center shrink-0">
-                  <Bot className="w-4 h-4" />
-                </div>
-              )}
-
-              <div
-                className={`max-w-[85%] rounded-2xl p-4 text-xs sm:text-sm leading-relaxed ${
-                  m.sender === 'user'
-                    ? 'bg-nyaya-600 text-white rounded-tr-none'
-                    : m.isWarning
-                    ? 'bg-red-50 text-red-950 border-2 border-red-300 rounded-tl-none shadow-sm'
-                    : 'bg-slate-50 text-slate-800 border border-slate-200 rounded-tl-none'
-                }`}
-              >
-                {m.isWarning ? (
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between gap-2 border-b border-red-200 pb-2">
-                      <div className="flex items-center gap-1.5 font-bold text-red-700 text-xs sm:text-sm">
-                        <ShieldAlert className="w-4 h-4 text-red-600 shrink-0" />
-                        <span>{m.title}</span>
-                      </div>
-                      <span className="px-2 py-0.5 bg-red-100 text-red-800 border border-red-300 rounded-full text-[10px] font-bold uppercase tracking-wider">
-                        {m.category}
-                      </span>
-                    </div>
-
-                    <p className="text-xs sm:text-sm text-red-900 leading-relaxed font-medium">
-                      {m.text}
-                    </p>
-
-                    <div className="bg-white/80 p-3 rounded-xl border border-red-200 space-y-1.5">
-                      <span className="text-[11px] font-bold text-red-900 flex items-center gap-1">
-                        <Scale className="w-3.5 h-3.5 text-red-600" />
-                        Lawful Guidance & Victim Redirection:
-                      </span>
-                      <p className="text-xs text-slate-700 leading-relaxed">
-                        {m.guidance}
-                      </p>
-                    </div>
-
-                    {m.incidentId && (
-                      <div className="text-[10px] text-red-600/80 font-mono pt-1">
-                        Incident Reference ID: {m.incidentId}
-                      </div>
-                    )}
+        {/* Right Structured Case Preview Column (5 Cols) */}
+        <div className="lg:col-span-5 space-y-4">
+          {analysisResult ? (
+            <div className="space-y-4 animate-in fade-in slide-in-from-right-3 duration-300">
+              {/* Structured Case Summary Card */}
+              <div className="bg-white p-6 rounded-3xl border border-slate-200/90 shadow-subtle space-y-4">
+                <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+                  <div>
+                    <span className="text-[10px] font-mono font-bold text-legal-blue bg-blue-50 px-2 py-0.5 rounded border border-blue-200">
+                      {analysisResult.case?.caseNumber || 'LN-DRAFT-001'}
+                    </span>
+                    <h3 className="text-sm font-bold text-slate-900 mt-1">
+                      {analysisResult.case?.issue || 'Structured Legal Dispute'}
+                    </h3>
                   </div>
-                ) : (
-                  <p className="whitespace-pre-line">{m.text}</p>
+                  {getUrgencyBadge(analysisResult.urgency)}
+                </div>
+
+                {/* Category & Jurisdiction */}
+                <div className="grid grid-cols-2 gap-2 text-xs">
+                  <div className="p-3 bg-slate-50 rounded-2xl border border-slate-100">
+                    <span className="text-[10px] text-slate-400 font-bold uppercase block">Legal Domain</span>
+                    <span className="font-bold text-slate-800">{analysisResult.case?.category}</span>
+                  </div>
+                  <div className="p-3 bg-slate-50 rounded-2xl border border-slate-100">
+                    <span className="text-[10px] text-slate-400 font-bold uppercase block">Jurisdiction</span>
+                    <span className="font-bold text-slate-800">{analysisResult.case?.jurisdiction || 'India'}</span>
+                  </div>
+                </div>
+
+                {/* Financial Claim */}
+                {analysisResult.case?.financialDetails?.disputedAmount && (
+                  <div className="p-3.5 bg-blue-50/80 rounded-2xl border border-blue-200 flex items-center justify-between text-xs">
+                    <span className="font-semibold text-slate-800">Disputed Financial Claim:</span>
+                    <span className="font-extrabold text-legal-blue font-mono text-sm">
+                      ₹{Number(analysisResult.case.financialDetails.disputedAmount).toLocaleString('en-IN')}
+                    </span>
+                  </div>
                 )}
 
-                {/* Clarifying Questions Quick Chips */}
-                {m.clarifyingQuestions && m.clarifyingQuestions.length > 0 && (
-                  <div className="mt-3 pt-3 border-t border-slate-200/80 space-y-2">
-                    <span className="text-[11px] font-bold text-slate-600 flex items-center gap-1">
-                      <HelpCircle className="w-3.5 h-3.5 text-nyaya-600" />
-                      Key Clarifying Questions (Click to answer):
+                {/* Grounded Legal Basis */}
+                {analysisResult.research?.legalBasis && analysisResult.research.legalBasis.length > 0 && user && user.role !== 'CITIZEN' && (
+                  <div className="space-y-2">
+                    <span className="text-xs font-bold text-slate-900 flex items-center gap-1">
+                      <Scale className="w-3.5 h-3.5 text-legal-blue" />
+                      Applicable Statutory Provisions:
                     </span>
-                    <div className="flex flex-col gap-1.5">
-                      {m.clarifyingQuestions.map((q, idx) => (
-                        <button
-                          key={idx}
-                          onClick={() => setInputStory(`Answering: ${q} — `)}
-                          className="text-left px-3 py-1.5 bg-white hover:bg-nyaya-50 text-slate-700 hover:text-nyaya-800 text-xs rounded-xl border border-slate-200 transition"
-                        >
-                          → {q}
-                        </button>
+                    <div className="space-y-1.5">
+                      {analysisResult.research.legalBasis.slice(0, 2).map((prov, i) => (
+                        <div key={i} className="p-2.5 bg-slate-50 rounded-xl border border-slate-200 text-xs">
+                          <span className="font-bold text-legal-blue">{prov.section}: </span>
+                          <span className="text-slate-700">{prov.sectionTitle}</span>
+                        </div>
                       ))}
                     </div>
                   </div>
                 )}
+
+                {/* Evidence Checklist */}
+                {analysisResult.evidence && (
+                  <div className="space-y-2">
+                    <span className="text-xs font-bold text-slate-900 flex items-center gap-1">
+                      <FileText className="w-3.5 h-3.5 text-legal-blue" />
+                      Evidence Audit Checklist:
+                    </span>
+                    <div className="space-y-1 text-xs">
+                      {analysisResult.evidence.available?.map((e, idx) => (
+                        <div key={idx} className="flex items-center gap-1.5 text-emerald-800 bg-emerald-50 px-2.5 py-1 rounded-xl border border-emerald-200">
+                          <CheckCircle2 className="w-3.5 h-3.5 shrink-0 text-emerald-600" />
+                          <span className="truncate">{e.name}</span>
+                        </div>
+                      ))}
+                      {analysisResult.evidence.missing?.slice(0, 2).map((e, idx) => (
+                        <div key={idx} className="flex items-center gap-1.5 text-amber-800 bg-amber-50 px-2.5 py-1 rounded-xl border border-amber-200">
+                          <AlertTriangle className="w-3.5 h-3.5 shrink-0 text-amber-600" />
+                          <span className="truncate">Need: {e.name}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Convert to Formal Case Button */}
+                <button
+                  onClick={handleCreateFormalCase}
+                  disabled={creatingCase || !!successNotice}
+                  className="w-full py-3 bg-gradient-to-r from-legal-blue to-blue-700 hover:from-blue-600 hover:to-blue-800 disabled:opacity-50 text-white font-bold text-xs rounded-2xl shadow-md transition flex items-center justify-center gap-2"
+                >
+                  {creatingCase ? (
+                    <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+                  ) : (
+                    <>
+                      <FolderPlus className="w-4 h-4 text-legal-gold" />
+                      <span>Save & Create Formal Case Record</span>
+                    </>
+                  )}
+                </button>
+
+                {successNotice && (
+                  <div className="p-3.5 bg-emerald-50 text-emerald-800 border border-emerald-200 text-xs rounded-2xl flex items-center gap-2 animate-in fade-in">
+                    <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-600" />
+                    <span>{successNotice}</span>
+                  </div>
+                )}
               </div>
-
-              {m.sender === 'user' && (
-                <div className="w-8 h-8 rounded-xl bg-slate-900 text-white flex items-center justify-center shrink-0">
-                  <User className="w-4 h-4" />
-                </div>
-              )}
             </div>
-          ))}
-
-          {loading && (
-            <div className="flex items-center gap-2 text-xs text-slate-500 italic p-3 bg-slate-50 rounded-2xl w-fit">
-              <span className="w-3.5 h-3.5 border-2 border-nyaya-600 border-t-transparent rounded-full animate-spin"></span>
-              Agents executing: Intake → Classification → Case Builder → Research → Evidence → Urgency...
+          ) : (
+            /* Empty State Placeholder */
+            <div className="bg-white p-8 rounded-3xl border border-slate-200/90 shadow-subtle text-center text-slate-400 space-y-3 min-h-[420px] flex flex-col items-center justify-center">
+              <div className="w-14 h-14 rounded-2xl bg-navy-50 text-legal-blue flex items-center justify-center border border-navy-100 shadow-sm">
+                <FileText className="w-7 h-7 text-legal-blue" />
+              </div>
+              <h4 className="text-sm font-bold text-slate-800">Live Case Intelligence Dossier</h4>
+              <p className="text-xs max-w-xs leading-relaxed text-slate-500">
+                As you describe your situation to the assistant, the Case Intelligence Engine will extract facts, verify legal provisions, audit evidence, and display your structured case here.
+              </p>
             </div>
           )}
         </div>
-
-        {/* Story Input Bar */}
-        <div className="p-4 bg-slate-50 border-t border-slate-200">
-          <div className="flex items-center gap-2 mb-2 overflow-x-auto pb-1 text-xs">
-            <span className="text-slate-400 text-[11px] shrink-0">Quick scenarios:</span>
-            {sampleStarters.map((s, idx) => (
-              <button
-                key={idx}
-                onClick={() => handleSendMessage(s)}
-                className="px-2.5 py-1 bg-white hover:bg-slate-200 text-slate-600 rounded-lg text-[11px] border border-slate-200 shrink-0 transition"
-              >
-                {s.split(' ')[0]} {s.split(' ')[1]}...
-              </button>
-            ))}
-          </div>
-
-          <div className="relative">
-            <textarea
-              rows={2}
-              value={inputStory}
-              onChange={(e) => setInputStory(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' && !e.shiftKey) {
-                  e.preventDefault();
-                  handleSendMessage();
-                }
-              }}
-              placeholder="Type your story in English, Hindi, or Hinglish (e.g. 'Mere boss ne salary rok li hai')..."
-              className="w-full pl-4 pr-12 py-3 bg-white border border-slate-200 rounded-2xl text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-nyaya-500 shadow-sm resize-none"
-            />
-            <button
-              onClick={() => handleSendMessage()}
-              disabled={loading || !inputStory.trim()}
-              className="absolute right-2.5 bottom-3.5 p-2 bg-nyaya-600 hover:bg-nyaya-700 disabled:bg-slate-300 text-white rounded-xl transition shadow"
-            >
-              <Send className="w-4 h-4" />
-            </button>
-          </div>
-        </div>
       </div>
 
-      {/* Right Structured Case Preview Column (5 Cols) */}
-      <div className="lg:col-span-5 space-y-4">
-        {analysisResult ? (
-          <div className="space-y-4 animate-in fade-in slide-in-from-right-3 duration-300">
-            {/* Structured Case Summary Card */}
-            <div className="bg-white p-5 rounded-3xl border border-slate-200 shadow-sm space-y-4">
-              <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+      {/* FLOATING ANIMATED MICROPHONE OPTION (BOTTOM RIGHT) */}
+      <div className="fixed bottom-6 right-6 z-40 flex flex-col items-end gap-3">
+        {/* Floating Voice Assistant Popover */}
+        {isVoiceOpen && (
+          <div className="bg-white rounded-3xl border border-slate-200 shadow-2xl p-5 w-80 sm:w-96 space-y-3.5 animate-in slide-in-from-bottom-5 duration-200">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-2.5">
+              <div className="flex items-center gap-2">
+                <div className="p-1.5 bg-blue-50 text-legal-blue rounded-xl">
+                  <Mic className="w-4 h-4" />
+                </div>
                 <div>
-                  <span className="text-[10px] font-mono font-bold text-nyaya-700 bg-nyaya-50 px-2 py-0.5 rounded">
-                    {analysisResult.case?.caseNumber || 'NS-DRAFT'}
-                  </span>
-                  <h3 className="text-sm font-bold text-slate-900 mt-1">
-                    {analysisResult.case?.issue}
-                  </h3>
-                </div>
-                {getUrgencyBadge(analysisResult.urgency)}
-              </div>
-
-              {/* Category & Parties */}
-              <div className="grid grid-cols-2 gap-2 text-xs">
-                <div className="p-2.5 bg-slate-50 rounded-xl border border-slate-100">
-                  <span className="text-[10px] text-slate-400 font-bold uppercase block">Category</span>
-                  <span className="font-semibold text-slate-800">{analysisResult.case?.category}</span>
-                </div>
-                <div className="p-2.5 bg-slate-50 rounded-xl border border-slate-100">
-                  <span className="text-[10px] text-slate-400 font-bold uppercase block">Jurisdiction</span>
-                  <span className="font-semibold text-slate-800">{analysisResult.case?.jurisdiction}</span>
+                  <h4 className="text-xs font-bold text-slate-900">Voice Assistant</h4>
+                  <p className="text-[10px] text-slate-400">Speak in Hindi, English, or Hinglish</p>
                 </div>
               </div>
-
-              {/* Financial Claim */}
-              {analysisResult.case?.financialDetails?.disputedAmount && (
-                <div className="p-3 bg-nyaya-50 rounded-2xl border border-nyaya-200 flex items-center justify-between text-xs">
-                  <span className="font-medium text-nyaya-900">Disputed Financial Claim:</span>
-                  <span className="font-extrabold text-nyaya-800 text-sm">
-                    ₹{Number(analysisResult.case.financialDetails.disputedAmount).toLocaleString('en-IN')}
-                  </span>
-                </div>
-              )}
-
-              {/* Grounded Legal Basis */}
-              {analysisResult.research?.legalBasis && analysisResult.research.legalBasis.length > 0 && user && user.role !== 'CITIZEN' && (
-                <div>
-                  <span className="text-xs font-bold text-slate-900 flex items-center gap-1 mb-2">
-                    <Scale className="w-3.5 h-3.5 text-nyaya-600" />
-                    Applicable Statutory Provisions:
-                  </span>
-                  <div className="space-y-1.5">
-                    {analysisResult.research.legalBasis.slice(0, 2).map((prov, i) => (
-                      <div key={i} className="p-2 bg-slate-50 rounded-xl border border-slate-200 text-xs">
-                        <span className="font-bold text-nyaya-800">{prov.section}: </span>
-                        <span className="text-slate-700">{prov.sectionTitle}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Evidence Checklist */}
-              {analysisResult.evidence && (
-                <div>
-                  <span className="text-xs font-bold text-slate-900 flex items-center gap-1 mb-2">
-                    <FileText className="w-3.5 h-3.5 text-nyaya-600" />
-                    Evidence Audit Checklist:
-                  </span>
-                  <div className="space-y-1 text-xs">
-                    {analysisResult.evidence.available?.map((e, idx) => (
-                      <div key={idx} className="flex items-center gap-1.5 text-emerald-700 bg-emerald-50/70 px-2 py-1 rounded-lg">
-                        <CheckCircle2 className="w-3 h-3 shrink-0 text-emerald-600" />
-                        <span className="truncate">{e.name}</span>
-                      </div>
-                    ))}
-                    {analysisResult.evidence.missing?.slice(0, 2).map((e, idx) => (
-                      <div key={idx} className="flex items-center gap-1.5 text-amber-700 bg-amber-50/70 px-2 py-1 rounded-lg">
-                        <AlertTriangle className="w-3 h-3 shrink-0 text-amber-600" />
-                        <span className="truncate">Need: {e.name}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Convert to Formal Case Button */}
               <button
-                onClick={handleCreateFormalCase}
-                disabled={creatingCase || !!successNotice}
-                className="w-full py-3 bg-nyaya-600 hover:bg-nyaya-700 disabled:opacity-50 text-white font-bold text-xs rounded-2xl shadow transition flex items-center justify-center gap-2"
+                onClick={() => setIsVoiceOpen(false)}
+                className="text-slate-400 hover:text-slate-600 p-1 rounded-lg hover:bg-slate-100"
               >
-                {creatingCase ? (
-                  <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
-                ) : (
-                  <>
-                    <FolderPlus className="w-4 h-4" />
-                    Save & Create Formal Case Record
-                  </>
-                )}
+                <X className="w-4 h-4" />
               </button>
+            </div>
 
-              {successNotice && (
-                <div className="p-3 bg-emerald-50 text-emerald-800 border border-emerald-200 text-xs rounded-xl flex items-center gap-2">
-                  <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-600" />
-                  {successNotice}
-                </div>
-              )}
+            {/* Language Selection */}
+            <div className="flex items-center justify-between text-xs bg-slate-50 p-2 rounded-xl border border-slate-100">
+              <span className="text-slate-500 text-[11px] font-medium flex items-center gap-1">
+                <Globe className="w-3 h-3 text-slate-400" />
+                Language:
+              </span>
+              <select
+                value={voiceLang}
+                onChange={(e) => setVoiceLang(e.target.value)}
+                className="bg-white px-2 py-1 rounded-lg text-[11px] font-semibold text-slate-700 border border-slate-200 focus:outline-none"
+              >
+                <option value="hi-IN">हिन्दी (Hindi / Hinglish)</option>
+                <option value="en-IN">English (India)</option>
+              </select>
             </div>
-          </div>
-        ) : (
-          /* Empty State Placeholder */
-          <div className="bg-white p-8 rounded-3xl border border-slate-200 shadow-sm text-center text-slate-400 space-y-3 min-h-[400px] flex flex-col items-center justify-center">
-            <div className="w-12 h-12 rounded-2xl bg-slate-100 flex items-center justify-center text-slate-400">
-              <FileText className="w-6 h-6" />
+
+            {/* Record Trigger */}
+            <div className="flex flex-col items-center justify-center p-4 bg-slate-50 rounded-2xl border border-slate-100 space-y-2">
+              <button
+                onClick={toggleVoiceRecording}
+                className={`w-14 h-14 rounded-full flex items-center justify-center text-white shadow-lg transition-all duration-200 ${
+                  isRecording
+                    ? 'bg-red-600 ring-4 ring-red-200 scale-110'
+                    : 'bg-gradient-to-r from-legal-blue to-blue-700 hover:scale-105 shadow-legal-blue/30'
+                }`}
+              >
+                {isRecording ? <MicOff className="w-5 h-5 animate-pulse" /> : <Mic className="w-5 h-5 text-legal-gold" />}
+              </button>
+              <span className="text-[11px] font-bold text-slate-700">
+                {isRecording ? 'Listening... Speak your case now' : 'Click to Speak'}
+              </span>
             </div>
-            <h4 className="text-sm font-bold text-slate-700">Live Case Summary</h4>
-            <p className="text-xs max-w-xs leading-relaxed">
-              As you describe your situation to the assistant, the Case Intelligence Engine will extract facts, verify legal provisions, audit evidence, and display your structured case here.
-            </p>
+
+            {voiceTranscript && (
+              <div className="p-3 bg-blue-50 text-slate-800 rounded-xl border border-blue-100 text-xs space-y-2">
+                <span className="text-[10px] font-bold text-legal-blue uppercase block">Transcript:</span>
+                <p className="italic font-medium">"{voiceTranscript}"</p>
+                <button
+                  onClick={() => {
+                    handleSendMessage(voiceTranscript);
+                    setIsVoiceOpen(false);
+                  }}
+                  className="w-full py-2 bg-legal-blue text-white rounded-xl text-xs font-bold shadow transition flex items-center justify-center gap-1"
+                >
+                  <Send className="w-3.5 h-3.5" />
+                  <span>Send to AI Assistant</span>
+                </button>
+              </div>
+            )}
           </div>
         )}
+
+        {/* Floating Animated Mic Button */}
+        <button
+          onClick={() => setIsVoiceOpen(!isVoiceOpen)}
+          className="relative group p-4 bg-gradient-to-r from-legal-blue to-blue-700 hover:from-blue-600 hover:to-blue-800 text-white rounded-full shadow-2xl hover:shadow-legal-blue/50 transition-all duration-300 transform hover:scale-110 active:scale-95 flex items-center justify-center animate-bounce hover:animate-none ring-4 ring-blue-400/30"
+          title="Speak to Legal Assistant (Voice)"
+        >
+          {/* Animated ripple glow */}
+          <span className="absolute -inset-1 rounded-full bg-gradient-to-r from-legal-gold to-sky-400 opacity-75 blur-sm group-hover:opacity-100 transition animate-pulse pointer-events-none"></span>
+
+          <span className="relative flex items-center gap-2 text-xs font-bold">
+            <Mic className="w-6 h-6 text-legal-gold" />
+            <span className="hidden sm:inline-block pr-1">Speak Case</span>
+          </span>
+        </button>
       </div>
     </div>
   );

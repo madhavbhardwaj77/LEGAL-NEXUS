@@ -20,6 +20,7 @@ import {
   Printer,
   FileCheck,
   AlertCircle,
+  FileSignature,
 } from 'lucide-react';
 import { jsPDF } from 'jspdf';
 import api from '../services/api';
@@ -42,13 +43,48 @@ export default function LegalDraftGenerator({ user, onOpenAuth }) {
   const [copied, setCopied] = useState(false);
 
   const draftOptions = [
-    { id: 'STATUTORY_LEGAL_NOTICE', title: '15-Day Statutory Legal Demand Notice', category: 'General / Labour / Civil', icon: '⚖️' },
-    { id: 'CONSUMER_FORUM_COMPLAINT', title: 'Consumer Court Complaint Petition (e-Daakhil)', category: 'Consumer Protection', icon: '🛍️' },
-    { id: 'EMPLOYER_WAGE_GRIEVANCE', title: 'Employer Wage Grievance / Section 15 Claim', category: 'Labour & Wages', icon: '💼' },
-    { id: 'LANDLORD_SECURITY_DEPOSIT_NOTICE', title: 'Security Deposit Refund Notice', category: 'Rental & Tenancy', icon: '🏠' },
-    { id: 'POLICE_CYBER_CRIME_COMPLAINT', title: 'Cyber Financial Fraud Complaint (1930 / Zero FIR)', category: 'Cybercrime', icon: '🛡️' },
-    { id: 'RTI_APPLICATION', title: 'RTI Application under Section 6(1)', category: 'Public Records', icon: '📋' },
-    { id: 'LEGAL_INFORMATION_SUMMARY', title: 'Case Facts & Strategy Summary', category: 'Counsel Brief', icon: '📑' },
+    {
+      id: 'STATUTORY_LEGAL_NOTICE',
+      title: '15-Day Statutory Legal Demand Notice',
+      category: 'General / Labour / Civil',
+      icon: '⚖️',
+    },
+    {
+      id: 'CONSUMER_FORUM_COMPLAINT',
+      title: 'Consumer Court Complaint Petition (e-Daakhil)',
+      category: 'Consumer Protection',
+      icon: '🛍️',
+    },
+    {
+      id: 'EMPLOYER_WAGE_GRIEVANCE',
+      title: 'Employer Wage Grievance / Section 15 Claim',
+      category: 'Labour & Wages',
+      icon: '💼',
+    },
+    {
+      id: 'LANDLORD_SECURITY_DEPOSIT_NOTICE',
+      title: 'Security Deposit Refund Demand Notice',
+      category: 'Rental & Tenancy',
+      icon: '🏠',
+    },
+    {
+      id: 'POLICE_CYBER_CRIME_COMPLAINT',
+      title: 'Cyber Financial Fraud Complaint (1930 / Zero FIR)',
+      category: 'Cybercrime',
+      icon: '🛡️',
+    },
+    {
+      id: 'RTI_APPLICATION',
+      title: 'RTI Application under Section 6(1)',
+      category: 'Public Records',
+      icon: '📋',
+    },
+    {
+      id: 'LEGAL_INFORMATION_SUMMARY',
+      title: 'Counsel Brief & Legal Strategy Summary',
+      category: 'Counsel Brief',
+      icon: '📑',
+    },
   ];
 
   useEffect(() => {
@@ -102,18 +138,24 @@ export default function LegalDraftGenerator({ user, onOpenAuth }) {
       let y = 50;
 
       // 1. Header Banner
-      doc.setFillColor(15, 23, 42); // slate-900
+      doc.setFillColor(11, 31, 51); // deep navy
       doc.rect(0, 0, pageWidth, 60, 'F');
 
       doc.setTextColor(255, 255, 255);
       doc.setFont('helvetica', 'bold');
-      doc.setFontSize(14);
-      doc.text('LEGAL NEXUS — STATUTORY DRAFTING ENGINE', margin, 32);
+      doc.setFontSize(13.5);
+      doc.text('LEGAL NEXUS — STATUTORY PLEADING ENGINE', margin, 32);
 
       doc.setFontSize(8);
       doc.setFont('helvetica', 'normal');
-      doc.setTextColor(148, 163, 184);
-      doc.text(`Doc Ref: ${generatedDraft.caseNumber || 'LN-2026-DRAFT'} | Jurisdiction: ${formData.jurisdiction || 'India'} | Generated: ${new Date().toLocaleDateString('en-IN')}`, margin, 48);
+      doc.setTextColor(201, 162, 39); // legal gold
+      doc.text(
+        `Doc Ref: ${generatedDraft.caseNumber || 'LN-2026-DRAFT'} | Jurisdiction: ${
+          formData.jurisdiction || 'India'
+        } | Generated: ${new Date().toLocaleDateString('en-IN')}`,
+        margin,
+        48
+      );
 
       y = 85;
 
@@ -123,7 +165,6 @@ export default function LegalDraftGenerator({ user, onOpenAuth }) {
       lines.forEach((line) => {
         const trimmed = line.trim();
 
-        // Check for new page
         if (y > 780) {
           doc.addPage();
           y = 50;
@@ -138,13 +179,13 @@ export default function LegalDraftGenerator({ user, onOpenAuth }) {
         if (line.startsWith('# ')) {
           y += 6;
           doc.setFont('helvetica', 'bold');
-          doc.setFontSize(13);
+          doc.setFontSize(12.5);
           doc.setTextColor(15, 23, 42);
           const headerText = trimmed.replace(/^#\s*/, '').toUpperCase();
           const splitHeader = doc.splitTextToSize(headerText, contentWidth);
           doc.text(splitHeader, margin, y);
-          y += splitHeader.length * 16 + 4;
-          
+          y += splitHeader.length * 15 + 4;
+
           doc.setDrawColor(203, 213, 225);
           doc.setLineWidth(1);
           doc.line(margin, y - 2, margin + contentWidth, y - 2);
@@ -153,9 +194,12 @@ export default function LegalDraftGenerator({ user, onOpenAuth }) {
         // Section Headers (### or ####)
         else if (line.startsWith('### ') || line.startsWith('#### ')) {
           y += 8;
-          if (y > 780) { doc.addPage(); y = 50; }
+          if (y > 780) {
+            doc.addPage();
+            y = 50;
+          }
           doc.setFont('helvetica', 'bold');
-          doc.setFontSize(10.5);
+          doc.setFontSize(10);
           doc.setTextColor(30, 41, 59);
           const subText = trimmed.replace(/^#+\s*/, '');
           const splitSub = doc.splitTextToSize(subText, contentWidth);
@@ -202,13 +246,17 @@ export default function LegalDraftGenerator({ user, onOpenAuth }) {
         }
       });
 
-      // Add Page Footers
+      // Page Footers
       const totalPages = doc.internal.getNumberOfPages();
       for (let p = 1; p <= totalPages; p++) {
         doc.setPage(p);
         doc.setFontSize(8);
         doc.setTextColor(148, 163, 184);
-        doc.text(`Legal Nexus Draft Generator • Page ${p} of ${totalPages} • Verified under Indian Law`, margin, 815);
+        doc.text(
+          `Legal Nexus Draft Generator • Page ${p} of ${totalPages} • Grounded in Indian Law`,
+          margin,
+          815
+        );
       }
 
       doc.save(`${(draftType || 'legal_draft').toLowerCase()}_${Date.now()}.pdf`);
@@ -221,34 +269,36 @@ export default function LegalDraftGenerator({ user, onOpenAuth }) {
   return (
     <div className="space-y-6">
       {/* Header Banner */}
-      <div className="bg-slate-900 text-white p-6 sm:p-8 rounded-3xl border border-slate-800 shadow-md flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+      <div className="bg-[#0B1F33] text-white p-6 sm:p-8 rounded-3xl border border-slate-800 shadow-legal flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-2 mb-1.5">
-            <span className="px-2.5 py-0.5 bg-nyaya-500/20 text-nyaya-300 border border-nyaya-500/30 text-[10px] font-bold rounded-full uppercase tracking-wider">
-              Smart Drafting & Automated Pleading Engine
+            <span className="px-3 py-0.5 bg-legal-blue/20 text-sky-300 border border-legal-blue/30 text-[10px] font-bold rounded-full uppercase tracking-wider">
+              Statutory Pleading Engine
             </span>
           </div>
-          <h2 className="text-xl sm:text-2xl font-bold tracking-tight">Legal Notice & Court Petition Generator</h2>
+          <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-white">
+            Smart Legal Notice & Petition Generator
+          </h2>
           <p className="text-xs sm:text-sm text-slate-400 mt-1 max-w-xl">
             Generate formal 15-day statutory notices, consumer petitions, wage recovery applications, and tenancy demands populated with structured case facts and grounded in Indian statutory authority.
           </p>
         </div>
 
         {generatedDraft && (
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2.5">
             <button
               onClick={handleCopy}
-              className="px-3.5 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold rounded-xl border border-slate-700 transition flex items-center gap-1.5"
+              className="px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold rounded-xl border border-slate-700 transition flex items-center gap-1.5 shadow-sm"
             >
-              {copied ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
-              {copied ? 'Copied!' : 'Copy Text'}
+              {copied ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4 text-slate-300" />}
+              <span>{copied ? 'Copied to Clipboard!' : 'Copy Text'}</span>
             </button>
             <button
               onClick={handleDownloadPdf}
-              className="px-4 py-2 bg-nyaya-600 hover:bg-nyaya-700 text-white text-xs font-bold rounded-xl shadow transition flex items-center gap-1.5"
+              className="px-5 py-2.5 bg-gradient-to-r from-legal-blue to-blue-700 hover:from-blue-600 hover:to-blue-800 text-white text-xs font-bold rounded-xl shadow-md transition flex items-center gap-1.5"
             >
-              <Download className="w-4 h-4" />
-              Download Notice (.pdf)
+              <Download className="w-4 h-4 text-legal-gold" />
+              <span>Download Notice (.pdf)</span>
             </button>
           </div>
         )}
@@ -257,19 +307,24 @@ export default function LegalDraftGenerator({ user, onOpenAuth }) {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         {/* Left Form: Draft Selection & Case Parameters (5 cols) */}
         <div className="lg:col-span-5 space-y-4">
-          <form onSubmit={handleGenerate} className="bg-white p-5 sm:p-6 rounded-3xl border border-slate-200 shadow-sm space-y-4">
+          <form
+            onSubmit={handleGenerate}
+            className="bg-white p-5 sm:p-6 rounded-3xl border border-slate-200/90 shadow-subtle space-y-4"
+          >
             <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2 border-b border-slate-100 pb-3">
-              <Layers className="w-4 h-4 text-nyaya-600" />
+              <Layers className="w-4 h-4 text-legal-blue" />
               1. Select Legal Document Template
             </h3>
 
-            {/* Template Selector Grid */}
-            <div className="space-y-1.5">
-              <label className="block text-xs font-semibold text-slate-700">Document Type</label>
+            {/* Template Selector */}
+            <div className="space-y-1">
+              <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider">
+                Document Template
+              </label>
               <select
                 value={draftType}
                 onChange={(e) => setDraftType(e.target.value)}
-                className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm text-slate-800 focus:ring-2 focus:ring-nyaya-500 focus:outline-none"
+                className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm text-slate-800 focus:ring-2 focus:ring-legal-blue focus:outline-none font-medium"
               >
                 {draftOptions.map((opt) => (
                   <option key={opt.id} value={opt.id}>
@@ -280,66 +335,76 @@ export default function LegalDraftGenerator({ user, onOpenAuth }) {
             </div>
 
             <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2 pt-2 border-b border-slate-100 pb-2">
-              <FileText className="w-4 h-4 text-nyaya-600" />
+              <FileText className="w-4 h-4 text-legal-blue" />
               2. Case Facts & Party Details
             </h3>
 
             <div className="grid grid-cols-1 gap-3">
               <div>
-                <label className="block text-[11px] font-semibold text-slate-600 mb-1">Complainant / Client Name</label>
+                <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
+                  Complainant / Client Name
+                </label>
                 <input
                   type="text"
                   value={formData.plaintiffName}
                   onChange={(e) => setFormData({ ...formData, plaintiffName: e.target.value })}
                   placeholder="e.g. Aarav Sharma"
-                  className="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-nyaya-500 focus:outline-none"
+                  className="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm focus:ring-2 focus:ring-legal-blue focus:outline-none"
                   required
                 />
               </div>
 
               <div>
-                <label className="block text-[11px] font-semibold text-slate-600 mb-1">Opposite Party / Organization</label>
+                <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
+                  Opposite Party / Organization
+                </label>
                 <input
                   type="text"
                   value={formData.defendantName}
                   onChange={(e) => setFormData({ ...formData, defendantName: e.target.value })}
                   placeholder="e.g. Tech Global Pvt Ltd / Landlord Name"
-                  className="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-nyaya-500 focus:outline-none"
+                  className="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm focus:ring-2 focus:ring-legal-blue focus:outline-none"
                   required
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-2">
                 <div>
-                  <label className="block text-[11px] font-semibold text-slate-600 mb-1">Disputed Amount (INR)</label>
+                  <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
+                    Disputed Quantum (INR)
+                  </label>
                   <input
                     type="number"
                     value={formData.disputedAmount}
                     onChange={(e) => setFormData({ ...formData, disputedAmount: e.target.value })}
                     placeholder="150000"
-                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-nyaya-500 focus:outline-none"
+                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm focus:ring-2 focus:ring-legal-blue focus:outline-none font-mono"
                   />
                 </div>
                 <div>
-                  <label className="block text-[11px] font-semibold text-slate-600 mb-1">Jurisdiction / City</label>
+                  <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
+                    Jurisdiction / City
+                  </label>
                   <input
                     type="text"
                     value={formData.jurisdiction}
                     onChange={(e) => setFormData({ ...formData, jurisdiction: e.target.value })}
                     placeholder="Delhi"
-                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-nyaya-500 focus:outline-none"
+                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm focus:ring-2 focus:ring-legal-blue focus:outline-none"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-[11px] font-semibold text-slate-600 mb-1">Primary Issue / Cause of Action</label>
+                <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
+                  Primary Cause of Action
+                </label>
                 <textarea
                   rows={3}
                   value={formData.issue}
                   onChange={(e) => setFormData({ ...formData, issue: e.target.value })}
                   placeholder="e.g. Unpaid salary for 3 months despite written requests and reminders"
-                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-nyaya-500 focus:outline-none resize-none"
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm focus:ring-2 focus:ring-legal-blue focus:outline-none resize-none leading-relaxed"
                 />
               </div>
             </div>
@@ -347,17 +412,17 @@ export default function LegalDraftGenerator({ user, onOpenAuth }) {
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-3 bg-nyaya-600 hover:bg-nyaya-700 text-white font-bold text-xs rounded-2xl shadow transition flex items-center justify-center gap-2"
+              className="w-full py-3 bg-gradient-to-r from-legal-blue to-blue-700 hover:from-blue-600 hover:to-blue-800 text-white font-bold text-xs rounded-2xl shadow-md transition flex items-center justify-center gap-2"
             >
               {loading ? (
                 <>
                   <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
-                  Compiling Grounded Draft...
+                  <span>Compiling Grounded Draft...</span>
                 </>
               ) : (
                 <>
-                  <Sparkles className="w-4 h-4" />
-                  Generate Grounded Legal Notice
+                  <Sparkles className="w-4 h-4 text-legal-gold" />
+                  <span>Generate Grounded Legal Notice</span>
                 </>
               )}
             </button>
@@ -367,17 +432,15 @@ export default function LegalDraftGenerator({ user, onOpenAuth }) {
         {/* Right Preview Column: Formatted Legal Document Paper View (7 cols) */}
         <div className="lg:col-span-7 space-y-4">
           {generatedDraft ? (
-            <div className="bg-white p-5 sm:p-6 rounded-3xl border border-slate-200 shadow-sm space-y-4 animate-in fade-in duration-300">
+            <div className="bg-white p-5 sm:p-6 rounded-3xl border border-slate-200/90 shadow-subtle space-y-4 animate-in fade-in duration-300">
               {/* Top Document Header & View Switcher */}
               <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-b border-slate-100 pb-3">
                 <div>
                   <div className="flex items-center gap-2">
-                    <span className="text-[10px] font-bold text-nyaya-700 bg-nyaya-50 px-2 py-0.5 rounded uppercase">
+                    <span className="text-[10px] font-bold text-legal-blue bg-blue-50 px-2 py-0.5 rounded uppercase">
                       {generatedDraft.draftType}
                     </span>
-                    <span className="text-[10px] text-slate-400 font-mono">
-                      {generatedDraft.caseNumber}
-                    </span>
+                    <span className="text-[10px] text-slate-400 font-mono">{generatedDraft.caseNumber}</span>
                   </div>
                   <h3 className="text-base font-bold text-slate-900 mt-1">{generatedDraft.title}</h3>
                 </div>
@@ -386,41 +449,41 @@ export default function LegalDraftGenerator({ user, onOpenAuth }) {
                 <div className="flex items-center bg-slate-100 p-1 rounded-xl border border-slate-200 text-xs">
                   <button
                     onClick={() => setViewMode('formatted')}
-                    className={`px-3 py-1.5 rounded-lg font-semibold flex items-center gap-1.5 transition ${
+                    className={`px-3 py-1.5 rounded-lg font-bold flex items-center gap-1.5 transition ${
                       viewMode === 'formatted'
-                        ? 'bg-white text-slate-900 shadow-sm'
+                        ? 'bg-white text-slate-900 shadow-subtle'
                         : 'text-slate-500 hover:text-slate-700'
                     }`}
                   >
-                    <Eye className="w-3.5 h-3.5" />
+                    <Eye className="w-3.5 h-3.5 text-legal-blue" />
                     Formal Document
                   </button>
                   <button
                     onClick={() => setViewMode('edit')}
-                    className={`px-3 py-1.5 rounded-lg font-semibold flex items-center gap-1.5 transition ${
+                    className={`px-3 py-1.5 rounded-lg font-bold flex items-center gap-1.5 transition ${
                       viewMode === 'edit'
-                        ? 'bg-white text-slate-900 shadow-sm'
+                        ? 'bg-white text-slate-900 shadow-subtle'
                         : 'text-slate-500 hover:text-slate-700'
                     }`}
                   >
-                    <Edit3 className="w-3.5 h-3.5" />
+                    <Edit3 className="w-3.5 h-3.5 text-legal-blue" />
                     Edit / Customize
                   </button>
                 </div>
               </div>
 
-              {/* Fact-Checked Status Pill */}
+              {/* Status Pills */}
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
                 <div className="p-2.5 bg-emerald-50 rounded-xl border border-emerald-200">
-                  <span className="text-[10px] text-emerald-700 font-bold uppercase block">Verification</span>
-                  <span className="font-bold text-emerald-800 flex items-center gap-1">
+                  <span className="text-[10px] text-emerald-800 font-bold uppercase block">Verification</span>
+                  <span className="font-bold text-emerald-900 flex items-center gap-1 text-xs">
                     <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
                     100% Grounded
                   </span>
                 </div>
                 <div className="p-2.5 bg-slate-50 rounded-xl border border-slate-100">
                   <span className="text-[10px] text-slate-400 font-bold uppercase block">Claim Quantum</span>
-                  <span className="font-bold text-slate-800">
+                  <span className="font-bold text-slate-800 font-mono">
                     ₹{Number(formData.disputedAmount || 0).toLocaleString('en-IN')}
                   </span>
                 </div>
@@ -436,14 +499,14 @@ export default function LegalDraftGenerator({ user, onOpenAuth }) {
 
               {/* Document Container */}
               {viewMode === 'formatted' ? (
-                /* 1. FORMAL LEGAL PAPER VIEW */
-                <div className="p-6 sm:p-8 bg-amber-50/20 border border-slate-300 rounded-2xl shadow-inner max-h-[550px] overflow-y-auto space-y-4 font-serif text-slate-900 leading-relaxed">
+                /* FORMAL LEGAL PAPER VIEW */
+                <div className="p-6 sm:p-8 legal-paper border border-slate-300 rounded-2xl shadow-inner max-h-[550px] overflow-y-auto space-y-4 font-serif text-slate-900 leading-relaxed">
                   {/* Paper Header / Dispatch stamp */}
                   <div className="text-center pb-4 border-b border-slate-300 space-y-1">
-                    <span className="text-[11px] font-sans uppercase tracking-widest text-slate-500 font-bold block">
+                    <span className="text-[10px] font-sans uppercase tracking-widest text-slate-500 font-bold block">
                       Dispatched via Registered Post A.D. / Speed Post / Electronic Mail
                     </span>
-                    <h2 className="text-base sm:text-lg font-bold tracking-tight text-slate-900 uppercase">
+                    <h2 className="text-base sm:text-lg font-bold tracking-tight text-slate-900 uppercase font-serif">
                       {generatedDraft.title}
                     </h2>
                     <p className="text-xs font-sans text-slate-500">
@@ -470,7 +533,7 @@ export default function LegalDraftGenerator({ user, onOpenAuth }) {
                   </div>
                 </div>
               ) : (
-                /* 2. LIVE EDIT & CUSTOMIZE VIEW */
+                /* LIVE EDIT VIEW */
                 <div className="space-y-2">
                   <div className="flex items-center justify-between text-xs text-slate-500">
                     <span>You can edit or customize any clauses or names directly below:</span>
@@ -480,24 +543,24 @@ export default function LegalDraftGenerator({ user, onOpenAuth }) {
                     rows={18}
                     value={editableContent}
                     onChange={(e) => setEditableContent(e.target.value)}
-                    className="w-full p-4 bg-slate-50 border border-slate-300 rounded-2xl font-mono text-xs text-slate-900 leading-relaxed focus:ring-2 focus:ring-nyaya-500 focus:outline-none resize-y"
+                    className="w-full p-4 bg-slate-50 border border-slate-300 rounded-2xl font-mono text-xs text-slate-900 leading-relaxed focus:ring-2 focus:ring-legal-blue focus:outline-none resize-y"
                   />
                 </div>
               )}
 
               {/* Mandatory Review Disclaimer */}
-              <div className="p-3 bg-amber-50 rounded-xl border border-amber-200 text-[11px] text-amber-800 flex items-center gap-2">
+              <div className="p-3 bg-amber-50 rounded-xl border border-amber-200 text-[11px] text-amber-900 flex items-center gap-2">
                 <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0" />
                 <span>
-                  <strong>Notice:</strong> {generatedDraft.variables?.disclaimer || 'AI-generated draft grounded in Indian statutes — requires user/professional review before dispatch.'}
+                  <strong>Disclaimer:</strong> {generatedDraft.variables?.disclaimer || 'AI-generated draft grounded in Indian statutes — requires user/professional review before dispatch.'}
                 </span>
               </div>
             </div>
           ) : (
             /* Empty State Placeholder */
-            <div className="bg-white p-8 rounded-3xl border border-slate-200 shadow-sm text-center text-slate-400 space-y-3 min-h-[450px] flex flex-col items-center justify-center">
-              <div className="w-14 h-14 rounded-2xl bg-slate-100 flex items-center justify-center text-slate-400">
-                <FileCheck className="w-7 h-7 text-nyaya-600" />
+            <div className="bg-white p-8 rounded-3xl border border-slate-200/90 shadow-subtle text-center text-slate-400 space-y-3 min-h-[450px] flex flex-col items-center justify-center">
+              <div className="w-14 h-14 rounded-2xl bg-navy-50 text-legal-blue flex items-center justify-center border border-navy-100 shadow-sm">
+                <FileSignature className="w-7 h-7 text-legal-blue" />
               </div>
               <h4 className="text-base font-bold text-slate-800">Smart Legal Drafting & Notice Pleading</h4>
               <p className="text-xs max-w-sm leading-relaxed text-slate-500">

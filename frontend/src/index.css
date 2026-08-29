@@ -3,7 +3,60 @@
 @tailwind utilities;
 
 @layer base {
+  html {
+    scroll-behavior: smooth;
+  }
   body {
-    @apply bg-slate-50 text-slate-900;
+    @apply bg-[#F8FAFC] text-slate-900 font-sans;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
 }
+
+/* Custom Sleek Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* Dark mode / dark sidebar scrollbars */
+.dark-scrollbar::-webkit-scrollbar-thumb {
+  background: #334155;
+}
+.dark-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #475569;
+}
+
+/* Legal Document Formal Paper Texture */
+.legal-paper {
+  background-color: #fdfdfb;
+  background-image: radial-gradient(#e2e8f0 0.75px, transparent 0.75px);
+  background-size: 16px 16px;
+}
+
+/* Subtle Shimmer Effect for AI Processing */
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.ai-shimmer {
+  background: linear-gradient(90deg, rgba(2,132,199,0.05) 0%, rgba(201,162,39,0.15) 50%, rgba(2,132,199,0.05) 100%);
+  background-size: 200% 100%;
+  animation: shimmer 2.5s infinite;
+}
+
