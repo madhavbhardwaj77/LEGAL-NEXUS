@@ -122,6 +122,15 @@ const THREAT_CATEGORIES = {
       /\b(?:how\s+(?:to|can\s+i))\s+(?:intercept|read|access)\s+(?:someone(?:'s)?|another\s+person(?:'s)?|my|his|her|their)\s+(?:emails?|messages?|texts?|communications?)\s+(?:without|illegally|secretly)\b/i,
     ],
   },
+
+  THEFT: {
+    label: 'Theft & Robbery',
+    patterns: [
+      /\b(?:how\s+(?:to|can\s+i))\s+(?:rob|burgle|steal\s+from|pickpocket|shoplift)\s+(?:a\s+)?(?:bank|store|shop|house|home|person|car|atm)\b/i,
+      /\b(?:how\s+(?:to|can\s+i))\s+(?:break\s+into|hotwire)\s+(?:a\s+)?(?:house|home|apartment|car|vehicle|safe|vault)\b/i,
+      /\b(?:how\s+(?:to|can\s+i))\s+(?:steal|snatch)\s+(?:money|cash|jewelry|gold|cars?|vehicles?|phones?)\b/i,
+    ],
+  },
 };
 
 // ─── Text Fields to Scan ─────────────────────────────────────────────────────
