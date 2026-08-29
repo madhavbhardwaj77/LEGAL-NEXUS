@@ -2,51 +2,58 @@ const mongoose = require('mongoose');
 const logger = require('../utils/logger');
 const config = require('./env');
 
-const connectDB = async (customUri = null) => {
+const connectDB = async (customUri = null, maxRetries = 5) => {
   const uri = customUri || config.mongo.uri;
   
-  try {
-    const conn = await mongoose.connect(uri, {
-      serverSelectionTimeoutMS: 2000,
-    });
-    
-    logger.info(`MongoDB Connected: ${conn.connection.host}/${conn.connection.name}`);
-    global.__MONGO_STORAGE_MODE__ = 'PERSISTENT_DISK';
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      logger.info(`Connecting to MongoDB (Attempt ${attempt}/${maxRetries}): ${uri.replace(/\/\/([^:]+):([^@]+)@/, '//***:***@')}`);
+      const conn = await mongoose.connect(uri, {
+        serverSelectionTimeoutMS: 5000,
+      });
+      
+      logger.info(`MongoDB Connected: ${conn.connection.host}/${conn.connection.name}`);
+      global.__MONGO_STORAGE_MODE__ = 'PERSISTENT_DISK';
 
-    mongoose.connection.on('error', (err) => {
-      logger.error('MongoDB connection error:', err);
-    });
+      mongoose.connection.on('error', (err) => {
+        logger.error('MongoDB connection error:', err);
+      });
 
-    mongoose.connection.on('disconnected', () => {
-      logger.warn('MongoDB connection lost. Reconnecting...');
-    });
+      mongoose.connection.on('disconnected', () => {
+        logger.warn('MongoDB connection lost. Reconnecting...');
+      });
 
-    return conn;
-  } catch (error) {
-    logger.error(`MongoDB Connection Failed: ${error.message}`);
-    
-    if (config.env !== 'production') {
-      try {
-        logger.info('Local MongoDB server is offline. Spawning automatic MongoMemoryServer database fallback...');
-        const { MongoMemoryServer } = require('mongodb-memory-server');
-        const mongod = await MongoMemoryServer.create();
-        const memoryUri = mongod.getUri();
-        logger.info(`MongoMemoryServer database spawned successfully at: ${memoryUri}`);
-        
-        const conn = await mongoose.connect(memoryUri);
-        logger.info('MongoDB Connected to Local In-Memory Fallback Database! Ready to save users/cases.');
-        
-        global.__MONGO_MEMORY_SERVER__ = mongod;
-        global.__MONGO_STORAGE_MODE__ = 'EPHEMERAL_IN_MEMORY';
-        return conn;
-      } catch (memErr) {
-        logger.error(`Failed to spawn MongoMemoryServer fallback: ${memErr.message}`);
+      return conn;
+    } catch (error) {
+      logger.warn(`MongoDB Connection Attempt ${attempt}/${maxRetries} Failed: ${error.message}`);
+      if (attempt < maxRetries) {
+        const delay = Math.min(2000 * attempt, 6000);
+        logger.info(`Retrying MongoDB connection in ${delay}ms...`);
+        await new Promise((resolve) => setTimeout(resolve, delay));
       }
     }
-    
-    logger.warn('Continuing execution in disconnected DB mode or waiting for database to spin up.');
-    return null;
   }
+
+  // If all retries to persistent MongoDB fail, attempt in-memory fallback if not production or as emergency
+  try {
+    logger.info('Persistent MongoDB unavailable. Attempting MongoMemoryServer fallback...');
+    const { MongoMemoryServer } = require('mongodb-memory-server');
+    const mongod = await MongoMemoryServer.create();
+    const memoryUri = mongod.getUri();
+    logger.info(`MongoMemoryServer database spawned successfully at: ${memoryUri}`);
+    
+    const conn = await mongoose.connect(memoryUri);
+    logger.info('MongoDB Connected to Local In-Memory Fallback Database! Ready to save users/cases.');
+    
+    global.__MONGO_MEMORY_SERVER__ = mongod;
+    global.__MONGO_STORAGE_MODE__ = 'EPHEMERAL_IN_MEMORY';
+    return conn;
+  } catch (memErr) {
+    logger.error(`Failed to spawn MongoMemoryServer fallback: ${memErr.message}`);
+  }
+  
+  logger.error('CRITICAL: All MongoDB connection attempts and fallbacks failed.');
+  return null;
 };
 
 const disconnectDB = async () => {

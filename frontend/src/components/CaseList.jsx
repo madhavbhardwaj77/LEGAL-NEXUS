@@ -421,6 +421,19 @@ export default function CaseList({ cases = [], loading, onSelectCase, onNewCase,
                     </span>
                   </div>
                 )}
+
+                {/* Assigned Advocate Pill */}
+                {c.assignedLawyer && (
+                  <div className="p-2.5 bg-emerald-50 rounded-xl border border-emerald-200 flex items-center justify-between text-[11px]">
+                    <span className="font-semibold text-emerald-900 flex items-center gap-1.5">
+                      <Scale className="w-3.5 h-3.5 text-emerald-600" />
+                      Assigned Counsel: {c.assignedLawyer.fullName || c.assignedLawyer.email || 'Verified Advocate'}
+                    </span>
+                    <span className="text-[10px] font-bold text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded-full">
+                      Active
+                    </span>
+                  </div>
+                )}
               </div>
 
               {/* Footer */}

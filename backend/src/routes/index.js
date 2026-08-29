@@ -12,6 +12,7 @@ const verificationRoutes = require('./verificationRoutes');
 const notificationRoutes = require('./notificationRoutes');
 const adminRoutes = require('./adminRoutes');
 const healthRoutes = require('./healthRoutes');
+const requestRoutes = require('./requestRoutes');
 
 const router = express.Router();
 
@@ -24,6 +25,7 @@ router.use('/documents', documentRoutes);
 router.use('/legal', legalRoutes);
 router.use('/ai', aiRoutes);
 router.use('/lawyers', lawyerRoutes);
+router.use('/requests', requestRoutes);
 router.use('/drafts', draftRoutes);
 router.use('/verification', verificationRoutes);
 router.use('/notifications', notificationRoutes);

@@ -60,9 +60,16 @@ export default function App() {
     if (!token) return;
     try {
       const res = await api.get('/auth/me');
-      setUser(res.data.data.user);
+      const authUser = res.data.data.user;
+      setUser(authUser);
       if (activeTab === 'landing' || activeTab === 'login' || activeTab === 'signup') {
-        setActiveTab('cases');
+        if (authUser.role === 'LAWYER') {
+          setActiveTab('lawyers');
+        } else {
+          setActiveTab('cases');
+        }
+      } else if (authUser.role === 'LAWYER' && (activeTab === 'cases' || activeTab === 'intake')) {
+        setActiveTab('lawyers');
       }
     } catch {
       localStorage.removeItem('nyaya_access_token');
@@ -101,8 +108,12 @@ export default function App() {
 
   const handleAuthSuccess = (authUser) => {
     setUser(authUser);
-    loadCases();
-    setActiveTab('cases');
+    if (authUser.role === 'LAWYER') {
+      setActiveTab('lawyers');
+    } else {
+      loadCases();
+      setActiveTab('cases');
+    }
   };
 
   const handleCaseCreated = (newCase) => {
@@ -122,6 +133,12 @@ export default function App() {
     // Protected routes: redirect to login if not authenticated
     if (!user) {
       setActiveTab('login');
+      return;
+    }
+
+    // Disallow Case Management and AI Legal Assistant for LAWYER role
+    if (user.role === 'LAWYER' && (tab === 'cases' || tab === 'intake')) {
+      setActiveTab('lawyers');
       return;
     }
 
@@ -163,18 +180,19 @@ export default function App() {
         {isMobileMenuOpen && !isPublicView && user && (
           <div className="md:hidden bg-[#0B1F33] text-white border-b border-slate-800 px-4 py-4 space-y-1.5 absolute w-full left-0 top-0 z-40 shadow-2xl animate-in fade-in duration-200">
             {[
-              { id: 'cases', label: 'Case Management', icon: LayoutDashboard },
-              { id: 'intake', label: 'AI Legal Assistant', icon: Bot },
+              { id: 'cases', label: 'Case Management', icon: LayoutDashboard, hideForRoles: ['LAWYER'] },
+              { id: 'intake', label: 'AI Legal Assistant', icon: Bot, hideForRoles: ['LAWYER'] },
+              { id: 'lawyers', label: user.role === 'LAWYER' ? 'Advocate Hub & Requests' : 'Advocate Directory', icon: UserCheck },
               { id: 'documents', label: 'Document Intelligence', icon: FileText },
               { id: 'drafts', label: 'Smart Legal Drafting', icon: PenTool },
               { id: 'research', label: 'Statutory Research', icon: BookOpen },
-              { id: 'lawyers', label: 'Advocate Directory', icon: UserCheck },
-              { id: 'profile', label: 'Profile & Network', icon: Users, requireAuth: true },
+              { id: 'profile', label: user.role === 'LAWYER' ? 'Profile & Case History' : 'Profile & Network', icon: Users, requireAuth: true },
               { id: 'settings', label: 'Platform Settings', icon: Settings },
               { id: 'system', label: 'System Status', icon: Activity, requireRole: ['LAWYER', 'ADMIN', 'LAW_STUDENT'] },
             ].map((item) => {
               if (item.requireAuth && !user) return null;
               if (item.requireRole && (!user || !item.requireRole.includes(user.role))) return null;
+              if (item.hideForRoles && user && item.hideForRoles.includes(user.role)) return null;
               const Icon = item.icon;
               const active = activeTab === item.id;
               return (
@@ -203,7 +221,14 @@ export default function App() {
           {/* PUBLIC ROUTES */}
           {activeTab === 'landing' && (
             <LandingPage
-              onGetStarted={() => { if (user) setActiveTab('intake'); else setActiveTab('login'); }}
+              onGetStarted={() => {
+                if (user) {
+                  if (user.role === 'LAWYER') setActiveTab('lawyers');
+                  else setActiveTab('intake');
+                } else {
+                  setActiveTab('login');
+                }
+              }}
               onOpenAuth={() => setActiveTab('login')}
               onSelectFeature={(feat) => handleSelectTab(feat)}
               user={user}

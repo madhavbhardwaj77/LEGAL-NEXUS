@@ -75,6 +75,8 @@ const updateProfessionalProfile = async (req, res, next) => {
       barCouncilRegistration,
       lawStudentDetails,
       education,
+      experiences,
+      caseHistories,
       certifications,
       feeRange,
       availabilityStatus,
@@ -91,7 +93,7 @@ const updateProfessionalProfile = async (req, res, next) => {
 
     if (fullName) profile.fullName = fullName;
     if (title) profile.title = title;
-    if (bio) profile.bio = bio;
+    if (bio !== undefined) profile.bio = bio;
     if (practiceAreas) profile.practiceAreas = practiceAreas;
     if (location) profile.location = { ...profile.location, ...location };
     if (languages) profile.languages = languages;
@@ -105,6 +107,8 @@ const updateProfessionalProfile = async (req, res, next) => {
     }
     if (lawStudentDetails) profile.lawStudentDetails = { ...profile.lawStudentDetails, ...lawStudentDetails };
     if (education) profile.education = education;
+    if (experiences) profile.experiences = experiences;
+    if (caseHistories) profile.caseHistories = caseHistories;
     if (certifications) profile.certifications = certifications;
     if (feeRange) profile.feeRange = { ...profile.feeRange, ...feeRange };
     if (availabilityStatus) profile.availabilityStatus = availabilityStatus;

@@ -1,11 +1,27 @@
 const express = require('express');
 const { body } = require('express-validator');
 const {
-  matchLawyersForCase,
-  publishCaseStudy,
-  listCaseStudies,
+  updateLawyerProfile,
+  addExperience,
+  updateExperience,
+  deleteExperience,
+  reorderExperiences,
+  addCaseHistory,
+  updateCaseHistory,
+  deleteCaseHistory,
   searchLawyersDirectory,
   getLawyerDetails,
+  requestConsultation,
+  getIncomingRequests,
+  respondToRequest,
+  getOngoingCases,
+  getCitizenRequests,
+  getCitizenCases,
+  matchLawyersForCase,
+  publishCaseStudy,
+  updateCaseStudy,
+  deleteCaseStudy,
+  listCaseStudies,
 } = require('../controllers/lawyerController');
 const { authenticateJWT, optionalAuth } = require('../middleware/auth');
 const { validate } = require('../middleware/validate');
@@ -13,10 +29,41 @@ const { auditLogMiddleware } = require('../middleware/auditLog');
 
 const router = express.Router();
 
-// POST /api/lawyers/match (Multi-factor weighted lawyer matching)
+// ── Profile Information ──────────────────────────────────────────
+router.put('/profile', authenticateJWT, updateLawyerProfile);
+router.put('/:id/profile', authenticateJWT, updateLawyerProfile);
+
+// ── Past Experiences CRUD ─────────────────────────────────────────
+router.post('/experience', authenticateJWT, addExperience);
+router.post('/:id/experience', authenticateJWT, addExperience);
+router.put('/experience/:expId', authenticateJWT, updateExperience);
+router.put('/:id/experience/:expId', authenticateJWT, updateExperience);
+router.delete('/experience/:expId', authenticateJWT, deleteExperience);
+router.delete('/:id/experience/:expId', authenticateJWT, deleteExperience);
+router.put('/experience-reorder', authenticateJWT, reorderExperiences);
+router.put('/:id/experience-reorder', authenticateJWT, reorderExperiences);
+
+// ── Case History CRUD ─────────────────────────────────────────────
+router.post('/cases', authenticateJWT, addCaseHistory);
+router.post('/:id/cases', authenticateJWT, addCaseHistory);
+router.put('/cases/:caseId', authenticateJWT, updateCaseHistory);
+router.put('/:id/cases/:caseId', authenticateJWT, updateCaseHistory);
+router.delete('/cases/:caseId', authenticateJWT, deleteCaseHistory);
+router.delete('/:id/cases/:caseId', authenticateJWT, deleteCaseHistory);
+
+// ── Lawyer Request Lifecycle & Ongoing Cases ──────────────────────
+router.get('/requests/incoming', authenticateJWT, getIncomingRequests);
+router.get('/requests', authenticateJWT, getIncomingRequests);
+router.patch('/requests/:id/respond', authenticateJWT, respondToRequest);
+router.post('/request-consultation', authenticateJWT, requestConsultation);
+router.get('/ongoing-cases', authenticateJWT, getOngoingCases);
+router.get('/requests/citizen', authenticateJWT, getCitizenRequests);
+router.get('/citizen-cases', authenticateJWT, getCitizenCases);
+
+// ── Matching Engine ───────────────────────────────────────────────
 router.post('/match', authenticateJWT, matchLawyersForCase);
 
-// POST /api/lawyers/case-studies (Publish anonymized case study)
+// ── Precedent Case Studies ─────────────────────────────────────────
 router.post(
   '/case-studies',
   authenticateJWT,
@@ -29,14 +76,13 @@ router.post(
   auditLogMiddleware('CASE_STUDY_PUBLISHED', 'CASE_STUDY'),
   publishCaseStudy
 );
-
-// GET /api/lawyers/case-studies
+router.put('/case-studies/:id', authenticateJWT, updateCaseStudy);
+router.delete('/case-studies/:id', authenticateJWT, deleteCaseStudy);
 router.get('/case-studies', listCaseStudies);
 
-// GET /api/lawyers
+// ── Directory & Public Profiles ───────────────────────────────────
 router.get('/', optionalAuth, searchLawyersDirectory);
-
-// GET /api/lawyers/:id
 router.get('/:id', optionalAuth, getLawyerDetails);
 
 module.exports = router;
+
