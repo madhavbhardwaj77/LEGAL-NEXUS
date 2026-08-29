@@ -591,7 +591,7 @@ export default function CaseFormModal({ isOpen, onClose, onCaseCreated }) {
             <button
               type="submit"
               disabled={loading}
-              className="px-6 py-2.5 text-xs font-bold bg-gradient-to-r from-legal-blue to-blue-700 hover:from-blue-600 hover:to-blue-800 text-white rounded-xl shadow-md transition disabled:opacity-50 flex items-center gap-1.5"
+              className="px-6 py-2.5 text-xs font-bold bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white rounded-xl shadow-md transition disabled:bg-slate-300 disabled:text-slate-500 disabled:opacity-50 flex items-center gap-1.5 cursor-pointer"
             >
               {loading ? (
                 <>
@@ -600,7 +600,7 @@ export default function CaseFormModal({ isOpen, onClose, onCaseCreated }) {
                 </>
               ) : (
                 <>
-                  <PlusCircle className="w-4 h-4 text-legal-gold" />
+                  <PlusCircle className="w-4 h-4 text-amber-300" />
                   <span>Establish Structured Case</span>
                 </>
               )}

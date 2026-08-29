@@ -441,9 +441,9 @@ Dated: 01-March-2024.
         {analysisResult && (
           <button
             onClick={handleDownloadReportPdf}
-            className="px-5 py-3 bg-gradient-to-r from-legal-blue to-blue-700 hover:from-blue-600 hover:to-blue-800 text-white text-xs font-bold rounded-2xl shadow-md transition flex items-center gap-2 shrink-0"
+            className="px-5 py-3 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white text-xs font-bold rounded-2xl shadow-md transition flex items-center gap-2 shrink-0 cursor-pointer"
           >
-            <Download className="w-4 h-4 text-legal-gold" />
+            <Download className="w-4 h-4 text-amber-300" />
             <span>Download Audit Report (PDF)</span>
           </button>
         )}
@@ -605,7 +605,7 @@ Dated: 01-March-2024.
             <button
               onClick={() => handleAnalyze()}
               disabled={loading || !docContent.trim()}
-              className="w-full py-3 bg-gradient-to-r from-legal-blue to-blue-700 hover:from-blue-600 hover:to-blue-800 disabled:bg-slate-300 text-white font-bold text-xs rounded-2xl shadow-md transition flex items-center justify-center gap-2"
+              className="w-full py-3 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 disabled:bg-slate-300 disabled:text-slate-500 disabled:opacity-50 text-white font-bold text-xs rounded-2xl shadow-md transition flex items-center justify-center gap-2 cursor-pointer"
             >
               {loading ? (
                 <>
@@ -614,7 +614,7 @@ Dated: 01-March-2024.
                 </>
               ) : (
                 <>
-                  <Sparkles className="w-4 h-4 text-legal-gold" />
+                  <Sparkles className="w-4 h-4 text-amber-300" />
                   <span>Run Legal Audit & Risk Assessment</span>
                 </>
               )}

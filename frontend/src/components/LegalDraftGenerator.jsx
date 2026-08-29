@@ -295,9 +295,9 @@ export default function LegalDraftGenerator({ user, onOpenAuth }) {
             </button>
             <button
               onClick={handleDownloadPdf}
-              className="px-5 py-2.5 bg-gradient-to-r from-legal-blue to-blue-700 hover:from-blue-600 hover:to-blue-800 text-white text-xs font-bold rounded-xl shadow-md transition flex items-center gap-1.5"
+              className="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white text-xs font-bold rounded-xl shadow-md transition flex items-center gap-1.5 cursor-pointer"
             >
-              <Download className="w-4 h-4 text-legal-gold" />
+              <Download className="w-4 h-4 text-amber-300" />
               <span>Download Notice (.pdf)</span>
             </button>
           </div>
@@ -412,7 +412,7 @@ export default function LegalDraftGenerator({ user, onOpenAuth }) {
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-3 bg-gradient-to-r from-legal-blue to-blue-700 hover:from-blue-600 hover:to-blue-800 text-white font-bold text-xs rounded-2xl shadow-md transition flex items-center justify-center gap-2"
+              className="w-full py-3 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 disabled:bg-slate-300 disabled:text-slate-500 disabled:opacity-50 text-white font-bold text-xs rounded-2xl shadow-md transition flex items-center justify-center gap-2 cursor-pointer"
             >
               {loading ? (
                 <>
@@ -421,7 +421,7 @@ export default function LegalDraftGenerator({ user, onOpenAuth }) {
                 </>
               ) : (
                 <>
-                  <Sparkles className="w-4 h-4 text-legal-gold" />
+                  <Sparkles className="w-4 h-4 text-amber-300" />
                   <span>Generate Grounded Legal Notice</span>
                 </>
               )}
