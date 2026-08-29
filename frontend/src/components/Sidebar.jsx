@@ -57,9 +57,9 @@ export default function Sidebar({
         key={item.id}
         onClick={() => onSelectTab(item.id)}
         title={collapsed ? item.label : undefined}
-        className={`sidebar-nav-item w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold transition-all duration-150 relative group ${
+        className={`sidebar-nav-item w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold transition-all duration-150 relative group cursor-pointer ${
           active
-            ? 'bg-gradient-to-r from-legal-blue/90 to-blue-700/80 text-white shadow-nav-active font-bold'
+            ? 'bg-blue-600 text-white shadow-md font-bold'
             : 'text-slate-400 hover:bg-slate-800/60 hover:text-slate-100'
         }`}
       >
@@ -220,9 +220,9 @@ export default function Sidebar({
         ) : (
           <button
             onClick={onOpenAuth}
-            className={`w-full py-2.5 px-3 btn-shimmer bg-gradient-to-r from-legal-blue to-blue-700 hover:from-blue-600 hover:to-blue-800 text-white font-bold text-xs rounded-xl shadow-md transition flex items-center justify-center gap-2`}
+            className={`w-full py-2.5 px-3 btn-shimmer bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl shadow-md transition flex items-center justify-center gap-2 cursor-pointer`}
           >
-            <Sparkles className="w-3.5 h-3.5 text-legal-gold shrink-0" />
+            <Sparkles className="w-3.5 h-3.5 text-amber-300 shrink-0" />
             {!collapsed && <span>Sign In / Register</span>}
           </button>
         )}

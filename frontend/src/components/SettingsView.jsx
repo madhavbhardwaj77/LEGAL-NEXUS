@@ -62,9 +62,9 @@ export default function SettingsView({ user, onSelectTab }) {
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-xs font-bold transition-all text-left ${
+                className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-xs font-bold transition-all text-left cursor-pointer ${
                   active
-                    ? 'bg-legal-blue text-white shadow-md shadow-legal-blue/20'
+                    ? 'bg-blue-600 text-white shadow-md'
                     : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
                 }`}
               >
@@ -123,12 +123,10 @@ export default function SettingsView({ user, onSelectTab }) {
                   </select>
                 </div>
 
-                <div className="p-4 bg-slate-50 rounded-2xl border border-slate-200 flex items-center justify-between">
+                <div className="flex items-center justify-between p-4 bg-slate-50 rounded-2xl border border-slate-200">
                   <div>
-                    <h4 className="text-xs font-bold text-slate-900">Automatic PII Masking</h4>
-                    <p className="text-[11px] text-slate-500">
-                      Redacts Aadhaar, Phone, and PAN numbers before dispatching to LLM engines.
-                    </p>
+                    <h4 className="text-xs font-bold text-slate-900">Automatic PII Anonymization</h4>
+                    <p className="text-[11px] text-slate-500">Mask Aadhaar, PAN, and bank accounts prior to AI inference.</p>
                   </div>
                   <label className="relative inline-flex items-center cursor-pointer">
                     <input
@@ -137,16 +135,16 @@ export default function SettingsView({ user, onSelectTab }) {
                       onChange={(e) => setPiiMasking(e.target.checked)}
                       className="sr-only peer"
                     />
-                    <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-legal-blue"></div>
+                    <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
                   </label>
                 </div>
               </div>
 
               <button
                 type="submit"
-                className="w-full py-3 bg-gradient-to-r from-legal-blue to-blue-700 hover:from-blue-600 hover:to-blue-800 text-white font-bold text-xs rounded-2xl shadow-md transition flex items-center justify-center gap-2"
+                className="w-full py-3 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-bold text-xs rounded-2xl shadow-md transition flex items-center justify-center gap-2 cursor-pointer"
               >
-                <Save className="w-4 h-4 text-legal-gold" />
+                <Save className="w-4 h-4 text-white" />
                 <span>Save AI Preferences</span>
               </button>
             </form>

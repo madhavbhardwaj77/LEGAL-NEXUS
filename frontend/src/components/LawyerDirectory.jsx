@@ -103,13 +103,13 @@ export default function LawyerDirectory({ user, onOpenAuth }) {
         <button
           onClick={handleMatchForCase}
           disabled={matching}
-          className="px-6 py-3.5 bg-gradient-to-r from-legal-blue to-blue-700 hover:from-blue-600 hover:to-blue-800 text-white font-bold text-xs rounded-2xl shadow-md transition flex items-center gap-2 shrink-0"
+          className="px-6 py-3.5 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-bold text-xs rounded-2xl shadow-md transition flex items-center gap-2 shrink-0 cursor-pointer"
         >
           {matching ? (
             <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
           ) : (
             <>
-              <Sparkles className="w-4 h-4 text-legal-gold" />
+              <Sparkles className="w-4 h-4 text-amber-300" />
               <span>Find Best Match for My Case</span>
             </>
           )}
@@ -120,9 +120,9 @@ export default function LawyerDirectory({ user, onOpenAuth }) {
       <div className="flex items-center gap-2 border-b border-slate-200 pb-2 text-sm font-semibold">
         <button
           onClick={() => setActiveSubTab('directory')}
-          className={`px-4 py-2 rounded-xl transition ${
+          className={`px-4 py-2 rounded-xl transition cursor-pointer ${
             activeSubTab === 'directory'
-              ? 'bg-legal-blue text-white shadow-subtle'
+              ? 'bg-blue-600 text-white shadow-sm font-bold'
               : 'text-slate-600 hover:bg-slate-100'
           }`}
         >
@@ -130,9 +130,9 @@ export default function LawyerDirectory({ user, onOpenAuth }) {
         </button>
         <button
           onClick={() => setActiveSubTab('caseStudies')}
-          className={`px-4 py-2 rounded-xl transition flex items-center gap-1.5 ${
+          className={`px-4 py-2 rounded-xl transition flex items-center gap-1.5 cursor-pointer ${
             activeSubTab === 'caseStudies'
-              ? 'bg-legal-blue text-white shadow-subtle'
+              ? 'bg-blue-600 text-white shadow-sm font-bold'
               : 'text-slate-600 hover:bg-slate-100'
           }`}
         >

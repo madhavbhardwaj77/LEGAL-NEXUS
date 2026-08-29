@@ -428,13 +428,13 @@ export default function UserProfile({ user }) {
               <button
                 type="submit"
                 disabled={saving}
-                className="w-full py-3 bg-gradient-to-r from-legal-blue to-blue-700 hover:from-blue-600 hover:to-blue-800 text-white font-bold text-xs rounded-2xl shadow-md transition flex items-center justify-center gap-2"
+                className="w-full py-3 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-bold text-xs rounded-2xl shadow-md transition flex items-center justify-center gap-2 cursor-pointer disabled:bg-slate-300 disabled:text-slate-500"
               >
                 {saving ? (
                   <RefreshCw className="animate-spin w-4 h-4" />
                 ) : (
                   <>
-                    <Save className="w-4 h-4 text-legal-gold" />
+                    <Save className="w-4 h-4 text-white" />
                     <span>Save Changes</span>
                   </>
                 )}
@@ -532,7 +532,7 @@ export default function UserProfile({ user }) {
                           ? 'bg-slate-100 text-slate-600 hover:bg-slate-200'
                           : connectedUsers[prof._id] === 'pending'
                           ? 'bg-amber-50 text-amber-800 border border-amber-200 hover:bg-amber-100'
-                          : 'bg-legal-blue text-white hover:bg-blue-700'
+                          : 'bg-blue-600 text-white hover:bg-blue-700 font-bold'
                       }`}
                     >
                       {connectedUsers[prof._id] === 'connected'

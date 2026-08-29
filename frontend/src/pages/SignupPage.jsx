@@ -290,14 +290,14 @@ export default function SignupPage({ onAuthSuccess, onNavigateToLogin }) {
             <button
               type="submit"
               disabled={loading}
-              className="btn-shimmer w-full py-3.5 bg-gradient-to-r from-legal-blue to-blue-700 hover:from-blue-600 hover:to-blue-800 disabled:opacity-50 text-white font-bold text-sm rounded-2xl shadow-md transition flex items-center justify-center gap-2"
+              className="btn-shimmer w-full py-3.5 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 disabled:bg-slate-300 disabled:text-slate-500 text-white font-bold text-sm rounded-2xl shadow-md transition flex items-center justify-center gap-2 cursor-pointer"
             >
               {loading ? (
                 <span className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
               ) : (
                 <>
                   <span>Create Account</span>
-                  <ArrowRight className="w-4 h-4 text-legal-gold" />
+                  <ArrowRight className="w-4 h-4 text-white" />
                 </>
               )}
             </button>
