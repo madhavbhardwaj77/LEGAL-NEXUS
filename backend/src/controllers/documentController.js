@@ -62,7 +62,7 @@ const uploadDocumentMetadata = async (req, res, next) => {
       case: caseId || undefined,
       title,
       documentType: documentType || 'OTHER',
-      fileUrl: fileUrl || 'https://storage.nyayasetu.in/cases/doc.pdf',
+      fileUrl: fileUrl || 'https://storage.legalnexus.in/cases/doc.pdf',
       fileName: fileName || title,
       fileSize: fileSize || 0,
       mimeType: mimeType || 'application/pdf',

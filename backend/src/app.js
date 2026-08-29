@@ -52,8 +52,8 @@ app.use('/api', apiLimiter);
 // Root Welcome Endpoint
 app.get('/', (req, res) => {
   res.json({
-    name: 'Nyaya Setu API',
-    description: 'Bridge to Justice - Legal Tech & AI Case Intelligence Platform for India',
+    name: 'Legal Nexus API',
+    description: 'AI-Powered Legal Tech & Case Intelligence Platform for India',
     version: '1.0.0',
     documentation: '/docs',
     healthCheck: '/api/health',

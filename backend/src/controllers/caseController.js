@@ -24,7 +24,7 @@ const handleCreateCase = async (req, res, next) => {
     } = req.body;
 
     const caseData = {
-      title: title || `${category}: ${issue.slice(0, 50)}`,
+      title: title || (issue ? `${category || 'Case'}: ${String(issue).slice(0, 50)}` : `${category || 'Case'} Inquiry`),
       category,
       issue,
       description,

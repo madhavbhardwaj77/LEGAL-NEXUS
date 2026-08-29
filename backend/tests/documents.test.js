@@ -35,7 +35,7 @@ describe('Documents & Background Queue APIs', () => {
         caseId,
         title: 'Employment Offer Letter & Contract',
         documentType: 'EMPLOYMENT_CONTRACT',
-        fileUrl: 'https://storage.nyayasetu.in/docs/sample_contract.pdf',
+        fileUrl: 'https://storage.legalnexus.in/docs/sample_contract.pdf',
         fileName: 'sample_contract.pdf',
         fileSize: 1024500,
         mimeType: 'application/pdf',

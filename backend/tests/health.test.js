@@ -6,7 +6,7 @@ describe('Health & Root API Endpoints', () => {
   it('should return welcome payload at root /', async () => {
     const res = await request(app).get('/');
     expect(res.status).toBe(200);
-    expect(res.body.name).toBe('Nyaya Setu API');
+    expect(res.body.name).toBe('Legal Nexus API');
   });
 
   it('should report healthy status at /api/health', async () => {

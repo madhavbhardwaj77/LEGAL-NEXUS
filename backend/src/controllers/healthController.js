@@ -11,7 +11,7 @@ const getHealthStatus = async (req, res) => {
 
   const healthData = {
     status: 'OPERATIONAL',
-    service: 'Nyaya Setu Core Backend API',
+    service: 'Legal Nexus Core Backend API',
     timestamp: new Date().toISOString(),
     uptimeSeconds: Math.floor(process.uptime()),
     database: {
@@ -25,7 +25,7 @@ const getHealthStatus = async (req, res) => {
     },
   };
 
-  return sendSuccess(res, healthData, 'Nyaya Setu Backend is healthy');
+  return sendSuccess(res, healthData, 'Legal Nexus Backend is healthy');
 };
 
 module.exports = {
