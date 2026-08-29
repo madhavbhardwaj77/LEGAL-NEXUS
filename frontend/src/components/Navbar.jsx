@@ -170,9 +170,9 @@ export default function Navbar({
             </button>
             <button
               onClick={() => onSelectTab && onSelectTab('signup')}
-              className="btn-shimmer inline-flex items-center gap-1.5 px-4 py-2 text-xs font-bold bg-gradient-to-r from-legal-blue to-blue-700 hover:from-blue-600 hover:to-blue-800 text-white rounded-xl shadow-md shadow-legal-blue/20 transition transform active:scale-95"
+              className="btn-shimmer inline-flex items-center gap-1.5 px-4 py-2 text-xs font-bold bg-blue-600 hover:bg-blue-700 text-white rounded-xl shadow-md transition transform active:scale-95"
             >
-              <Sparkles className="w-3 h-3 text-legal-gold" />
+              <Sparkles className="w-3 h-3 text-amber-300" />
               Get Started
             </button>
           </div>

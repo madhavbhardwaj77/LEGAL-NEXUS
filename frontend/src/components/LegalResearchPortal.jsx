@@ -147,13 +147,13 @@ export default function LegalResearchPortal({ user, onOpenAuth }) {
             <button
               onClick={() => handleSearch()}
               disabled={loading}
-              className="absolute right-2 top-2 bottom-2 px-5 bg-gradient-to-r from-legal-blue to-blue-700 hover:from-blue-600 hover:to-blue-800 text-white font-bold text-xs rounded-xl transition flex items-center gap-1.5 shadow"
+              className="absolute right-2 top-2 bottom-2 px-5 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-bold text-xs rounded-xl transition flex items-center gap-1.5 shadow-md disabled:opacity-50"
             >
               {loading ? (
                 <span className="inline-block w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
               ) : (
                 <>
-                  <Sparkles className="w-3.5 h-3.5 text-legal-gold" />
+                  <Sparkles className="w-3.5 h-3.5 text-amber-300" />
                   <span>Research</span>
                 </>
               )}

@@ -438,9 +438,11 @@ export default function CaseStoryIntake({ user, onOpenAuth, onCaseCreated }) {
               <button
                 onClick={() => handleSendMessage()}
                 disabled={loading || !inputStory.trim()}
-                className="absolute right-2.5 bottom-3 p-2 bg-legal-blue hover:bg-blue-700 disabled:bg-slate-300 text-white rounded-xl transition shadow-md"
+                title="Send narrative"
+                className="absolute right-2.5 bottom-2.5 px-3.5 py-2 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 disabled:bg-slate-200 disabled:text-slate-400 disabled:shadow-none text-white font-bold rounded-xl transition-all shadow-md flex items-center gap-1.5 cursor-pointer disabled:cursor-not-allowed"
               >
-                <Send className="w-4 h-4 text-legal-gold" />
+                <Send className="w-4 h-4 text-white" />
+                <span className="text-xs hidden sm:inline">Send</span>
               </button>
             </div>
 

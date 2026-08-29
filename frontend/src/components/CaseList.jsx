@@ -191,9 +191,9 @@ export default function CaseList({ cases = [], loading, onSelectCase, onNewCase,
         {user && (
           <button
             onClick={onNewCase}
-            className="btn-shimmer inline-flex items-center justify-center gap-2 px-5 py-3 bg-gradient-to-r from-legal-blue to-blue-700 hover:from-blue-600 hover:to-blue-800 text-white font-bold text-xs rounded-2xl shadow-md shadow-legal-blue/20 transition shrink-0"
+            className="btn-shimmer inline-flex items-center justify-center gap-2 px-5 py-3 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-bold text-xs rounded-2xl shadow-md transition shrink-0"
           >
-            <PlusCircle className="w-4 h-4 text-legal-gold" />
+            <PlusCircle className="w-4 h-4 text-amber-300" />
             <span>File New Legal Case</span>
           </button>
         )}
