@@ -492,18 +492,65 @@ export default function CaseStoryIntake({ user, onOpenAuth, onCaseCreated }) {
                   </div>
                 )}
 
-                {/* Grounded Legal Basis */}
-                {analysisResult.research?.legalBasis && analysisResult.research.legalBasis.length > 0 && user && user.role !== 'CITIZEN' && (
+                {/* Grounded Legal Basis - Visible to All Personas */}
+                {analysisResult.research?.legalBasis && analysisResult.research.legalBasis.length > 0 && (
                   <div className="space-y-2">
                     <span className="text-xs font-bold text-slate-900 flex items-center gap-1">
                       <Scale className="w-3.5 h-3.5 text-legal-blue" />
-                      Applicable Statutory Provisions:
+                      Applicable Indian Laws & Sections:
                     </span>
                     <div className="space-y-1.5">
-                      {analysisResult.research.legalBasis.slice(0, 2).map((prov, i) => (
+                      {analysisResult.research.legalBasis.map((prov, i) => (
                         <div key={i} className="p-2.5 bg-slate-50 rounded-xl border border-slate-200 text-xs">
-                          <span className="font-bold text-legal-blue">{prov.section}: </span>
-                          <span className="text-slate-700">{prov.sectionTitle}</span>
+                          <div className="font-bold text-legal-blue flex items-center justify-between">
+                            <span>{prov.act ? `${prov.act} — ${prov.section}` : prov.section}</span>
+                          </div>
+                          {prov.sectionTitle && <div className="text-slate-700 font-medium text-[11px] mt-0.5">{prov.sectionTitle}</div>}
+                          {prov.actionableRemedy && (
+                            <div className="text-slate-500 text-[10px] mt-1 italic">
+                              <span className="font-semibold text-slate-600">Statutory Remedy:</span> {prov.actionableRemedy}
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Applicable Charges & Legal Violations */}
+                {analysisResult.research?.applicableCharges && analysisResult.research.applicableCharges.length > 0 && (
+                  <div className="space-y-1.5">
+                    <span className="text-xs font-bold text-slate-900 flex items-center gap-1">
+                      <ShieldCheck className="w-3.5 h-3.5 text-legal-blue" />
+                      Applicable Legal Violations & Charges:
+                    </span>
+                    <div className="flex flex-wrap gap-1.5">
+                      {analysisResult.research.applicableCharges.map((chg, i) => (
+                        <span key={i} className="text-[10px] font-semibold bg-blue-50/80 border border-blue-200 text-legal-blue px-2 py-0.5 rounded-lg">
+                          {chg}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Tailored Procedural Action Plan */}
+                {analysisResult.actionPlan && analysisResult.actionPlan.length > 0 && (
+                  <div className="space-y-2 p-3 bg-slate-50 rounded-2xl border border-slate-200/80">
+                    <span className="text-xs font-bold text-slate-900 flex items-center gap-1">
+                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                      Actionable Recommendations & Roadmap:
+                    </span>
+                    <div className="space-y-2 text-xs">
+                      {analysisResult.actionPlan.map((act, idx) => (
+                        <div key={idx} className="flex items-start gap-2 text-[11px]">
+                          <span className="w-4 h-4 rounded-full bg-legal-blue text-white flex items-center justify-center font-bold text-[9px] shrink-0 mt-0.5">
+                            {idx + 1}
+                          </span>
+                          <div>
+                            <span className="font-bold text-slate-800">{act.step}: </span>
+                            <span className="text-slate-600">{act.detail}</span>
+                          </div>
                         </div>
                       ))}
                     </div>
@@ -521,13 +568,13 @@ export default function CaseStoryIntake({ user, onOpenAuth, onCaseCreated }) {
                       {analysisResult.evidence.available?.map((e, idx) => (
                         <div key={idx} className="flex items-center gap-1.5 text-emerald-800 bg-emerald-50 px-2.5 py-1 rounded-xl border border-emerald-200">
                           <CheckCircle2 className="w-3.5 h-3.5 shrink-0 text-emerald-600" />
-                          <span className="truncate">{e.name}</span>
+                          <span className="truncate">{typeof e === 'string' ? e : e.name}</span>
                         </div>
                       ))}
-                      {analysisResult.evidence.missing?.slice(0, 2).map((e, idx) => (
+                      {analysisResult.evidence.missing?.map((e, idx) => (
                         <div key={idx} className="flex items-center gap-1.5 text-amber-800 bg-amber-50 px-2.5 py-1 rounded-xl border border-amber-200">
                           <AlertTriangle className="w-3.5 h-3.5 shrink-0 text-amber-600" />
-                          <span className="truncate">Need: {e.name}</span>
+                          <span className="truncate">Required: {typeof e === 'string' ? e : e.name}</span>
                         </div>
                       ))}
                     </div>
