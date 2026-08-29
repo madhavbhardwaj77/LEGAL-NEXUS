@@ -75,10 +75,26 @@ export default function CaseStoryIntake({ user, onOpenAuth, onCaseCreated }) {
       };
       setMessages((prev) => [...prev, assistantMsg]);
     } catch (err) {
-      setMessages((prev) => [
-        ...prev,
-        { sender: 'assistant', text: 'Sorry, I encountered an error analyzing your case. Please try again.' },
-      ]);
+      if (err.response?.data?.guardrailWarning) {
+        const warningData = err.response.data.warning || {};
+        setMessages((prev) => [
+          ...prev,
+          {
+            sender: 'assistant',
+            isWarning: true,
+            title: err.response.data.message || '⚠️ Guardrail Warning: Query Blocked',
+            category: warningData.categoryLabel || warningData.category || 'Security Policy Violation',
+            incidentId: warningData.incidentId,
+            text: warningData.detail || 'This query was flagged by the Guardrail layer.',
+            guidance: warningData.guidance || 'If you are seeking legal protection as a victim, please rephrase your query.',
+          },
+        ]);
+      } else {
+        setMessages((prev) => [
+          ...prev,
+          { sender: 'assistant', text: err.response?.data?.message || 'Sorry, I encountered an error analyzing your case. Please try again.' },
+        ]);
+      }
     } finally {
       setLoading(false);
     }
@@ -170,13 +186,49 @@ export default function CaseStoryIntake({ user, onOpenAuth, onCaseCreated }) {
               )}
 
               <div
-                className={`max-w-[80%] rounded-2xl p-4 text-xs sm:text-sm leading-relaxed ${
+                className={`max-w-[85%] rounded-2xl p-4 text-xs sm:text-sm leading-relaxed ${
                   m.sender === 'user'
                     ? 'bg-nyaya-600 text-white rounded-tr-none'
+                    : m.isWarning
+                    ? 'bg-red-50 text-red-950 border-2 border-red-300 rounded-tl-none shadow-sm'
                     : 'bg-slate-50 text-slate-800 border border-slate-200 rounded-tl-none'
                 }`}
               >
-                <p className="whitespace-pre-line">{m.text}</p>
+                {m.isWarning ? (
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between gap-2 border-b border-red-200 pb-2">
+                      <div className="flex items-center gap-1.5 font-bold text-red-700 text-xs sm:text-sm">
+                        <ShieldAlert className="w-4 h-4 text-red-600 shrink-0" />
+                        <span>{m.title}</span>
+                      </div>
+                      <span className="px-2 py-0.5 bg-red-100 text-red-800 border border-red-300 rounded-full text-[10px] font-bold uppercase tracking-wider">
+                        {m.category}
+                      </span>
+                    </div>
+
+                    <p className="text-xs sm:text-sm text-red-900 leading-relaxed font-medium">
+                      {m.text}
+                    </p>
+
+                    <div className="bg-white/80 p-3 rounded-xl border border-red-200 space-y-1.5">
+                      <span className="text-[11px] font-bold text-red-900 flex items-center gap-1">
+                        <Scale className="w-3.5 h-3.5 text-red-600" />
+                        Lawful Guidance & Victim Redirection:
+                      </span>
+                      <p className="text-xs text-slate-700 leading-relaxed">
+                        {m.guidance}
+                      </p>
+                    </div>
+
+                    {m.incidentId && (
+                      <div className="text-[10px] text-red-600/80 font-mono pt-1">
+                        Incident Reference ID: {m.incidentId}
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <p className="whitespace-pre-line">{m.text}</p>
+                )}
 
                 {/* Clarifying Questions Quick Chips */}
                 {m.clarifyingQuestions && m.clarifyingQuestions.length > 0 && (

@@ -7,6 +7,7 @@ import {
   ExternalLink,
   CheckCircle,
   AlertCircle,
+  ShieldAlert,
   HelpCircle,
   Scale,
   FileCheck2,
@@ -68,7 +69,18 @@ export default function LegalResearchPortal({ user, onOpenAuth }) {
       });
       setResult(res.data.data);
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to complete legal research. Please try again.');
+      if (err.response?.data?.guardrailWarning) {
+        setError({
+          isGuardrail: true,
+          title: err.response.data.message || '⚠️ Guardrail Warning: Query Blocked',
+          warning: err.response.data.warning || {},
+        });
+      } else {
+        setError({
+          isGuardrail: false,
+          message: err.response?.data?.message || 'Failed to complete legal research. Please try again.',
+        });
+      }
     } finally {
       setLoading(false);
     }
@@ -162,10 +174,44 @@ export default function LegalResearchPortal({ user, onOpenAuth }) {
       </div>
 
       {error && (
-        <div className="p-4 bg-red-50 text-red-700 rounded-2xl border border-red-200 flex items-center gap-3 text-sm">
-          <AlertCircle className="w-5 h-5 shrink-0" />
-          {error}
-        </div>
+        error.isGuardrail ? (
+          <div className="p-6 bg-red-50 text-red-950 rounded-3xl border-2 border-red-300 shadow-sm space-y-3">
+            <div className="flex items-center justify-between gap-2 border-b border-red-200 pb-2">
+              <div className="flex items-center gap-2 font-bold text-red-700 text-sm sm:text-base">
+                <ShieldAlert className="w-5 h-5 text-red-600 shrink-0" />
+                <span>{error.title}</span>
+              </div>
+              <span className="px-2.5 py-0.5 bg-red-100 text-red-800 border border-red-300 rounded-full text-[11px] font-bold uppercase tracking-wider">
+                {error.warning?.categoryLabel || error.warning?.category || 'Security Policy'}
+              </span>
+            </div>
+
+            <p className="text-xs sm:text-sm text-red-900 leading-relaxed font-medium">
+              {error.warning?.detail || 'This legal search query seeks assistance with activities prohibited under platform safety guidelines.'}
+            </p>
+
+            <div className="bg-white/80 p-3.5 rounded-2xl border border-red-200 space-y-1.5">
+              <span className="text-xs font-bold text-red-900 flex items-center gap-1.5">
+                <Scale className="w-4 h-4 text-red-600" />
+                Lawful Guidance & Victim Redirection:
+              </span>
+              <p className="text-xs text-slate-700 leading-relaxed">
+                {error.warning?.guidance || 'If you are seeking legal protection as a victim, please rephrase your query to describe the harm experienced.'}
+              </p>
+            </div>
+
+            {error.warning?.incidentId && (
+              <div className="text-[10px] text-red-600/80 font-mono pt-1">
+                Incident Reference ID: {error.warning.incidentId}
+              </div>
+            )}
+          </div>
+        ) : (
+          <div className="p-4 bg-red-50 text-red-700 rounded-2xl border border-red-200 flex items-center gap-3 text-sm">
+            <AlertCircle className="w-5 h-5 shrink-0" />
+            {error.message || error}
+          </div>
+        )
       )}
 
       {/* Research Output Section */}

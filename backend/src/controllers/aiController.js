@@ -227,7 +227,7 @@ const handleConvertIntakeToCase = async (req, res, next) => {
     const rawCat = (structuredCase.category || '').toLowerCase();
     if (rawCat.includes('employment') || rawCat.includes('labour')) cat = 'Employment';
     else if (rawCat.includes('consumer')) cat = 'Consumer Dispute';
-    else if (rawCat.includes('tenan') || rawCat.includes('rent') || rawCat.includes('landlord')) cat = 'Property & Real Estate';
+    else if (rawCat.includes('tenan') || rawCat.includes('rent') || rawCat.includes('landlord') || rawCat.includes('property') || rawCat.includes('estate')) cat = 'Property & Real Estate';
     else if (rawCat.includes('cyber')) cat = 'Cyber Law & Data Privacy';
     else if (rawCat.includes('civil')) cat = 'Civil Litigation';
 

@@ -84,11 +84,17 @@ export default function SystemHealth({ healthStatus, onRefresh }) {
           </div>
           <div>
             <h3 className="text-base font-bold text-slate-900">MongoDB Database</h3>
-            <p className="text-xs text-slate-500 mt-0.5">System of Record • 16+ Collections</p>
+            <p className="text-xs text-slate-500 mt-0.5">
+              {healthStatus?.database?.mongoStorageMode === 'PERSISTENT_DISK'
+                ? 'Persistent Local Disk Storage • 16+ Collections'
+                : 'In-Memory Fallback • 16+ Collections'}
+            </p>
           </div>
           <div className="mt-4 pt-3 border-t border-slate-100 text-xs text-slate-600 flex justify-between">
             <span>Port 27017</span>
-            <span>Mongoose 8.x ODM</span>
+            <span className="font-semibold text-emerald-700">
+              {healthStatus?.database?.mongoStorageMode === 'PERSISTENT_DISK' ? 'Permanent Disk Mode' : 'Ephemeral Memory Mode'}
+            </span>
           </div>
         </div>
 
