@@ -13,10 +13,10 @@
   }
 }
 
-/* Custom Sleek Scrollbar */
+/* ── Premium Scrollbar ─────────────────────────────────────────── */
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 5px;
+  height: 5px;
 }
 ::-webkit-scrollbar-track {
   background: transparent;
@@ -29,34 +29,140 @@
   background: #94a3b8;
 }
 
-/* Dark mode / dark sidebar scrollbars */
 .dark-scrollbar::-webkit-scrollbar-thumb {
-  background: #334155;
+  background: #1e293b;
 }
 .dark-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: #475569;
+  background: #334155;
 }
 
-/* Legal Document Formal Paper Texture */
+/* ── Legal Document Paper Texture ──────────────────────────────── */
 .legal-paper {
   background-color: #fdfdfb;
   background-image: radial-gradient(#e2e8f0 0.75px, transparent 0.75px);
   background-size: 16px 16px;
 }
 
-/* Subtle Shimmer Effect for AI Processing */
+/* ── AI Shimmer ────────────────────────────────────────────────── */
 @keyframes shimmer {
-  0% {
-    background-position: -200% 0;
-  }
-  100% {
-    background-position: 200% 0;
-  }
+  0%   { background-position: -200% 0; }
+  100% { background-position:  200% 0; }
 }
-
 .ai-shimmer {
-  background: linear-gradient(90deg, rgba(2,132,199,0.05) 0%, rgba(201,162,39,0.15) 50%, rgba(2,132,199,0.05) 100%);
+  background: linear-gradient(90deg,
+    rgba(2,132,199,0.05) 0%,
+    rgba(201,162,39,0.15) 50%,
+    rgba(2,132,199,0.05) 100%);
   background-size: 200% 100%;
   animation: shimmer 2.5s infinite;
 }
 
+/* ── Button Shimmer Sweep on Hover ─────────────────────────────── */
+@keyframes btn-shimmer {
+  0%   { transform: translateX(-100%) skewX(-15deg); }
+  100% { transform: translateX(250%)  skewX(-15deg); }
+}
+.btn-shimmer {
+  position: relative;
+  overflow: hidden;
+}
+.btn-shimmer::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255,255,255,0.18) 50%,
+    transparent 100%
+  );
+  transform: translateX(-100%) skewX(-15deg);
+  transition: none;
+}
+.btn-shimmer:hover::after {
+  animation: btn-shimmer 0.55s ease forwards;
+}
+
+/* ── Skeleton Pulse ────────────────────────────────────────────── */
+@keyframes skeleton-pulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.4; }
+}
+.skeleton {
+  animation: skeleton-pulse 1.5s ease-in-out infinite;
+  background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%);
+  background-size: 200% 100%;
+}
+
+/* ── Page Fade-Slide Transition ────────────────────────────────── */
+@keyframes page-enter {
+  0%   { opacity: 0; transform: translateY(10px); }
+  100% { opacity: 1; transform: translateY(0);    }
+}
+.page-enter {
+  animation: page-enter 0.25s ease-out both;
+}
+
+/* ── Glass Card ────────────────────────────────────────────────── */
+.glass {
+  background: rgba(255, 255, 255, 0.06);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.10);
+}
+
+/* ── Gold Glow ─────────────────────────────────────────────────── */
+.glow-gold {
+  box-shadow: 0 0 18px -4px rgba(201, 162, 39, 0.45);
+}
+.glow-blue {
+  box-shadow: 0 0 20px -4px rgba(37, 99, 235, 0.4);
+}
+
+/* ── Sidebar width transition ──────────────────────────────────── */
+.sidebar-transition {
+  transition: width 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ── Tooltip (sidebar collapsed) ──────────────────────────────── */
+.sidebar-tooltip {
+  position: absolute;
+  left: calc(100% + 12px);
+  top: 50%;
+  transform: translateY(-50%);
+  background: #0f172a;
+  color: #f1f5f9;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 8px;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+  z-index: 50;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+}
+.sidebar-tooltip::before {
+  content: '';
+  position: absolute;
+  right: 100%;
+  top: 50%;
+  transform: translateY(-50%);
+  border: 5px solid transparent;
+  border-right-color: #0f172a;
+}
+.sidebar-nav-item:hover .sidebar-tooltip {
+  opacity: 1;
+}
+
+/* ── Gradient animated mesh (hero bg) ─────────────────────────── */
+@keyframes mesh-shift {
+  0%   { background-position: 0% 50%; }
+  50%  { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+.hero-mesh {
+  background-size: 300% 300%;
+  animation: mesh-shift 12s ease infinite;
+}

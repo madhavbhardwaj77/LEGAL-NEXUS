@@ -9,9 +9,8 @@ import {
   Sparkles,
   ShieldCheck,
   Bell,
-  User,
   ChevronRight,
-  ExternalLink,
+  Command,
 } from 'lucide-react';
 
 export default function Navbar({
@@ -23,115 +22,139 @@ export default function Navbar({
   showToggle,
   activeTab = 'landing',
   onSelectTab,
-  onOpenSearch,
 }) {
   const getTabTitle = (tab) => {
     switch (tab) {
-      case 'cases':
-        return 'Case Management & Intake';
-      case 'intake':
-        return 'AI Legal Assistant & Workspace';
-      case 'documents':
-        return 'Document Intelligence & Clause Audit';
-      case 'drafts':
-        return 'Smart Statutory Drafting Engine';
-      case 'research':
-        return 'Statutory Legal Search';
-      case 'lawyers':
-        return 'Verified Advocate Ecosystem';
-      case 'profile':
-        return 'User Profile & Network Hub';
-      case 'settings':
-        return 'Platform Settings';
-      case 'system':
-        return 'System Infrastructure Monitor';
-      default:
-        return 'Legal Intelligence Platform';
+      case 'cases':     return 'Case Management & Intake';
+      case 'intake':    return 'AI Legal Assistant & Workspace';
+      case 'documents': return 'Document Intelligence & Clause Audit';
+      case 'drafts':    return 'Smart Statutory Drafting Engine';
+      case 'research':  return 'Statutory Legal Search';
+      case 'lawyers':   return 'Verified Advocate Ecosystem';
+      case 'profile':   return 'User Profile & Network Hub';
+      case 'settings':  return 'Platform Settings';
+      case 'system':    return 'System Infrastructure Monitor';
+      default:          return 'Legal Intelligence Platform';
     }
   };
 
+  // Role → color mapping for avatar
+  const roleColor = {
+    CITIZEN:     'from-blue-500 to-sky-400',
+    LAWYER:      'from-legal-gold to-amber-400',
+    LAW_STUDENT: 'from-emerald-500 to-teal-400',
+    ADMIN:       'from-purple-500 to-violet-400',
+  };
+  const avatarGradient = user ? (roleColor[user.role] || 'from-blue-500 to-sky-400') : '';
+
   return (
-    <header className="bg-[#0B1F33] border-b border-slate-800 text-white h-16 px-4 sm:px-6 flex items-center justify-between sticky top-0 z-30 shadow-md backdrop-blur-md">
-      {/* Left: Branding & Breadcrumbs */}
-      <div className="flex items-center gap-3 sm:gap-6">
+    <header className="bg-[#0B1F33] border-b border-slate-800/80 text-white h-16 px-4 sm:px-6 flex items-center justify-between sticky top-0 z-30 shadow-lg backdrop-blur-md">
+
+      {/* ── Left: Brand + Breadcrumb ─────────────────────────── */}
+      <div className="flex items-center gap-3 sm:gap-5">
         <div
           onClick={() => onSelectTab && onSelectTab('landing')}
           className="flex items-center gap-3 cursor-pointer group select-none"
         >
-          <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-legal-blue to-sky-400 p-2 text-white shadow-md shadow-legal-blue/20 flex items-center justify-center group-hover:scale-105 transition-transform duration-200">
-            <Scale className="w-5 h-5" />
+          {/* Logo */}
+          <div className="relative w-9 h-9 rounded-xl bg-gradient-to-tr from-legal-blue to-sky-400 flex items-center justify-center shadow-blue-glow/30 shadow-md group-hover:scale-105 transition-transform duration-200">
+            <Scale className="w-5 h-5 text-white" />
+            {/* Subtle animated ring */}
+            <span className="absolute inset-0 rounded-xl ring-2 ring-sky-400/0 group-hover:ring-sky-400/40 transition-all duration-300" />
           </div>
-          <div>
+
+          <div className="hidden sm:block">
             <div className="flex items-center gap-1.5">
-              <span className="text-base font-extrabold tracking-tight text-white block">
+              <span className="text-[15px] font-extrabold tracking-tight text-white leading-none">
                 Legal Nexus
               </span>
-              <span className="text-[9px] font-bold text-legal-gold bg-legal-gold/10 px-1.5 py-0.5 rounded border border-legal-gold/20 tracking-wider uppercase">
-                AI Legal
+              <span className="text-[9px] font-bold text-legal-gold bg-legal-gold/10 px-1.5 py-0.5 rounded border border-legal-gold/20 tracking-widest uppercase leading-none">
+                AI
               </span>
             </div>
-            <p className="text-[10px] text-slate-400 font-medium">Enterprise Legal AI Platform</p>
+            <p className="text-[10px] text-slate-500 font-medium mt-0.5 leading-none">Enterprise Legal AI</p>
           </div>
         </div>
 
-        {/* Section Breadcrumb (Visible when not on landing) */}
+        {/* Breadcrumb */}
         {activeTab !== 'landing' && (
           <div className="hidden lg:flex items-center gap-2 text-xs text-slate-400 pl-4 border-l border-slate-800">
             <span
               onClick={() => onSelectTab && onSelectTab('landing')}
-              className="hover:text-slate-200 cursor-pointer transition"
+              className="hover:text-slate-300 cursor-pointer transition"
             >
               Platform
             </span>
-            <ChevronRight className="w-3.5 h-3.5 text-slate-600" />
-            <span className="text-slate-200 font-semibold truncate max-w-xs">
+            <ChevronRight className="w-3.5 h-3.5 text-slate-700" />
+            <span className="text-slate-300 font-semibold truncate max-w-[220px]">
               {getTabTitle(activeTab)}
             </span>
           </div>
         )}
       </div>
 
-      {/* Right: Actions & User Profile */}
-      <div className="flex items-center gap-2.5 sm:gap-4">
-        {/* Quick Search Shortcut */}
+      {/* ── Right: Actions ───────────────────────────────────── */}
+      <div className="flex items-center gap-2 sm:gap-3">
+
+        {/* Command-palette search pill */}
         {activeTab !== 'landing' && (
           <button
             onClick={() => onSelectTab && onSelectTab('research')}
             title="Search Indian statutory laws"
-            className="hidden md:flex items-center gap-2 px-3.5 py-1.5 bg-slate-800/60 hover:bg-slate-800 text-slate-400 hover:text-slate-200 text-xs rounded-xl border border-slate-700 transition"
+            className="hidden md:flex items-center gap-2 px-3.5 py-2 bg-slate-800/60 hover:bg-slate-800 text-slate-400 hover:text-slate-200 text-xs rounded-xl border border-slate-700 transition group"
           >
-            <Search className="w-3.5 h-3.5 text-slate-400" />
-            <span>Search statutes & precedents...</span>
+            <Search className="w-3.5 h-3.5 text-slate-500 group-hover:text-slate-300 transition" />
+            <span className="text-slate-500 group-hover:text-slate-300 transition">Search statutes...</span>
+            <span className="ml-2 flex items-center gap-0.5 text-[10px] text-slate-600 bg-slate-700/60 px-1.5 py-0.5 rounded-md border border-slate-700 font-mono">
+              <Command className="w-2.5 h-2.5" />K
+            </span>
           </button>
         )}
 
-        {/* User Actions */}
+        {/* Notification bell (UI-only) */}
+        {user && (
+          <button
+            title="Notifications"
+            className="relative p-2 text-slate-500 hover:text-slate-200 hover:bg-slate-800 rounded-xl border border-transparent hover:border-slate-700 transition"
+          >
+            <Bell className="w-4 h-4" />
+            <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 bg-legal-gold rounded-full" />
+          </button>
+        )}
+
+        {/* User chip or auth buttons */}
         {user ? (
-          <div className="flex items-center gap-2 bg-slate-800/90 pl-3 pr-1.5 py-1 rounded-xl border border-slate-700 shadow-sm">
-            <div className="flex flex-col text-right pr-1">
-              <span
-                className="text-xs font-bold text-white truncate max-w-[130px]"
-                title={user.email}
-              >
+          <div className="flex items-center gap-2 bg-slate-800/80 pl-1.5 pr-1.5 py-1.5 rounded-xl border border-slate-700/80 shadow-sm">
+            {/* Gradient avatar */}
+            <div className={`w-7 h-7 rounded-lg bg-gradient-to-br ${avatarGradient} flex items-center justify-center text-white text-[11px] font-extrabold shadow-sm shrink-0`}>
+              {(user.profileData?.fullName || user.email).charAt(0).toUpperCase()}
+            </div>
+
+            <div className="hidden sm:flex flex-col text-right pr-1 min-w-0">
+              <span className="text-xs font-bold text-white truncate max-w-[120px]" title={user.email}>
                 {user.profileData?.fullName || user.email.split('@')[0]}
               </span>
-              <span className="text-[9px] font-extrabold text-legal-gold uppercase tracking-wider">
+              <span className="text-[9px] font-extrabold text-legal-gold uppercase tracking-wider leading-none mt-0.5">
                 {user.role}
               </span>
             </div>
 
             <button
               onClick={() => onSelectTab && onSelectTab('profile')}
-              title="View Profile & Network"
+              title="View Profile"
               className="p-1.5 text-slate-400 hover:text-white hover:bg-slate-700 rounded-lg transition"
             >
-              <User className="w-4 h-4" />
+              <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/>
+              </svg>
             </button>
+
+            <div className="w-px h-5 bg-slate-700 mx-0.5" />
 
             <button
               onClick={onLogout}
               title="Sign Out"
-              className="p-1.5 text-slate-400 hover:text-red-400 hover:bg-slate-700 rounded-lg transition"
+              className="p-1.5 text-slate-400 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition"
             >
               <LogOut className="w-4 h-4" />
             </button>
@@ -140,21 +163,22 @@ export default function Navbar({
           <div className="flex items-center gap-2">
             <button
               onClick={() => onSelectTab && onSelectTab('login')}
-              className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold text-slate-200 hover:text-white bg-slate-800/80 hover:bg-slate-800 rounded-xl border border-slate-700 transition"
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold text-slate-200 hover:text-white bg-slate-800/80 hover:bg-slate-700 rounded-xl border border-slate-700 hover:border-slate-600 transition"
             >
               <LogIn className="w-3.5 h-3.5 text-legal-gold" />
               Sign In
             </button>
             <button
               onClick={() => onSelectTab && onSelectTab('signup')}
-              className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-bold bg-gradient-to-r from-legal-blue to-blue-700 hover:from-blue-600 hover:to-blue-800 text-white rounded-xl shadow-md shadow-legal-blue/20 transition transform active:scale-95"
+              className="btn-shimmer inline-flex items-center gap-1.5 px-4 py-2 text-xs font-bold bg-gradient-to-r from-legal-blue to-blue-700 hover:from-blue-600 hover:to-blue-800 text-white rounded-xl shadow-md shadow-legal-blue/20 transition transform active:scale-95"
             >
-              Sign Up
+              <Sparkles className="w-3 h-3 text-legal-gold" />
+              Get Started
             </button>
           </div>
         )}
 
-        {/* Mobile Menu Toggle */}
+        {/* Mobile menu toggle */}
         {showToggle && (
           <button
             onClick={onToggleMobileMenu}

@@ -193,19 +193,17 @@ export default function App() {
           </div>
         )}
 
-        {/* Primary Content Viewport */}
+        {/* Primary Content Viewport — key prop triggers page-enter animation on tab change */}
         <main
-          className={`flex-1 w-full mx-auto overflow-y-auto ${
+          key={activeTab}
+          className={`flex-1 w-full mx-auto overflow-y-auto page-enter ${
             isPublicView ? 'max-w-7xl px-4 sm:px-6 lg:px-8 py-8' : 'p-4 sm:p-6 lg:p-8 max-w-7xl'
           }`}
         >
           {/* PUBLIC ROUTES */}
           {activeTab === 'landing' && (
             <LandingPage
-              onGetStarted={() => {
-                if (user) setActiveTab('intake');
-                else setActiveTab('login');
-              }}
+              onGetStarted={() => { if (user) setActiveTab('intake'); else setActiveTab('login'); }}
               onOpenAuth={() => setActiveTab('login')}
               onSelectFeature={(feat) => handleSelectTab(feat)}
               user={user}
@@ -244,11 +242,7 @@ export default function App() {
 
           {activeTab === 'intake' && (
             user ? (
-              <CaseStoryIntake
-                user={user}
-                onOpenAuth={() => setActiveTab('login')}
-                onCaseCreated={handleCaseCreated}
-              />
+              <CaseStoryIntake user={user} onOpenAuth={() => setActiveTab('login')} onCaseCreated={handleCaseCreated} />
             ) : (
               <LoginPage onAuthSuccess={handleAuthSuccess} onNavigateToSignup={() => setActiveTab('signup')} />
             )
@@ -327,16 +321,54 @@ export default function App() {
         user={user}
       />
 
-      {/* Institutional Enterprise Footer */}
-      <footer className="bg-white border-t border-slate-200 py-6 text-center text-xs text-slate-500 shrink-0">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 flex flex-col sm:flex-row items-center justify-between gap-3">
-          <div className="flex items-center gap-2">
-            <span className="font-bold text-slate-900">Legal Nexus</span>
-            <span className="text-slate-400">•</span>
-            <span>AI-Powered Legal Access & Case Navigation</span>
-          </div>
-          <div className="flex items-center gap-4 text-slate-400 text-[11px]">
-            <span>© 2026 Legal Nexus Platform</span>
+      {/* Upgraded Footer */}
+      <footer className="bg-white border-t border-slate-200 py-8 shrink-0">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-6">
+            {/* Brand */}
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-legal-blue to-sky-400 flex items-center justify-center shadow-sm">
+                <Scale className="w-4 h-4 text-white" />
+              </div>
+              <div>
+                <div className="flex items-center gap-1.5">
+                  <span className="text-sm font-extrabold text-slate-900 tracking-tight">Legal Nexus</span>
+                  <span className="text-[9px] font-bold text-legal-gold bg-legal-gold/10 px-1.5 py-0.5 rounded border border-legal-gold/20 tracking-wider uppercase">AI</span>
+                </div>
+                <p className="text-[10px] text-slate-400 font-medium">AI-Powered Legal Access & Case Navigation</p>
+              </div>
+            </div>
+
+            {/* Quick links */}
+            <div className="flex items-center gap-6 text-xs text-slate-500">
+              {[
+                { label: 'AI Assistant', tab: 'intake' },
+                { label: 'Research', tab: 'research' },
+                { label: 'Advocates', tab: 'lawyers' },
+                { label: 'Document AI', tab: 'documents' },
+              ].map((link) => (
+                <button
+                  key={link.tab}
+                  onClick={() => handleSelectTab(link.tab)}
+                  className="hover:text-legal-blue transition font-medium"
+                >
+                  {link.label}
+                </button>
+              ))}
+            </div>
+
+            {/* Trust + copyright */}
+            <div className="flex flex-col items-end gap-1.5">
+              <div className="flex items-center gap-2 text-[10px] text-slate-400">
+                <span className="flex items-center gap-1 text-emerald-500 font-semibold">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                  All systems operational
+                </span>
+                <span className="text-slate-300">•</span>
+                <span>256-bit encrypted</span>
+              </div>
+              <span className="text-[10px] text-slate-400">© 2026 Legal Nexus Platform. All rights reserved.</span>
+            </div>
           </div>
         </div>
       </footer>
