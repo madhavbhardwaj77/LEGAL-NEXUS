@@ -28,64 +28,119 @@ const getCategoryDetails = (category) => {
 
   if (cat.includes('consumer')) {
     return {
-      statute: 'The Consumer Protection Act, 2019 — Section 35',
+      statute: 'The Consumer Protection Act, 2019 — Section 35 & 84',
       description:
-        'Defines the manner in which a complaint shall be filed electronically (e-Daakhil) before District, State, or National Consumer Commissions for defects in goods or deficiency in services.',
+        'Defines the electronic filing of complaints (e-Daakhil) before District, State, and National Consumer Commissions and establishes strict Product Liability for defective goods and deficiency in services.',
+      charges: ['Deficiency in Service (Sec 2(11) CPA)', 'Unfair Trade Practice (Sec 2(47) CPA)', 'Product Liability Failure'],
       actionPlan: [
-        'Collate & Preserve Records: Gather original invoice, payment receipt, delivery photos, and correspondence with customer care.',
-        'Lodge Grievance: File a pre-litigation complaint on the National Consumer Helpline portal (NCH) by dialing 1915.',
-        'File Consumer Complaint: Register formal electronic complaint on the e-Daakhil Portal (edaakhil.nic.in) for refund and compensation.',
+        'Preserve Purchase & Defect Proof: Collate tax invoice, warranty card, product unboxing video, service center job sheets, and support tickets.',
+        'National Consumer Helpline (NCH): Register a formal pre-litigation grievance on the NCH portal (consumerhelpline.gov.in) or call 1915.',
+        '15-Day Statutory Legal Notice: Serve a formal notice demanding product replacement, refund, and compensation for mental agony.',
+        'e-Daakhil Consumer Complaint: File an electronic complaint on e-Daakhil (edaakhil.nic.in) before the competent District Consumer Commission.',
       ],
     };
   }
 
   if (cat.includes('property') || cat.includes('real estate') || cat.includes('tenant') || cat.includes('rental')) {
     return {
-      statute: 'The Model Tenancy Act, 2021 — Section 21',
+      statute: 'The Model Tenancy Act, 2021 (Sec 21) • Transfer of Property Act, 1882 (Sec 108)',
       description:
-        'Specifies the procedure for eviction of tenants and recovery of security deposits, detailing grounds of lease termination and refund obligations.',
+        'Regulates rights and obligations between lessors and lessees, mandatory security deposit refund upon peaceful vacation, and statutory procedures for lawful tenancy termination.',
+      charges: ['Wrongful Withholding of Security Deposit', 'Breach of Leave and License Agreement', 'Unlawful Dispossession / Trespass'],
       actionPlan: [
-        'Preserve Rental Records: Collect signed rent agreement, bank deposit slips, notice period emails, and photos of vacated premises.',
-        'Issue Legal Demand Notice: Serve a formal 15-day statutory notice to refund deposit or quit possession.',
-        'File Petition: Approach local Rent Authority or Rent Court to recover the security deposit with interest.',
+        'Assemble Rental & Handover Proof: Collect signed rent agreement, security deposit bank proof, 30-day vacation notice emails, and handover photos.',
+        '15-Day Statutory Demand Notice: Serve a formal legal notice demanding immediate refund of security deposit with 18% p.a. interest.',
+        'Rent Authority Petition: File a summary recovery petition before the local Rent Authority / Rent Court under the Tenancy Act.',
+        'Summary Recovery Suit (Order 37 CPC): If commercial lease or high value, initiate summary civil recovery suit in competent Civil Court.',
       ],
     };
   }
 
   if (cat.includes('cyber') || cat.includes('privacy') || cat.includes('data')) {
     return {
-      statute: 'The Information Technology Act, 2000 — Section 66D',
+      statute: 'The Information Technology Act, 2000 (Sec 66D & 43A) • BNS 318(4) / IPC 420',
       description:
-        'Imposes punishment for cheating by personation using computer resource, covering online fraud, email spoofing, and phishing transactions.',
+        'Prescribes criminal penalties for cheating by personation using computer resources, cyber financial phishing, and statutory compensation for failure to protect sensitive personal data.',
+      charges: ['Cheating by Personation (Sec 66D IT Act)', 'Identity Theft (Sec 66C IT Act)', 'Criminal Breach of Trust (Sec 316 BNS)'],
       actionPlan: [
-        'Block & Freeze: Contact bank immediately to freeze transactions and dispute unauthorized charges.',
-        'Call Helpline: Dial 1930 Cyber Fraud Helpline immediately to attempt account lien (freeze funds in beneficiary bank).',
-        'Lodge Cyber Complaint: File a formal complaint online at the National Cyber Crime Reporting Portal (cybercrime.gov.in) with transaction logs.',
+        'Golden Hour Bank Transaction Freeze: Contact bank branch and customer care immediately to freeze payment channels and dispute unauthorized debits.',
+        'National Cyber Crime Helpline (1930): Call 1930 immediately to trigger an automated lien on recipient beneficiary bank accounts.',
+        'National Cyber Crime Portal: Submit formal complaint with transaction screenshots, SMS logs, and fraudster details on cybercrime.gov.in.',
+        'Escalate to RBI Banking Ombudsman: File online dispute on cms.rbi.org.in if bank fails to credit unauthorized debits under zero-liability rules.',
+      ],
+    };
+  }
+
+  if (cat.includes('family') || cat.includes('matrimonial') || cat.includes('divorce') || cat.includes('custody')) {
+    return {
+      statute: 'Protection of Women from Domestic Violence Act, 2005 (Sec 12) • Section 144 BNSS / 125 CrPC',
+      description:
+        'Provides emergency protection orders, residence rights, monthly interim maintenance, and custody adjudication through Family Courts and Magistrates.',
+      charges: ['Domestic Violence (Sec 3 DV Act)', 'Failure to Provide Maintenance', 'Cruelty & Harassment (Sec 85/86 BNS)'],
+      actionPlan: [
+        'Collate Matrimonial & Income Proof: Assemble marriage certificate, communication records, bank statements, and income affidavits.',
+        'Approach Protection Officer / CAW Cell: Submit a formal Domestic Incident Report (DIR) to the Protection Officer or Women Safety Cell.',
+        'Pre-Litigation Mediation: Apply for mediation at the District Legal Services Authority (DLSA) / Family Court Mediation Centre.',
+        'Magistrate / Family Court Petition: File formal application under Sec 12 DV Act or Sec 144 BNSS for interim relief.',
+      ],
+    };
+  }
+
+  if (cat.includes('criminal') || cat.includes('assault') || cat.includes('threat') || cat.includes('fir')) {
+    return {
+      statute: 'Bharatiya Nyaya Sanhita, 2023 (Sec 115, 351, 78) • BNSS, 2023 (Sec 173 - Mandatory FIR)',
+      description:
+        'Defines cognizable offenses including voluntarily causing hurt, criminal intimidation, and stalking, and establishes statutory duty of police to register First Information Report (FIR).',
+      charges: ['Criminal Intimidation (Sec 351 BNS)', 'Voluntarily Causing Hurt (Sec 115 BNS)', 'Stalking (Sec 78 BNS)', 'Theft (Sec 303 BNS)'],
+      actionPlan: [
+        'Medical Examination (MLC): Obtain Medico-Legal Certificate (MLC) from a government hospital if bodily harm was inflicted.',
+        'Lodge Written Complaint (FIR): Submit signed, chronological complaint to Station House Officer (SHO) under Sec 173 BNSS.',
+        'Escalate to Superintendent of Police (SP/DCP): If FIR is refused, send complaint by registered post under Sec 173(4) BNSS.',
+        'Judicial Magistrate Order (Sec 175(3) BNSS): Approach Magistrate for court-monitored investigation and FIR direction.',
+      ],
+    };
+  }
+
+  if (cat.includes('banking') || cat.includes('finance') || cat.includes('cheque') || cat.includes('loan')) {
+    return {
+      statute: 'Negotiable Instruments Act, 1881 (Sec 138) • RBI Fair Practices Code for Lenders',
+      description:
+        'Criminal prosecution for dishonour of cheques and strict regulatory restrictions prohibiting harassment by loan recovery agents.',
+      charges: ['Cheque Dishonour (Sec 138 NI Act)', 'Violation of RBI Fair Lending Code', 'Defamatory Credit Reporting'],
+      actionPlan: [
+        'Assemble Banking & Cheque Proof: Collect bank statements, loan ledger, cheque return memo, and recovery agent call recordings.',
+        'Escalate to Principal Nodal Officer: Submit written grievance to the Bank / NBFC Grievance Redressal Officer.',
+        'RBI Integrated Ombudsman: File online complaint at cms.rbi.org.in if grievance is unresolved within 30 days.',
+        'Statutory 30-Day Cheque Notice: If cheque bounce, issue statutory notice under Sec 138 of the NI Act within 30 days of receiving the memo.',
       ],
     };
   }
 
   if (cat.includes('employment') || cat.includes('labour') || cat.includes('wage')) {
     return {
-      statute: 'The Payment of Wages Act, 1936 — Section 15',
+      statute: 'The Payment of Wages Act, 1936 (Sec 15) • Industrial Disputes Act, 1947 (Sec 25F & 33C)',
       description:
-        'Mandates wage settlement on due dates and authorizes the Labour Authority to order wage recovery plus statutory compensation and penalties.',
+        'Mandates wage settlement on due dates and authorizes the Labour Authority to order wage recovery plus statutory compensation up to 10x and retrenchment severance.',
+      charges: ['Unlawful Withholding of Wages (Sec 15 Payment of Wages Act)', 'Wrongful Termination without Notice Pay', 'Breach of Employment Contract'],
       actionPlan: [
-        'Collate & Preserve Records: Gather employment appointment letter, salary slips, and bank statements showing unpaid months.',
-        'Issue Statutory Demand Notice: Serve formal 15-day notice under the Payment of Wages Act.',
-        'Pre-Litigation Grievance: Register online grievance on the Ministry of Labour SAMADHAN Portal (samadhan.labour.gov.in).',
+        'Collate Employment & Compensation Records: Gather appointment letter, monthly salary slips, and bank statements showing unpaid months.',
+        '15-Day Statutory Legal Demand Notice: Serve formal notice to the company directors and HR under the Payment of Wages Act.',
+        'SAMADHAN Labour Portal Conciliation: Register a conciliation grievance on the Ministry of Labour SAMADHAN Portal (samadhan.labour.gov.in).',
+        'Petition before Labour Authority: File recovery claim under Sec 15 of the Payment of Wages Act or Sec 33C(2) of the Industrial Disputes Act.',
       ],
     };
   }
 
   return {
-    statute: 'The Code of Civil Procedure, 1908 — Section 89',
+    statute: 'The Code of Civil Procedure, 1908 (Sec 89) • Specific Relief Act, 1963',
     description:
-      'Encourages alternate dispute resolution (ADR) mechanisms, including mediation, conciliation, and arbitration, to resolve civil disputes before court trials.',
+      'Provides for specific performance of obligations, permanent injunctions against unlawful acts, and alternate dispute resolution (ADR) mechanisms including mediation.',
+    charges: ['Breach of Legal Obligation', 'Tortious Interference', 'Civil Damages Claim'],
     actionPlan: [
-      'Preserve Evidence: Collect agreement copy, transaction history, emails, and notices exchanged.',
-      'Serve Legal Notice: Send formal pre-suit notice outlining demands and giving 30 days to resolve.',
+      'Collate Evidence & Contracts: Assemble agreement copies, transaction history, emails, and notices exchanged.',
+      'Serve Formal Pre-Suit Legal Notice: Send formal notice outlining legal grounds and giving 15 to 30 days to resolve.',
       'Pre-Litigation Mediation: Register for pre-litigation mediation at the local District Legal Services Authority (DLSA).',
+      'Civil Suit for Injunction / Damages: File formal civil suit before the competent District Civil Court.',
     ],
   };
 };
@@ -308,14 +363,14 @@ export default function CaseDetailModal({ selectedCase, isOpen, onClose, onCaseU
                 </div>
               </div>
 
-              {/* Layer 3: Statutory Legal Basis */}
-              {details && user && user.role !== 'CITIZEN' && (
+              {/* Layer 3: Statutory Legal Basis & Charges */}
+              {details && (
                 <div className="p-4 bg-slate-50 rounded-2xl border border-slate-200 space-y-2.5">
                   <h4 className="text-xs font-bold text-slate-900 uppercase tracking-wider flex items-center gap-1.5">
                     <Scale className="w-3.5 h-3.5 text-legal-blue" />
-                    Authoritative Statutory Basis
+                    Authoritative Statutory Basis & Governing Laws
                   </h4>
-                  <div className="p-3.5 bg-white rounded-xl border border-slate-200 text-xs space-y-1.5">
+                  <div className="p-3.5 bg-white rounded-xl border border-slate-200 text-xs space-y-2">
                     <div className="flex items-center justify-between">
                       <span className="font-bold text-slate-900 text-xs">{details.statute}</span>
                       <span className="text-[10px] bg-emerald-50 text-emerald-800 px-2 py-0.5 rounded font-bold border border-emerald-200">
@@ -323,6 +378,18 @@ export default function CaseDetailModal({ selectedCase, isOpen, onClose, onCaseU
                       </span>
                     </div>
                     <p className="text-slate-600 text-xs leading-relaxed">{details.description}</p>
+                    {details.charges && (
+                      <div className="pt-2 border-t border-slate-100 flex flex-wrap gap-1.5">
+                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider self-center mr-1">
+                          Applicable Charges:
+                        </span>
+                        {details.charges.map((chg, i) => (
+                          <span key={i} className="text-[10px] font-semibold bg-blue-50 text-legal-blue px-2 py-0.5 rounded border border-blue-200">
+                            {chg}
+                          </span>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 </div>
               )}

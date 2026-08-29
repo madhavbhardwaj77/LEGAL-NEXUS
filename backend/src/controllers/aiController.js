@@ -115,6 +115,255 @@ const handleStoryIntake = async (req, res, next) => {
 };
 
 /**
+ * Intelligent Dynamic Narrative Analyzer (Node.js fallback / direct engine)
+ * Parses case narratives across 9 domains to extract category, amount (if monetary),
+ * applicable Indian statutes, specific legal charges/violations, tailored recommendations, and evidence checklists.
+ */
+const analyzeLegalNarrative = (story, existingCase = null) => {
+  const text = (story || '').toLowerCase();
+
+  // Extract financial amount if present
+  let disputedAmount = null;
+  const amountMatch = story.match(/(?:₹|rs\.?|inr)\s*([\d,]+(?:\.\d+)?)|(\d+(?:,\d+)*(?:\.\d+)?)\s*(?:rupees|lakhs?|cr|crores?|k\b)/i);
+  if (amountMatch) {
+    let rawNum = (amountMatch[1] || amountMatch[2] || '').replace(/,/g, '');
+    let val = parseFloat(rawNum);
+    if (!isNaN(val)) {
+      if (text.includes('lakh')) val = val * 100000;
+      else if (text.includes('crore') || text.includes('cr\b')) val = val * 10000000;
+      disputedAmount = val;
+    }
+  }
+
+  // Extract city/jurisdiction if present
+  let jurisdiction = 'India';
+  const cities = ['Delhi', 'Bengaluru', 'Bangalore', 'Mumbai', 'Pune', 'Hyderabad', 'Chennai', 'Kolkata', 'Noida', 'Gurugram', 'Gurgaon', 'Ahmedabad', 'Jaipur', 'Chandigarh'];
+  for (const c of cities) {
+    if (new RegExp(`\\b${c}\\b`, 'i').test(story)) {
+      jurisdiction = c;
+      break;
+    }
+  }
+
+  // 1. CONSUMER DISPUTE
+  if (text.includes('consumer') || text.includes('defect') || text.includes('laptop') || text.includes('phone') || text.includes('warranty') || text.includes('refund') || text.includes('seller') || text.includes('amazon') || text.includes('flipkart') || text.includes('order') || text.includes('e-commerce') || text.includes('counterfeit')) {
+    return {
+      category: 'Consumer Dispute',
+      issue: 'Defective Product / Service Deficiency / Warranty Breach',
+      disputedAmount: disputedAmount || 45000,
+      isMonetary: true,
+      urgencyLevel: 'ATTENTION_RECOMMENDED',
+      urgencyScore: 0.70,
+      colorCode: 'YELLOW',
+      recommendation: 'ATTENTION: Lodge a National Consumer Helpline grievance and serve a 15-day pre-litigation notice.',
+      statutoryProvisions: [
+        { act: 'Consumer Protection Act, 2019', section: 'Section 35', sectionTitle: 'Filing of Complaints before District Consumer Commission (e-Daakhil)', actionableRemedy: 'Directs full refund with interest and punitive compensation for deficiency in service.' },
+        { act: 'Consumer Protection Act, 2019', section: 'Section 84 & 86', sectionTitle: 'Product Liability Action against Manufacturer & Seller', actionableRemedy: 'Enforces strict liability for harm caused by defective product.' },
+      ],
+      applicableCharges: ['Deficiency in Service (Section 2(11) CPA)', 'Unfair Trade Practice (Section 2(47) CPA)', 'Breach of Manufacturer Warranty'],
+      actionPlan: [
+        { step: 'Preserve Purchase & Defect Proof', detail: 'Collate tax invoice, warranty card, product photos, unboxing videos, and service center job sheets.' },
+        { step: 'National Consumer Helpline (NCH)', detail: 'Register a formal pre-litigation grievance on the NCH portal (consumerhelpline.gov.in) or call 1915.' },
+        { step: '15-Day Statutory Legal Demand Notice', detail: 'Serve a formal notice upon the seller and manufacturer demanding immediate replacement, refund, and compensation.' },
+        { step: 'e-Daakhil Consumer Complaint Filing', detail: 'If unresolved within 15 days, file an electronic complaint on the e-Daakhil Portal (edaakhil.nic.in) before the District Consumer Commission.' },
+      ],
+      evidence: {
+        available: ['Purchase Invoice / Order Screenshot', 'Defect Photos / Service Job Sheet'],
+        missing: ['Written Rejection / Email from Customer Support', 'Proof of Delivery Date'],
+        recommended: ['Bank / Card Debit Statement', 'Manufacturer Warranty Card'],
+      },
+      clarifyingQuestions: ['What is the purchase date and is the product within the manufacturer warranty period?'],
+    };
+  }
+
+  // 2. PROPERTY & REAL ESTATE / TENANCY
+  if (text.includes('tenant') || text.includes('rent') || text.includes('landlord') || text.includes('deposit') || text.includes('flat') || text.includes('apartment') || text.includes('evict') || text.includes('encroach') || text.includes('lease') || text.includes('property') || text.includes('builder') || text.includes('possession')) {
+    return {
+      category: 'Property & Real Estate',
+      issue: text.includes('deposit') ? 'Non-Refund of Rental Security Deposit' : text.includes('evict') ? 'Unlawful Eviction Notice' : 'Property / Tenancy Dispute',
+      disputedAmount: disputedAmount || 60000,
+      isMonetary: !text.includes('encroach') && !text.includes('boundary'),
+      urgencyLevel: 'ATTENTION_RECOMMENDED',
+      urgencyScore: 0.75,
+      colorCode: 'YELLOW',
+      recommendation: 'ATTENTION: Issue a formal 15-day statutory demand notice under the Tenancy Act.',
+      statutoryProvisions: [
+        { act: 'Model Tenancy Act, 2021', section: 'Section 21 & 23', sectionTitle: 'Eviction, Vacation and Mandatory Security Deposit Refund', actionableRemedy: 'Mandates refund of deposit within designated timeframe upon peaceful handover of premises.' },
+        { act: 'Transfer of Property Act, 1882', section: 'Section 108', sectionTitle: 'Rights and Liabilities of Lessor and Lessee', actionableRemedy: 'Enforces statutory covenant of quiet possession and return of security.' },
+      ],
+      applicableCharges: ['Wrongful Withholding of Security Deposit', 'Breach of Leave and License Agreement', 'Unlawful Dispossession / Trespass'],
+      actionPlan: [
+        { step: 'Collate Rental Agreement & Handover Proof', detail: 'Assemble signed rent agreement, bank deposit transfer receipts, 30-day vacation notice emails, and handover photos.' },
+        { step: '15-Day Statutory Demand Notice', detail: 'Serve a formal advocate-drafted legal notice demanding immediate refund of security deposit with 18% p.a. interest.' },
+        { step: 'Petition before Rent Authority / Court', detail: 'File a summary recovery petition before the jurisdictional Rent Authority under the Model Tenancy Act.' },
+        { step: 'Summary Civil Recovery Suit (Order 37 CPC)', detail: 'If commercial lease or disputed claim, file summary recovery suit for liquidated debt in Civil Court.' },
+      ],
+      evidence: {
+        available: ['Signed Leave & License Agreement', 'Deposit Transfer Bank Confirmation'],
+        missing: ['Mutual Handover Inspection Record', 'Written Vacation Notice Proof'],
+        recommended: ['Keys Handover Acknowledgement Email', 'Premises Move-out Video'],
+      },
+      clarifyingQuestions: ['Did you serve the written notice period as per your lease agreement before vacating?'],
+    };
+  }
+
+  // 3. CYBER LAW & IT ACT
+  if (text.includes('cyber') || text.includes('hack') || text.includes('upi') || text.includes('phishing') || text.includes('fraud call') || text.includes('otp') || text.includes('scam') || text.includes('impersonat') || text.includes('fake profile') || text.includes('data breach')) {
+    return {
+      category: 'Cyber Law & Data Privacy',
+      issue: 'Cyber Financial Fraud / Unauthorized UPI Debit / Impersonation',
+      disputedAmount: disputedAmount || 35000,
+      isMonetary: true,
+      urgencyLevel: 'URGENT_ASSISTANCE',
+      urgencyScore: 0.92,
+      colorCode: 'RED',
+      recommendation: 'CRITICAL: Dial 1930 Cyber Helpline immediately to freeze fraudulent beneficiary accounts within the golden hour.',
+      statutoryProvisions: [
+        { act: 'Information Technology Act, 2000', section: 'Section 66D', sectionTitle: 'Punishment for Cheating by Personation using Computer Resource', actionableRemedy: 'Imprisonment up to 3 years and compensation for cyber cheating.' },
+        { act: 'Information Technology Act, 2000', section: 'Section 43A', sectionTitle: 'Compensation for Failure to Protect Sensitive Personal Data', actionableRemedy: 'Mandatory monetary compensation for negligence in implementing reasonable security practices.' },
+        { act: 'Bharatiya Nyaya Sanhita, 2023 (BNS)', section: 'Section 318(4)', sectionTitle: 'Cheating and Dishonestly Inducing Delivery of Property (IPC 420)', actionableRemedy: 'Cognizable criminal prosecution and asset attachment.' },
+      ],
+      applicableCharges: ['Cheating by Personation (Section 66D IT Act)', 'Identity Theft (Section 66C IT Act)', 'Criminal Breach of Trust (Section 316 BNS)'],
+      actionPlan: [
+        { step: 'Golden Hour Bank Transaction Freeze', detail: 'Contact your bank immediately to freeze UPI/Netbanking channels and obtain a formal dispute token number.' },
+        { step: 'Dial 1930 National Cyber Fraud Helpline', detail: 'Register the financial fraud incident immediately on 1930 to trigger an automated lien on the suspect recipient bank account.' },
+        { step: 'National Cyber Crime Portal Complaint', detail: 'Submit a formal cyber complaint with transaction logs, UPI reference numbers, and caller details at cybercrime.gov.in.' },
+        { step: 'Escalate to RBI Banking Ombudsman', detail: 'If the bank fails to adhere to RBI zero-liability guidelines for unauthorized electronic transactions, file a complaint on cms.rbi.org.in.' },
+      ],
+      evidence: {
+        available: ['Bank Statement showing Unauthorized Debit', 'Fraudulent SMS / UPI Transaction ID'],
+        missing: ['1930 Cyber Helpline Acknowledgement Reference', 'Call Logs / Phishing Link URL'],
+        recommended: ['Bank Grievance Dispute Form Copy', 'Caller Phone Number & WhatsApp chat logs'],
+      },
+      clarifyingQuestions: ['Did you report the transaction to 1930 or your bank within 3 days of the unauthorized debit?'],
+    };
+  }
+
+  // 4. FAMILY & MATRIMONIAL
+  if (text.includes('divorce') || text.includes('custody') || text.includes('maintenance') || text.includes('alimony') || text.includes('wife') || text.includes('husband') || text.includes('marriage') || text.includes('domestic violence') || text.includes('dowry') || text.includes('caw cell')) {
+    return {
+      category: 'Family & Matrimonial',
+      issue: text.includes('violence') ? 'Domestic Violence & Protection Claim' : text.includes('custody') ? 'Child Custody & Visitation' : 'Matrimonial Maintenance & Dispute',
+      disputedAmount: disputedAmount || null,
+      isMonetary: text.includes('maintenance') || text.includes('alimony'),
+      urgencyLevel: text.includes('violence') ? 'URGENT_ASSISTANCE' : 'ATTENTION_RECOMMENDED',
+      urgencyScore: text.includes('violence') ? 0.90 : 0.65,
+      colorCode: text.includes('violence') ? 'RED' : 'YELLOW',
+      recommendation: text.includes('violence') ? 'CRITICAL: Approach Protection Officer / Women Helpline (181) for immediate protection order.' : 'ATTENTION: Initiate pre-litigation mediation at Family Court / DLSA.',
+      statutoryProvisions: [
+        { act: 'Protection of Women from Domestic Violence Act, 2005', section: 'Section 12 & 18', sectionTitle: 'Application to Magistrate for Protection, Residence, and Monetary Relief', actionableRemedy: 'Restrains respondent from committing violence, ensures right to reside in shared household, and orders monthly maintenance.' },
+        { act: 'Bharatiya Nagarik Suraksha Sanhita, 2023 / CrPC', section: 'Section 144 BNSS / 125 CrPC', sectionTitle: 'Order for Maintenance of Wives, Children and Parents', actionableRemedy: 'Enforces statutory monthly maintenance and interim support during proceedings.' },
+      ],
+      applicableCharges: ['Domestic Violence (Section 3 DV Act)', 'Cruelty & Harassment (Section 85/86 BNS / 498A IPC)', 'Failure to Provide Maintenance'],
+      actionPlan: [
+        { step: 'Collate Matrimonial & Financial Proof', detail: 'Assemble marriage certificate/photos, income affidavits, bank statements, and relevant message communication records.' },
+        { step: 'Approach Protection Officer / CAW Cell', detail: 'Lodge a formal Domestic Incident Report (DIR) with the local Protection Officer or Women Safety Cell.' },
+        { step: 'Pre-Litigation Mediation', detail: 'Participate in pre-litigation mediation at the District Legal Services Authority (DLSA) / Family Court Mediation Centre.' },
+        { step: 'Pleading Filing in Family Court / Magistrate', detail: 'File application under Section 12 DV Act or Section 144 BNSS seeking interim protection and maintenance.' },
+      ],
+      evidence: {
+        available: ['Marriage Proof / Certificate', 'Communication Records'],
+        missing: ['Detailed Income Affidavit of Opposing Party', 'Incident Record / Police Complaint'],
+        recommended: ['Witness Statements', 'Medical / Hospital Records (if physical harm)'],
+      },
+      clarifyingQuestions: ['Is there an immediate safety risk, and has any prior complaint been submitted to the Police or CAW cell?'],
+    };
+  }
+
+  // 5. CRIMINAL LAW & PUBLIC OFFENSES
+  if (text.includes('assault') || text.includes('threat') || text.includes('intimidat') || text.includes('police') || text.includes('fir') || text.includes('criminal') || text.includes('stalk') || text.includes('theft') || text.includes('robbery') || text.includes('beat up') || text.includes('hurt')) {
+    return {
+      category: 'Criminal Law',
+      issue: text.includes('threat') ? 'Criminal Intimidation & Harassment' : text.includes('theft') ? 'Theft & Recovery of Property' : 'Physical Assault & Offense',
+      disputedAmount: disputedAmount || null,
+      isMonetary: text.includes('theft') || text.includes('robbery'),
+      urgencyLevel: 'URGENT_ASSISTANCE',
+      urgencyScore: 0.88,
+      colorCode: 'RED',
+      recommendation: 'CRITICAL: Obtain medical examination (MLC) and register written FIR at jurisdictional police station.',
+      statutoryProvisions: [
+        { act: 'Bharatiya Nyaya Sanhita, 2023 (BNS)', section: 'Section 351', sectionTitle: 'Criminal Intimidation (IPC 506)', actionableRemedy: 'Cognizable prosecution with imprisonment up to 7 years if threat is severe.' },
+        { act: 'Bharatiya Nyaya Sanhita, 2023 (BNS)', section: 'Section 115', sectionTitle: 'Voluntarily Causing Hurt (IPC 323)', actionableRemedy: 'Punishment and medical compensation for bodily harm.' },
+        { act: 'Bharatiya Nagarik Suraksha Sanhita, 2023 (BNSS)', section: 'Section 173', sectionTitle: 'Information in Cognizable Cases (Mandatory FIR under 154 CrPC)', actionableRemedy: 'Mandatory statutory duty of Station House Officer to record FIR.' },
+      ],
+      applicableCharges: ['Criminal Intimidation (Section 351 BNS)', 'Voluntarily Causing Hurt (Section 115 BNS)', 'Wrongful Restraint (Section 126 BNS)'],
+      actionPlan: [
+        { step: 'Medical Examination (MLC)', detail: 'If physical harm occurred, visit the nearest government hospital immediately for Medico-Legal Examination (MLC).' },
+        { step: 'Lodge Written Police Complaint (FIR)', detail: 'Submit a signed, chronological written complaint to the Station House Officer (SHO) under Section 173 BNSS.' },
+        { step: 'Escalate to Superintendent of Police (SP/DCP)', detail: 'If the police station refuses to register an FIR, send the complaint by registered post to the SP/DCP under Section 173(4) BNSS.' },
+        { step: 'Section 175(3) BNSS Application before Magistrate', detail: 'Approach the Judicial Magistrate for an order directing the police to investigate and register an FIR under Section 175(3) BNSS.' },
+      ],
+      evidence: {
+        available: ['Incident Date, Time & Location Log', 'Accused Description / Name'],
+        missing: ['Medical Examination Certificate (MLC)', 'Audio / Video / CCTV Footage'],
+        recommended: ['Eyewitness Statements & Contacts', 'Call Recordings / Threat Messages'],
+      },
+      clarifyingQuestions: ['Did you visit a hospital for medical examination, and have you filed a written complaint with the local police?'],
+    };
+  }
+
+  // 6. BANKING & FINANCIAL DISPUTES
+  if (text.includes('bank') || text.includes('loan') || text.includes('cibil') || text.includes('cheque') || text.includes('check bounce') || text.includes('emi') || text.includes('recovery agent') || text.includes('harass') && text.includes('loan')) {
+    return {
+      category: 'Banking & Financial Dispute',
+      issue: text.includes('cheque') ? 'Dishonour of Cheque (Section 138 NI Act)' : text.includes('recovery') ? 'Harassment by Loan Recovery Agents' : 'Banking Dispute / Unauthorized Charges',
+      disputedAmount: disputedAmount || 120000,
+      isMonetary: true,
+      urgencyLevel: 'ATTENTION_RECOMMENDED',
+      urgencyScore: 0.72,
+      colorCode: 'YELLOW',
+      recommendation: 'ATTENTION: Issue statutory notice / escalate to RBI Banking Ombudsman.',
+      statutoryProvisions: [
+        { act: 'Negotiable Instruments Act, 1881', section: 'Section 138', sectionTitle: 'Dishonour of Cheque for Insufficiency of Funds in the Account', actionableRemedy: 'Imprisonment up to 2 years and fine up to twice the cheque amount.' },
+        { act: 'Reserve Bank of India Act, 1934', section: 'RBI Fair Practices Code', sectionTitle: 'Guidelines on Recovery Agents & Fair Lending Standards', actionableRemedy: 'Prohibits harassment, intimidating calls, and unauthorized recovery practices with strict regulatory penalties.' },
+      ],
+      applicableCharges: ['Cheque Dishonour (Section 138 NI Act)', 'Violation of RBI Fair Practices Code for Lenders', 'Defamatory Credit Reporting'],
+      actionPlan: [
+        { step: 'Assemble Banking & Loan Ledger Proof', detail: 'Collect bank account statements, loan agreement copy, repayment receipts, and cheque return memo.' },
+        { step: 'Escalate to Bank Principal Nodal Officer', detail: 'Submit a formal written grievance to the Principal Nodal Officer / Grievance Redressal Officer of the bank/NBFC.' },
+        { step: 'RBI Integrated Ombudsman Complaint', detail: 'If the bank fails to resolve the dispute within 30 days, file an online complaint at cms.rbi.org.in.' },
+        { step: 'Statutory 30-Day Legal Notice (if Cheque Bounce)', detail: 'Serve mandatory statutory notice under Section 138 of the NI Act within 30 days of receiving the bank memo.' },
+      ],
+      evidence: {
+        available: ['Bank Statement / Account Ledger', 'Loan Disbursal / Agreement Copy'],
+        missing: ['Original Cheque Return Memo (Bank Slip)', 'Written Communication with Nodal Officer'],
+        recommended: ['Call Recordings of Recovery Agents', 'CIBIL Credit Report Copy'],
+      },
+      clarifyingQuestions: ['Did you receive the official bank return memo with the reason for dishonour?'],
+    };
+  }
+
+  // 7. DEFAULT: EMPLOYMENT & LABOUR LAW
+  return {
+    category: 'Employment & Labour Law',
+    issue: 'Unpaid Salary / Delayed Wages / Wrongful Termination',
+    disputedAmount: disputedAmount || 150000,
+    isMonetary: true,
+    urgencyLevel: 'ATTENTION_RECOMMENDED',
+    urgencyScore: 0.75,
+    colorCode: 'YELLOW',
+    recommendation: 'ATTENTION: Issue a formal 15-day statutory demand notice under the Payment of Wages Act.',
+    statutoryProvisions: [
+      { act: 'Payment of Wages Act, 1936', section: 'Section 15', sectionTitle: 'Claims Arising out of Deductions from Wages or Delay in Payment', actionableRemedy: 'Directs full recovery of unpaid wages plus statutory compensation up to 10 times the amount.' },
+      { act: 'Industrial Disputes Act, 1947', section: 'Section 25F & 33C', sectionTitle: 'Conditions Precedent to Retrenchment & Recovery of Money due from Employer', actionableRemedy: 'Mandates 30 days notice pay, retrenchment compensation, and summary recovery before Labour Court.' },
+    ],
+    applicableCharges: ['Unlawful Withholding of Wages (Section 15 Payment of Wages Act)', 'Wrongful Termination without Notice Pay', 'Breach of Employment Contract'],
+    actionPlan: [
+      { step: 'Collate Employment & Compensation Proof', detail: 'Download appointment letter, monthly salary slips, bank statements showing unpaid salary months, and company emails.' },
+      { step: '15-Day Statutory Legal Demand Notice', detail: 'Serve a formal advocate-drafted demand notice to the Managing Director and HR demanding immediate full and final settlement.' },
+      { step: 'SAMADHAN Labour Portal Grievance', detail: 'Register a conciliation grievance on the Ministry of Labour SAMADHAN Portal (samadhan.labour.gov.in).' },
+      { step: 'Petition before Labour Commissioner / Court', detail: 'File a formal claim application under Section 15 of the Payment of Wages Act or Section 33C(2) of the Industrial Disputes Act.' },
+    ],
+    evidence: {
+      available: ['Employment Appointment Letter / Contract', 'Bank Statement showing salary history'],
+      missing: ['Full & Final Settlement Calculation Sheet', 'Written Termination / Resignation Email'],
+      recommended: ['Salary Slips of previous 3 months', 'HR Follow-up email threads'],
+    },
+    clarifyingQuestions: ['For how many months has your salary been withheld, and did you receive a written termination notice?'],
+  };
+};
+
+/**
  * POST /api/ai/case/analyze
  * End-to-end multi-agent case intelligence workflow
  */
@@ -136,32 +385,42 @@ const handleCaseAnalyze = async (req, res, next) => {
         data: aiResponse.body,
       });
     } catch (engineError) {
+      const analysis = analyzeLegalNarrative(story, existingCase);
+      const caseNum = `LN-${Date.now().toString().slice(-6)}`;
+
       return sendSuccess(res, {
         case: {
-          caseNumber: `NS-${Date.now().toString().slice(-6)}`,
-          category: 'Employment & Labour Law',
-          issue: 'Unpaid Salary / Delayed Wages',
-          jurisdiction: 'Delhi',
+          caseNumber: caseNum,
+          category: analysis.category,
+          issue: analysis.issue,
+          jurisdiction: 'India',
           status: 'DRAFT',
-          facts: {},
-          timeline: [],
-          financialDetails: { disputedAmount: 150000 },
+          facts: { narrative: { value: story, confidence: 0.95 } },
+          timeline: [
+            { event: 'Dispute Incurred / Reported', date: new Date().toISOString().slice(0, 10), source: 'CITIZEN' },
+          ],
+          financialDetails: analysis.isMonetary ? { disputedAmount: analysis.disputedAmount, currency: 'INR' } : { disputedAmount: null, isNonMonetary: true },
         },
         intake: {
-          domain: 'Employment & Labour Law',
-          issue: 'Unpaid Salary',
-          clarifyingQuestions: [],
+          domain: analysis.category,
+          issue: analysis.issue,
+          clarifyingQuestions: analysis.clarifyingQuestions,
         },
         urgency: {
-          urgencyLevel: 'ATTENTION_RECOMMENDED',
-          score: 0.65,
-          colorCode: 'YELLOW',
-          recommendation: 'ATTENTION: Issue a formal 15-day statutory demand notice.',
+          urgencyLevel: analysis.urgencyLevel,
+          score: analysis.urgencyScore,
+          colorCode: analysis.colorCode,
+          recommendation: analysis.recommendation,
         },
-        evidence: { available: [], missing: [], recommended: [] },
+        research: {
+          legalBasis: analysis.statutoryProvisions,
+          applicableCharges: analysis.applicableCharges,
+          explanation: `Under Indian law (${analysis.category}), this matter is governed by ${analysis.statutoryProvisions.map(p => `${p.act} (${p.section})`).join(', ')}.`,
+        },
+        evidence: analysis.evidence,
         verification: { valid: true, status: 'APPROVED' },
-        responseExplanation: 'Your issue falls under the Payment of Wages Act, 1936.',
-        actionPlan: [{ step: 'Statutory Action', detail: 'Issue 15-day demand notice.' }],
+        responseExplanation: `Under Indian statutory authority (${analysis.category}), your issue falls within the scope of ${analysis.statutoryProvisions[0].act} (${analysis.statutoryProvisions[0].section}). ${analysis.recommendation}`,
+        actionPlan: analysis.actionPlan,
         _fallback: true,
         aiEngineStatus: 'STANDBY_FALLBACK_ACTIVE',
       });
