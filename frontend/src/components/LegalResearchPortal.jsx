@@ -298,39 +298,41 @@ export default function LegalResearchPortal({ user, onOpenAuth, onNavigateToComp
                   </div>
 
                   <div className="pt-3 border-t border-slate-100 flex flex-wrap items-center justify-between gap-2 text-[11px] text-slate-500">
-                    <button
-                      onClick={async () => {
-                        if (!user) {
-                          onOpenAuth();
-                          return;
-                        }
-                        try {
-                          await api.post('/notebook', {
-                            title: `${prov.act} (${prov.section}): ${prov.sectionTitle}`,
-                            folder: result.detectedDomain || 'Statutory Research',
-                            tags: [result.detectedDomain || 'Statute', 'BareAct'],
-                            content: `### ${prov.sectionTitle}\n**Act:** ${prov.act}\n**Section:** ${prov.section}\n\n> ${prov.statutorySnippet}\n\n**Actionable Remedy:** ${prov.actionableRemedy || 'N/A'}`,
-                            clippedSources: [
-                              {
-                                actName: prov.act,
-                                section: prov.section,
-                                title: prov.sectionTitle,
-                                content: prov.statutorySnippet,
-                                citation: prov.authority,
-                              },
-                            ],
-                          });
-                          setClippedIdx(idx);
-                          setTimeout(() => setClippedIdx(null), 3000);
-                        } catch (err) {
-                          console.error(err);
-                        }
-                      }}
-                      className="px-2.5 py-1 bg-slate-100 hover:bg-blue-50 hover:text-legal-blue text-slate-700 font-bold rounded-lg transition flex items-center gap-1 cursor-pointer"
-                    >
-                      <BookmarkPlus className="w-3.5 h-3.5" />
-                      <span>{clippedIdx === idx ? '✓ Clipped to Notebook!' : 'Clip to Notebook'}</span>
-                    </button>
+                    {user?.role === 'LAWYER' && (
+                      <button
+                        onClick={async () => {
+                          if (!user) {
+                            onOpenAuth();
+                            return;
+                          }
+                          try {
+                            await api.post('/notebook', {
+                              title: `${prov.act} (${prov.section}): ${prov.sectionTitle}`,
+                              folder: result.detectedDomain || 'Statutory Research',
+                              tags: [result.detectedDomain || 'Statute', 'BareAct'],
+                              content: `### ${prov.sectionTitle}\n**Act:** ${prov.act}\n**Section:** ${prov.section}\n\n> ${prov.statutorySnippet}\n\n**Actionable Remedy:** ${prov.actionableRemedy || 'N/A'}`,
+                              clippedSources: [
+                                {
+                                  actName: prov.act,
+                                  section: prov.section,
+                                  title: prov.sectionTitle,
+                                  content: prov.statutorySnippet,
+                                  citation: prov.authority,
+                                },
+                              ],
+                            });
+                            setClippedIdx(idx);
+                            setTimeout(() => setClippedIdx(null), 3000);
+                          } catch (err) {
+                            console.error(err);
+                          }
+                        }}
+                        className="px-2.5 py-1 bg-slate-100 hover:bg-blue-50 hover:text-legal-blue text-slate-700 font-bold rounded-lg transition flex items-center gap-1 cursor-pointer"
+                      >
+                        <BookmarkPlus className="w-3.5 h-3.5" />
+                        <span>{clippedIdx === idx ? '✓ Clipped to Notebook!' : 'Clip to Notebook'}</span>
+                      </button>
+                    )}
 
                     {prov.sourceUrl && (
                       <a

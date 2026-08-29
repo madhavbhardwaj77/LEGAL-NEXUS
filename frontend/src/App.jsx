@@ -309,11 +309,15 @@ export default function App() {
 
           {activeTab === 'comparator' && (
             user ? (
-              <CaseComparator
-                user={user}
-                onOpenAuth={() => setActiveTab('login')}
-                onSaveToNotebook={() => setActiveTab('notebook')}
-              />
+              user.role === 'LAWYER' ? (
+                <CaseComparator
+                  user={user}
+                  onOpenAuth={() => setActiveTab('login')}
+                  onSaveToNotebook={() => setActiveTab('notebook')}
+                />
+              ) : (
+                <LawyerDirectory user={user} onOpenAuth={() => setActiveTab('login')} />
+              )
             ) : (
               <LoginPage onAuthSuccess={handleAuthSuccess} onNavigateToSignup={() => setActiveTab('signup')} />
             )
@@ -321,11 +325,15 @@ export default function App() {
 
           {activeTab === 'notebook' && (
             user ? (
-              <ResearchNotebook
-                user={user}
-                onOpenAuth={() => setActiveTab('login')}
-                onSelectTab={handleSelectTab}
-              />
+              user.role === 'LAWYER' ? (
+                <ResearchNotebook
+                  user={user}
+                  onOpenAuth={() => setActiveTab('login')}
+                  onSelectTab={handleSelectTab}
+                />
+              ) : (
+                <LawyerDirectory user={user} onOpenAuth={() => setActiveTab('login')} />
+              )
             ) : (
               <LoginPage onAuthSuccess={handleAuthSuccess} onNavigateToSignup={() => setActiveTab('signup')} />
             )

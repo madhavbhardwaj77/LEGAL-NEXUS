@@ -18,6 +18,8 @@ const {
   handleSaveMemory,
 } = require('../controllers/aiController');
 const { authenticateJWT, optionalAuth } = require('../middleware/auth');
+const { authorizeRoles } = require('../middleware/rbac');
+const { ROLES } = require('../config/roles');
 const { validate } = require('../middleware/validate');
 const { auditLogMiddleware } = require('../middleware/auditLog');
 const { guardrailCheck } = require('../middleware/guardrail');
@@ -95,7 +97,12 @@ router.post(
 );
 
 // POST /api/ai/compare-cases (Multi-dimensional case comparator)
-router.post('/compare-cases', authenticateJWT, handleCompareCases);
+router.post(
+  '/compare-cases',
+  authenticateJWT,
+  authorizeRoles(ROLES.LAWYER, ROLES.ADMIN, ROLES.LAW_STUDENT),
+  handleCompareCases
+);
 
 // POST /api/ai/stream-chat (Real-time SSE token streaming)
 router.post('/stream-chat', optionalAuth, handleStreamChat);

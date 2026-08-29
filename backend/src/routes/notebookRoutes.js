@@ -1,6 +1,8 @@
 const express = require('express');
 const router = express.Router();
 const { authenticateJWT } = require('../middleware/auth');
+const { authorizeRoles } = require('../middleware/rbac');
+const { ROLES } = require('../config/roles');
 const {
   getNotes,
   createNote,
@@ -10,7 +12,7 @@ const {
   exportBrief,
 } = require('../controllers/notebookController');
 
-router.use(authenticateJWT);
+router.use(authenticateJWT, authorizeRoles(ROLES.LAWYER, ROLES.ADMIN, ROLES.LAW_STUDENT));
 
 router.get('/', getNotes);
 router.post('/', createNote);

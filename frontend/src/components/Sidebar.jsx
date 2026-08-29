@@ -33,14 +33,18 @@ export default function Sidebar({
     { id: 'cases',      label: 'Case Management',     shortLabel: 'Cases',      icon: LayoutDashboard, badge: null, hideForLawyer: true },
     { id: 'intake',     label: 'AI Legal Assistant',   shortLabel: 'AI Chat',    icon: Bot,             badge: 'Agentic', highlight: true, hideForLawyer: true },
     { id: 'lawyers',    label: isLawyer ? 'Advocate Hub & Requests' : 'Advocate Directory', shortLabel: 'Advocates', icon: UserCheck, badge: isLawyer ? 'Requests' : 'Verified' },
-    { id: 'comparator', label: 'Case Comparator',      shortLabel: 'Comparator', icon: GitCompare,      badge: 'Dual AI' },
-    { id: 'notebook',   label: 'Research Notebook',    shortLabel: 'Notebook',   icon: Bookmark,        badge: 'Notes' },
+    { id: 'comparator', label: 'Case Comparator',      shortLabel: 'Comparator', icon: GitCompare,      badge: 'Dual AI', lawyerOnly: true },
+    { id: 'notebook',   label: 'Research Notebook',    shortLabel: 'Notebook',   icon: Bookmark,        badge: 'Notes',   lawyerOnly: true },
     { id: 'documents',  label: 'Document Intelligence',shortLabel: 'Doc AI',     icon: FileText,        badge: 'Audit' },
     { id: 'drafts',     label: 'Smart Legal Drafting', shortLabel: 'Drafting',   icon: PenTool,         badge: '7 Forms' },
     { id: 'research',   label: 'Statutory Research',   shortLabel: 'Research',   icon: BookOpen,        badge: 'RAG' },
   ];
 
-  const mainWorkspaceItems = rawWorkspaceItems.filter((item) => !(isLawyer && item.hideForLawyer));
+  const mainWorkspaceItems = rawWorkspaceItems.filter((item) => {
+    if (isLawyer && item.hideForLawyer) return false;
+    if (!isLawyer && item.lawyerOnly) return false;
+    return true;
+  });
 
   const secondaryItems = [
     { id: 'profile',  label: isLawyer ? 'Profile & Case History' : 'Profile & Network', shortLabel: 'Profile', icon: Users, requireAuth: true },
