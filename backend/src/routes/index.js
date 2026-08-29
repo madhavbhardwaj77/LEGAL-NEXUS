@@ -13,6 +13,8 @@ const notificationRoutes = require('./notificationRoutes');
 const adminRoutes = require('./adminRoutes');
 const healthRoutes = require('./healthRoutes');
 const requestRoutes = require('./requestRoutes');
+const notebookRoutes = require('./notebookRoutes');
+const mcpRoutes = require('./mcpRoutes');
 
 const router = express.Router();
 
@@ -26,6 +28,8 @@ router.use('/legal', legalRoutes);
 router.use('/ai', aiRoutes);
 router.use('/lawyers', lawyerRoutes);
 router.use('/requests', requestRoutes);
+router.use('/notebook', notebookRoutes);
+router.use('/mcp', mcpRoutes);
 router.use('/drafts', draftRoutes);
 router.use('/verification', verificationRoutes);
 router.use('/notifications', notificationRoutes);

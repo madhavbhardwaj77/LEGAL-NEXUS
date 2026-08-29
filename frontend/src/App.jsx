@@ -13,6 +13,8 @@ import LegalResearchPortal from './components/LegalResearchPortal';
 import CaseStoryIntake from './components/CaseStoryIntake';
 import LegalDraftGenerator from './components/LegalDraftGenerator';
 import DocumentIntelligenceModal from './components/DocumentIntelligenceModal';
+import CaseComparator from './components/CaseComparator';
+import ResearchNotebook from './components/ResearchNotebook';
 import UserProfile from './components/UserProfile';
 import SettingsView from './components/SettingsView';
 import {
@@ -300,6 +302,30 @@ export default function App() {
           {activeTab === 'lawyers' && (
             user ? (
               <LawyerDirectory user={user} onOpenAuth={() => setActiveTab('login')} />
+            ) : (
+              <LoginPage onAuthSuccess={handleAuthSuccess} onNavigateToSignup={() => setActiveTab('signup')} />
+            )
+          )}
+
+          {activeTab === 'comparator' && (
+            user ? (
+              <CaseComparator
+                user={user}
+                onOpenAuth={() => setActiveTab('login')}
+                onSaveToNotebook={() => setActiveTab('notebook')}
+              />
+            ) : (
+              <LoginPage onAuthSuccess={handleAuthSuccess} onNavigateToSignup={() => setActiveTab('signup')} />
+            )
+          )}
+
+          {activeTab === 'notebook' && (
+            user ? (
+              <ResearchNotebook
+                user={user}
+                onOpenAuth={() => setActiveTab('login')}
+                onSelectTab={handleSelectTab}
+              />
             ) : (
               <LoginPage onAuthSuccess={handleAuthSuccess} onNavigateToSignup={() => setActiveTab('signup')} />
             )

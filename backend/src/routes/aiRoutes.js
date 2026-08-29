@@ -12,6 +12,10 @@ const {
   dispatchAiTask,
   getAiTaskStatus,
   getAiWorkerStatus,
+  handleCompareCases,
+  handleStreamChat,
+  handleGetMemory,
+  handleSaveMemory,
 } = require('../controllers/aiController');
 const { authenticateJWT, optionalAuth } = require('../middleware/auth');
 const { validate } = require('../middleware/validate');
@@ -89,6 +93,18 @@ router.post(
   ],
   handleVerifyCitation
 );
+
+// POST /api/ai/compare-cases (Multi-dimensional case comparator)
+router.post('/compare-cases', authenticateJWT, handleCompareCases);
+
+// POST /api/ai/stream-chat (Real-time SSE token streaming)
+router.post('/stream-chat', optionalAuth, handleStreamChat);
+
+// GET /api/ai/memory (Persistent cross-session user legal memory)
+router.get('/memory', authenticateJWT, handleGetMemory);
+
+// POST /api/ai/memory (Update persistent memory context)
+router.post('/memory', authenticateJWT, handleSaveMemory);
 
 // POST /api/ai/tasks (Background queue dispatch)
 router.post(

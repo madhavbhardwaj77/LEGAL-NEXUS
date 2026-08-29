@@ -5,7 +5,10 @@ FastAPI Application for Legal Research, Case Intelligence, Document AI, Drafting
 
 import os
 import sys
+import json
+import asyncio
 from fastapi import FastAPI, HTTPException
+from fastapi.responses import StreamingResponse
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 from typing import Optional, List, Dict, Any
@@ -29,6 +32,8 @@ from .drafting.draft_fact_checker import draft_fact_checker
 from .matching.matcher import LawyerMatcher
 from .schemas.case_schemas import StructuredCaseState
 from .guardrails.manager import guardrail_manager
+from .comparator import case_comparator
+from .mcp_server import mcp_server
 
 app = FastAPI(
     title="Legal Nexus Legal AI Engine",
@@ -382,21 +387,71 @@ def verify_citation(req: VerifyCitationRequest):
     )
     return verification
 
-@app.get("/ai/domains")
-def get_domains():
-    rag_service = LegalRAGService()
-    chunks = rag_service.retriever.store.chunks
-    domain_counts = {}
-    for c in chunks:
-        d = c.get("domain", "General")
-        domain_counts[d] = domain_counts.get(d, 0) + 1
+# ----------------- Case Comparator & MCP Endpoints -----------------
 
-    return {
-        "domains": list(LegalDomainClassifier.DOMAINS.values()),
-        "domainChunkCounts": domain_counts,
-        "totalChunks": len(chunks),
-    }
+class CompareCasesRequest(BaseModel):
+    caseA: Dict[str, Any]
+    caseB: Dict[str, Any]
+    focusAreas: Optional[List[str]] = None
+
+class MCPToolCallRequest(BaseModel):
+    name: str
+    arguments: Dict[str, Any] = Field(default_factory=dict)
+
+@app.post("/comparator/compare")
+def compare_two_cases(req: CompareCasesRequest):
+    return case_comparator.compare_cases(
+        case_a=req.caseA,
+        case_b=req.caseB,
+        focus_areas=req.focusAreas
+    )
+
+@app.get("/mcp/tools")
+def get_mcp_tools():
+    return mcp_server.list_tools()
+
+@app.post("/mcp/call")
+async def call_mcp_tool(req: MCPToolCallRequest):
+    return await mcp_server.execute_tool(
+        tool_name=req.name,
+        arguments=req.arguments
+    )
+
+# ----------------- SSE Token Streaming Endpoint -----------------
+
+class StreamChatRequest(BaseModel):
+    message: str
+    conversationHistory: Optional[List[Dict[str, str]]] = Field(default_factory=list)
+    caseContext: Optional[Dict[str, Any]] = None
+
+@app.post("/chat/stream")
+async def stream_chat_response(req: StreamChatRequest):
+    """
+    Streams progressive tokens via Server-Sent Events (SSE)
+    """
+    async def event_generator():
+        # First generate the domain & structured response using existing service
+        rag_service = LegalRAGService()
+        research_result = rag_service.conduct_research(query=req.message, top_k=3)
+        summary = research_result.get("responseSummary", "Analyzing legal provisions...")
+        statutory_refs = research_result.get("citations", [])
+
+        yield f"data: {json.dumps({'type': 'start', 'domain': research_result.get('domain', 'General')})}\n\n"
+        await asyncio.sleep(0.05)
+
+        # Stream the response word by word
+        words = summary.split(" ")
+        for i, word in enumerate(words):
+            chunk = word + (" " if i < len(words) - 1 else "")
+            yield f"data: {json.dumps({'type': 'token', 'content': chunk})}\n\n"
+            await asyncio.sleep(0.02)
+
+        # Stream final metadata and citations
+        yield f"data: {json.dumps({'type': 'end', 'citations': statutory_refs, 'confidence': research_result.get('confidenceScore', 0.92)})}\n\n"
+
+    return StreamingResponse(event_generator(), media_type="text/event-stream")
 
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host=settings.host, port=settings.port)
+

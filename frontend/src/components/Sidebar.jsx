@@ -14,6 +14,8 @@ import {
   ChevronLeft,
   ChevronRight,
   Sparkles,
+  GitCompare,
+  Bookmark,
 } from 'lucide-react';
 
 export default function Sidebar({
@@ -28,12 +30,14 @@ export default function Sidebar({
   const isLawyer = user?.role === 'LAWYER';
 
   const rawWorkspaceItems = [
-    { id: 'cases',     label: 'Case Management',     shortLabel: 'Cases',    icon: LayoutDashboard, badge: null, hideForLawyer: true },
-    { id: 'intake',    label: 'AI Legal Assistant',   shortLabel: 'AI Chat',  icon: Bot,             badge: 'Agentic', highlight: true, hideForLawyer: true },
-    { id: 'lawyers',   label: isLawyer ? 'Advocate Hub & Requests' : 'Advocate Directory', shortLabel: 'Advocates', icon: UserCheck, badge: isLawyer ? 'Requests' : 'Verified' },
-    { id: 'documents', label: 'Document Intelligence',shortLabel: 'Doc AI',   icon: FileText,        badge: 'Audit' },
-    { id: 'drafts',    label: 'Smart Legal Drafting', shortLabel: 'Drafting', icon: PenTool,         badge: '7 Forms' },
-    { id: 'research',  label: 'Statutory Research',   shortLabel: 'Research', icon: BookOpen,        badge: 'RAG' },
+    { id: 'cases',      label: 'Case Management',     shortLabel: 'Cases',      icon: LayoutDashboard, badge: null, hideForLawyer: true },
+    { id: 'intake',     label: 'AI Legal Assistant',   shortLabel: 'AI Chat',    icon: Bot,             badge: 'Agentic', highlight: true, hideForLawyer: true },
+    { id: 'lawyers',    label: isLawyer ? 'Advocate Hub & Requests' : 'Advocate Directory', shortLabel: 'Advocates', icon: UserCheck, badge: isLawyer ? 'Requests' : 'Verified' },
+    { id: 'comparator', label: 'Case Comparator',      shortLabel: 'Comparator', icon: GitCompare,      badge: 'Dual AI' },
+    { id: 'notebook',   label: 'Research Notebook',    shortLabel: 'Notebook',   icon: Bookmark,        badge: 'Notes' },
+    { id: 'documents',  label: 'Document Intelligence',shortLabel: 'Doc AI',     icon: FileText,        badge: 'Audit' },
+    { id: 'drafts',     label: 'Smart Legal Drafting', shortLabel: 'Drafting',   icon: PenTool,         badge: '7 Forms' },
+    { id: 'research',   label: 'Statutory Research',   shortLabel: 'Research',   icon: BookOpen,        badge: 'RAG' },
   ];
 
   const mainWorkspaceItems = rawWorkspaceItems.filter((item) => !(isLawyer && item.hideForLawyer));
