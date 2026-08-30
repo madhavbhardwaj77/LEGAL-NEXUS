@@ -1,5 +1,13 @@
 const http = require('http');
-const { ProfessionalProfile, User, CaseStudy, Case } = require('../models');
+const {
+  ProfessionalProfile,
+  User,
+  CaseStudy,
+  Case,
+  LawyerMatch,
+  CaseTimeline,
+  Notification,
+} = require('../models');
 const { sendSuccess, sendError } = require('../utils/apiResponse');
 const { ROLES } = require('../config/roles');
 
@@ -44,8 +52,461 @@ const forwardToAiEngine = (path, method = 'GET', payload = null) => {
 };
 
 /**
+ * Helper: Find lawyer profile by ID or current logged-in user
+ */
+const findAuthorizedProfile = async (paramId, userId, userRole) => {
+  let profile = null;
+  if (paramId && paramId !== 'me') {
+    profile = await ProfessionalProfile.findById(paramId);
+    if (!profile) {
+      profile = await ProfessionalProfile.findOne({ user: paramId });
+    }
+  } else {
+    profile = await ProfessionalProfile.findOne({ user: userId });
+  }
+
+  if (!profile) {
+    if (userRole === ROLES.LAWYER || userRole === ROLES.LAW_STUDENT) {
+      const u = await User.findById(userId);
+      profile = new ProfessionalProfile({
+        user: userId,
+        professionalRole: userRole,
+        fullName: u?.email?.split('@')[0] || 'Advocate',
+      });
+      await profile.save();
+    }
+  }
+
+  return profile;
+};
+
+/**
+ * PUT /api/lawyers/:id/profile or PUT /api/lawyers/profile
+ * Update Lawyer Profile info
+ */
+const updateLawyerProfile = async (req, res, next) => {
+  try {
+    const targetId = req.params.id || 'me';
+    const profile = await findAuthorizedProfile(targetId, req.user._id, req.user.role);
+
+    if (!profile) {
+      return sendError(res, 'Lawyer profile not found', 404);
+    }
+
+    if (profile.user.toString() !== req.user._id.toString() && req.user.role !== ROLES.ADMIN) {
+      return sendError(res, 'Unauthorized to modify this profile', 403);
+    }
+
+    const {
+      fullName,
+      title,
+      bio,
+      avatar,
+      contactPhone,
+      contactEmail,
+      practiceAreas,
+      location,
+      languages,
+      experienceYears,
+      barCouncilRegistration,
+      education,
+      feeRange,
+      availabilityStatus,
+    } = req.body;
+
+    if (fullName) profile.fullName = fullName;
+    if (title !== undefined) profile.title = title;
+    if (bio !== undefined) profile.bio = bio;
+    if (avatar !== undefined) profile.avatar = avatar;
+    if (contactPhone !== undefined) profile.contactPhone = contactPhone;
+    if (contactEmail !== undefined) profile.contactEmail = contactEmail;
+    if (practiceAreas !== undefined) profile.practiceAreas = practiceAreas;
+    if (location) profile.location = { ...profile.location, ...location };
+    if (languages !== undefined) profile.languages = languages;
+    if (experienceYears !== undefined) profile.experienceYears = experienceYears;
+    if (education !== undefined) profile.education = education;
+    if (feeRange !== undefined) profile.feeRange = { ...profile.feeRange, ...feeRange };
+    if (availabilityStatus) profile.availabilityStatus = availabilityStatus;
+
+    if (barCouncilRegistration) {
+      profile.barCouncilRegistration = {
+        ...profile.barCouncilRegistration,
+        ...barCouncilRegistration,
+        isVerified: profile.barCouncilRegistration ? profile.barCouncilRegistration.isVerified : false,
+      };
+    }
+
+    await profile.save();
+    return sendSuccess(res, profile, 'Lawyer profile updated successfully');
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * POST /api/lawyers/experience
+ */
+const addExperience = async (req, res, next) => {
+  try {
+    const targetId = req.params.id || 'me';
+    const profile = await findAuthorizedProfile(targetId, req.user._id, req.user.role);
+    if (!profile) return sendError(res, 'Profile not found', 404);
+
+    const { title, role, organization, courtOrForum, practiceArea, startYear, endYear, isCurrent, description } = req.body;
+    profile.experiences.push({
+      title,
+      role: role || title,
+      organization,
+      courtOrForum,
+      practiceArea,
+      startYear,
+      endYear,
+      isCurrent: isCurrent || false,
+      description,
+      displayOrder: profile.experiences.length,
+    });
+
+    await profile.save();
+    return sendSuccess(res, profile.experiences, 'Experience added successfully', 201);
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * PUT /api/lawyers/experience/:expId
+ */
+const updateExperience = async (req, res, next) => {
+  try {
+    const targetId = req.params.id || 'me';
+    const profile = await findAuthorizedProfile(targetId, req.user._id, req.user.role);
+    if (!profile) return sendError(res, 'Profile not found', 404);
+
+    const exp = profile.experiences.id(req.params.expId);
+    if (!exp) return sendError(res, 'Experience item not found', 404);
+
+    const fields = ['title', 'role', 'organization', 'courtOrForum', 'practiceArea', 'startYear', 'endYear', 'isCurrent', 'description', 'displayOrder'];
+    fields.forEach((f) => {
+      if (req.body[f] !== undefined) exp[f] = req.body[f];
+    });
+
+    await profile.save();
+    return sendSuccess(res, profile.experiences, 'Experience updated successfully');
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * DELETE /api/lawyers/experience/:expId
+ */
+const deleteExperience = async (req, res, next) => {
+  try {
+    const targetId = req.params.id || 'me';
+    const profile = await findAuthorizedProfile(targetId, req.user._id, req.user.role);
+    if (!profile) return sendError(res, 'Profile not found', 404);
+
+    profile.experiences = profile.experiences.filter((e) => e._id.toString() !== req.params.expId);
+    await profile.save();
+    return sendSuccess(res, profile.experiences, 'Experience deleted successfully');
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * PUT /api/lawyers/experience-reorder
+ */
+const reorderExperiences = async (req, res, next) => {
+  try {
+    const targetId = req.params.id || 'me';
+    const profile = await findAuthorizedProfile(targetId, req.user._id, req.user.role);
+    if (!profile) return sendError(res, 'Profile not found', 404);
+
+    const { orderedIds } = req.body;
+    if (Array.isArray(orderedIds)) {
+      orderedIds.forEach((id, idx) => {
+        const item = profile.experiences.id(id);
+        if (item) item.displayOrder = idx;
+      });
+      profile.experiences.sort((a, b) => (a.displayOrder || 0) - (b.displayOrder || 0));
+      await profile.save();
+    }
+    return sendSuccess(res, profile.experiences, 'Experiences reordered');
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * POST /api/lawyers/cases (Case History)
+ */
+const addCaseHistory = async (req, res, next) => {
+  try {
+    const targetId = req.params.id || 'me';
+    const profile = await findAuthorizedProfile(targetId, req.user._id, req.user.role);
+    if (!profile) return sendError(res, 'Profile not found', 404);
+
+    const { title, caseNumber, courtOrForum, practiceArea, year, summary, challenge, strategy, outcome, anonymizedDetails } = req.body;
+    profile.caseHistories.push({
+      title,
+      caseNumber,
+      courtOrForum,
+      practiceArea,
+      year,
+      summary,
+      challenge,
+      strategy,
+      outcome,
+      anonymizedDetails: anonymizedDetails !== false,
+      displayOrder: profile.caseHistories.length,
+    });
+
+    await profile.save();
+    return sendSuccess(res, profile.caseHistories, 'Case history added', 201);
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * PUT /api/lawyers/cases/:caseId
+ */
+const updateCaseHistory = async (req, res, next) => {
+  try {
+    const targetId = req.params.id || 'me';
+    const profile = await findAuthorizedProfile(targetId, req.user._id, req.user.role);
+    if (!profile) return sendError(res, 'Profile not found', 404);
+
+    const c = profile.caseHistories.id(req.params.caseId);
+    if (!c) return sendError(res, 'Case item not found', 404);
+
+    const fields = ['title', 'caseNumber', 'courtOrForum', 'practiceArea', 'year', 'summary', 'challenge', 'strategy', 'outcome', 'anonymizedDetails', 'displayOrder'];
+    fields.forEach((f) => {
+      if (req.body[f] !== undefined) c[f] = req.body[f];
+    });
+
+    await profile.save();
+    return sendSuccess(res, profile.caseHistories, 'Case history updated');
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * DELETE /api/lawyers/cases/:caseId
+ */
+const deleteCaseHistory = async (req, res, next) => {
+  try {
+    const targetId = req.params.id || 'me';
+    const profile = await findAuthorizedProfile(targetId, req.user._id, req.user.role);
+    if (!profile) return sendError(res, 'Profile not found', 404);
+
+    profile.caseHistories = profile.caseHistories.filter((c) => c._id.toString() !== req.params.caseId);
+    await profile.save();
+    return sendSuccess(res, profile.caseHistories, 'Case history deleted');
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * GET /api/lawyers
+ * Public & Verified Directory Search
+ */
+const searchLawyersDirectory = async (req, res, next) => {
+  try {
+    const { practiceArea, city, state, search, language, verifiedOnly } = req.query;
+
+    const filter = {
+      professionalRole: ROLES.LAWYER,
+      'barCouncilRegistration.isVerified': true,
+      verificationStatus: 'VERIFIED',
+    };
+
+    if (practiceArea) {
+      filter.practiceAreas = { $in: [new RegExp(practiceArea, 'i')] };
+    }
+    if (city) filter['location.city'] = new RegExp(city, 'i');
+    if (state) filter['location.state'] = new RegExp(state, 'i');
+    if (language) filter.languages = { $in: [language] };
+    if (search) {
+      filter.$or = [
+        { fullName: new RegExp(search, 'i') },
+        { title: new RegExp(search, 'i') },
+        { practiceAreas: { $in: [new RegExp(search, 'i')] } },
+      ];
+    }
+
+    const profiles = await ProfessionalProfile.find(filter)
+      .populate('user', 'email role isVerified createdAt')
+      .sort({ experienceYears: -1, createdAt: -1 });
+
+    const lawyerUserIds = profiles.map((p) => p.user?._id).filter(Boolean);
+    const caseStudies = await CaseStudy.find({ professional: { $in: lawyerUserIds } });
+    const studyMap = new Map();
+    caseStudies.forEach((cs) => {
+      const pid = cs.professional.toString();
+      if (!studyMap.has(pid)) studyMap.set(pid, []);
+      studyMap.get(pid).push(cs);
+    });
+
+    const enriched = profiles.map((p) => {
+      const pObj = p.toObject();
+      pObj.publishedCaseStudies = studyMap.get(p.user?._id?.toString()) || [];
+      return pObj;
+    });
+
+    return sendSuccess(res, enriched, 'Verified advocate directory retrieved');
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * GET /api/lawyers/:id
+ */
+const getLawyerDetails = async (req, res, next) => {
+  try {
+    const profile = await ProfessionalProfile.findById(req.params.id)
+      .populate('user', 'email role isVerified createdAt');
+
+    if (!profile) return sendError(res, 'Lawyer profile not found', 404);
+
+    const caseStudies = await CaseStudy.find({ professional: profile.user._id });
+    const pObj = profile.toObject();
+    pObj.publishedCaseStudies = caseStudies;
+
+    return sendSuccess(res, pObj, 'Lawyer profile details retrieved');
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * POST /api/lawyers/request-consultation
+ */
+const requestConsultation = async (req, res, next) => {
+  try {
+    const { lawyerId, caseId, requestMessage, urgency = 'MEDIUM', contactMode = 'VIDEO' } = req.body;
+    let lawyerUser = null;
+
+    const profile = await ProfessionalProfile.findById(lawyerId);
+    if (profile && profile.user) {
+      lawyerUser = profile.user;
+    } else {
+      lawyerUser = lawyerId;
+    }
+
+    const matchReq = await LawyerMatch.create({
+      case: caseId || undefined,
+      citizen: req.user._id,
+      lawyer: lawyerUser,
+      requestMessage: requestMessage || 'Legal Consultation Requested',
+      status: 'PENDING',
+      meta: { urgency, contactMode },
+    });
+
+    return sendSuccess(res, matchReq, 'Consultation request sent successfully', 201);
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * GET /api/lawyers/requests/incoming
+ */
+const getIncomingRequests = async (req, res, next) => {
+  try {
+    const requests = await LawyerMatch.find({ lawyer: req.user._id })
+      .populate('citizen', 'email phone profileData')
+      .populate('case', 'caseNumber title category urgency status financialDetails location')
+      .sort({ createdAt: -1 });
+
+    return sendSuccess(res, requests, 'Incoming consultation requests retrieved');
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * PATCH /api/lawyers/requests/:id/respond
+ */
+const respondToRequest = async (req, res, next) => {
+  try {
+    const { status, notes } = req.body;
+    const matchReq = await LawyerMatch.findOne({ _id: req.params.id, lawyer: req.user._id });
+    if (!matchReq) return sendError(res, 'Request not found or unauthorized', 404);
+
+    matchReq.status = status;
+    if (notes) matchReq.responseNotes = notes;
+    matchReq.respondedAt = new Date();
+    await matchReq.save();
+
+    if (status === 'ACCEPTED' && matchReq.case) {
+      await Case.findByIdAndUpdate(matchReq.case, {
+        assignedLawyer: req.user._id,
+        status: 'UNDER_REVIEW',
+      });
+    }
+
+    return sendSuccess(res, matchReq, 'Request response updated');
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * GET /api/lawyers/ongoing-cases
+ */
+const getOngoingCases = async (req, res, next) => {
+  try {
+    const cases = await Case.find({ assignedLawyer: req.user._id })
+      .populate('user', 'email phone profileData')
+      .sort({ updatedAt: -1 });
+
+    return sendSuccess(res, cases, 'Ongoing cases retrieved');
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * GET /api/lawyers/requests/citizen
+ */
+const getCitizenRequests = async (req, res, next) => {
+  try {
+    const requests = await LawyerMatch.find({ citizen: req.user._id })
+      .populate('case', 'caseNumber title category urgency status')
+      .populate('lawyer', 'email phone')
+      .sort({ createdAt: -1 });
+
+    return sendSuccess(res, requests, 'Citizen requests retrieved successfully');
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * GET /api/lawyers/citizen-cases
+ */
+const getCitizenCases = async (req, res, next) => {
+  try {
+    const cases = await Case.find({ status: { $nin: ['ARCHIVED'] } })
+      .populate('user', 'email phone profileData')
+      .populate('assignedLawyer', 'email phone')
+      .sort({ createdAt: -1 })
+      .limit(30);
+
+    return sendSuccess(res, cases, 'Citizen cases retrieved');
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
  * POST /api/lawyers/match
- * Multi-factor Lawyer Matching Engine for a Case
+ * Multi-factor Weighted Ranking Matcher Engine
  */
 const matchLawyersForCase = async (req, res, next) => {
   try {
@@ -60,109 +521,95 @@ const matchLawyersForCase = async (req, res, next) => {
 
     if (inputProfile) {
       caseProfile = {
-        category: inputProfile.category || practiceArea || 'General Legal Practice',
-        issue: inputProfile.issue || inputProfile.title || issue || 'Case Representation',
-        jurisdiction: inputProfile.jurisdiction || inputProfile.city || location || 'Delhi',
-        language: inputProfile.language || language || 'English',
-        financialDetails: { disputedAmount: inputProfile.budget || budget || 100000 },
+        category: inputProfile.category || caseProfile.category,
+        issue: inputProfile.issue || caseProfile.issue,
+        jurisdiction: inputProfile.jurisdiction || caseProfile.jurisdiction,
+        language: inputProfile.language || caseProfile.language,
+        financialDetails: { disputedAmount: inputProfile.budget || caseProfile.financialDetails.disputedAmount },
       };
-    }
-
-    if (caseId) {
+    } else if (caseId) {
       const caseDoc = await Case.findById(caseId);
       if (caseDoc) {
         caseProfile = {
-          category: caseDoc.category || caseProfile.category,
-          issue: caseDoc.title || caseDoc.issue || caseProfile.issue,
-          jurisdiction: caseDoc.location?.city || caseDoc.location?.state || 'Delhi',
+          category: caseDoc.category || 'General Civil Law',
+          issue: caseDoc.issue || caseDoc.title || 'Civil Litigation Matter',
+          jurisdiction: caseDoc.location?.city || 'Delhi',
           language: 'English',
-          financialDetails: { disputedAmount: caseDoc.financialDetails?.disputedAmount || 0 },
+          financialDetails: { disputedAmount: caseDoc.financialDetails?.disputedAmount || 100000 },
         };
       }
     }
 
-    // Fetch all active verified lawyers and all published case studies
-    const [profiles, allCaseStudies] = await Promise.all([
-      ProfessionalProfile.find({
-        professionalRole: ROLES.LAWYER,
-        verificationStatus: 'VERIFIED',
-      }).populate('user', 'email role isVerified createdAt'),
-      CaseStudy.find().populate('professional', 'email'),
-    ]);
+    const profiles = await ProfessionalProfile.find({
+      professionalRole: ROLES.LAWYER,
+      'barCouncilRegistration.isVerified': true,
+      verificationStatus: 'VERIFIED',
+    }).populate('user', 'email role isVerified createdAt');
+
+    const allCaseStudies = await CaseStudy.find({});
+    const caseStudyByLawyer = new Map();
+    allCaseStudies.forEach((cs) => {
+      const pid = cs.professional.toString();
+      if (!caseStudyByLawyer.has(pid)) {
+        caseStudyByLawyer.set(pid, []);
+      }
+      caseStudyByLawyer.get(pid).push(cs);
+    });
 
     const targetCategory = (caseProfile.category || '').toLowerCase();
-    const targetCity = (caseProfile.jurisdiction || '').toLowerCase();
+    const targetCity = (caseProfile.jurisdiction || 'Delhi').toLowerCase();
 
-    // Map candidates and evaluate category experience + published case studies
     const evaluated = profiles.map((p) => {
-      const pEmail = p.user?.email || '';
-      const pUserId = p.user?._id?.toString();
+      const userKey = p.user?._id?.toString() || p._id.toString();
+      const lawyerCaseStudies = caseStudyByLawyer.get(userKey) || [];
 
-      // Find published case studies by this advocate
-      const lawyerCaseStudies = allCaseStudies.filter(
-        (cs) => cs.professional?._id?.toString() === pUserId || cs.professional?.email === pEmail
-      );
-
-      // Check case studies specific to this case's category
       const categoryCaseStudies = lawyerCaseStudies.filter((cs) => {
         const csArea = (cs.practiceArea || '').toLowerCase();
+        const csTitle = (cs.title || '').toLowerCase();
+        const csSum = (cs.summary || '').toLowerCase();
         return (
           csArea.includes(targetCategory) ||
           targetCategory.includes(csArea) ||
-          (targetCategory.includes('employment') && csArea.includes('labour')) ||
-          (targetCategory.includes('consumer') && csArea.includes('consumer')) ||
-          (targetCategory.includes('property') && csArea.includes('property')) ||
-          (targetCategory.includes('cyber') && csArea.includes('cyber')) ||
-          (targetCategory.includes('corporate') && csArea.includes('corporate')) ||
-          (targetCategory.includes('family') && csArea.includes('family'))
+          csTitle.includes(targetCategory) ||
+          csSum.includes(targetCategory)
         );
       });
 
-      // 1. Practice Area / Domain Fit (35 Points Max)
-      let practiceScore = 0;
-      let isCategorySpecialist = false;
       const matchedArea = (p.practiceAreas || []).find((pa) => {
         const paLower = pa.toLowerCase();
         return (
           paLower.includes(targetCategory) ||
           targetCategory.includes(paLower) ||
-          (targetCategory.includes('employment') && paLower.includes('labour')) ||
           (targetCategory.includes('consumer') && paLower.includes('consumer')) ||
+          (targetCategory.includes('employment') && paLower.includes('employment')) ||
+          (targetCategory.includes('labour') && paLower.includes('labour')) ||
           (targetCategory.includes('property') && paLower.includes('property')) ||
           (targetCategory.includes('cyber') && paLower.includes('cyber')) ||
-          (targetCategory.includes('corporate') && paLower.includes('corporate')) ||
-          (targetCategory.includes('family') && paLower.includes('family'))
+          (targetCategory.includes('family') && (paLower.includes('family') || paLower.includes('matrimonial'))) ||
+          (targetCategory.includes('corporate') && (paLower.includes('corporate') || paLower.includes('commercial'))) ||
+          (targetCategory.includes('criminal') && paLower.includes('criminal'))
         );
       });
 
-      if (matchedArea) {
-        practiceScore = 35;
-        isCategorySpecialist = true;
-      } else if ((p.practiceAreas || []).some((pa) => /civil|litigation|general/i.test(pa))) {
-        practiceScore = 15; // General civil overlap
-      } else {
-        practiceScore = 0; // Unrelated domain
-      }
+      const isCategorySpecialist = Boolean(matchedArea);
+      let practiceScore = isCategorySpecialist ? 35 : 10;
 
-      // 2. Published Case Studies in this Category (25 Points Max)
       let caseStudyScore = 0;
       if (categoryCaseStudies.length > 0) {
         caseStudyScore = 25;
       } else if (lawyerCaseStudies.length > 0) {
-        caseStudyScore = 10;
+        caseStudyScore = 15;
       } else {
-        caseStudyScore = 0;
+        caseStudyScore = 5;
       }
 
-      // 3. Standing & Litigation Experience (25 Points Max)
-      const expYears = p.experienceYears || 1;
-      let expScore = 8;
+      const expYears = p.experienceYears || 0;
+      let expScore = 10;
       if (expYears >= 15) expScore = 25;
       else if (expYears >= 10) expScore = 20;
       else if (expYears >= 5) expScore = 15;
       else expScore = 10;
 
-      // 4. Jurisdiction & Court Match (15 Points Max)
       const cCity = (p.location?.city || '').toLowerCase();
       const cState = (p.location?.state || '').toLowerCase();
       let locScore = 8;
@@ -238,11 +685,8 @@ const matchLawyersForCase = async (req, res, next) => {
       };
     });
 
-    // STRICT RELEVANCE FILTER:
-    // Only return advocates who have practice area match or minimum 50% score
     const relevantMatches = evaluated.filter((m) => m.matchScore >= 50);
 
-    // Sort: High Recommend first, then by matchScore descending, then by experienceYears descending
     relevantMatches.sort((a, b) => {
       if (b.isHighRecommend !== a.isHighRecommend) {
         return b.isHighRecommend ? 1 : -1;
@@ -269,151 +713,13 @@ const matchLawyersForCase = async (req, res, next) => {
 };
 
 /**
- * POST /api/lawyers/case-studies
- * Publish Anonymized Case Study
- */
-const publishCaseStudy = async (req, res, next) => {
-  try {
-    const { title, practiceArea, forum, summary, challenge, strategy, outcome, year } = req.body;
-
-    const caseStudy = await CaseStudy.create({
-      professional: req.user._id,
-      title,
-      practiceArea: practiceArea || 'General Law',
-      forum,
-      summary,
-      challenge,
-      strategy,
-      outcome,
-      anonymizedDetails: true,
-      year: year || new Date().getFullYear(),
-    });
-
-    return sendSuccess(res, caseStudy, 'Case study published successfully', 201);
-  } catch (error) {
-    next(error);
-  }
-};
-
-/**
- * GET /api/lawyers/case-studies
- */
-const listCaseStudies = async (req, res, next) => {
-  try {
-    const { practiceArea, professionalId } = req.query;
-    const filter = {};
-    if (practiceArea) filter.practiceArea = new RegExp(practiceArea, 'i');
-    if (professionalId) filter.professional = professionalId;
-
-    const caseStudies = await CaseStudy.find(filter)
-      .populate('professional', 'email role')
-      .sort({ createdAt: -1 });
-
-    return sendSuccess(res, caseStudies, 'Case studies retrieved');
-  } catch (error) {
-    next(error);
-  }
-};
-
-/**
- * GET /api/lawyers
- */
-const searchLawyersDirectory = async (req, res, next) => {
-  try {
-    const {
-      role,
-      practiceArea,
-      city,
-      state,
-      verifiedOnly,
-      minExperience,
-      search,
-      page = 1,
-      limit = 20,
-    } = req.query;
-
-    const filter = {};
-
-    // STRICT: Only show VERIFIED advocates in directory by default
-    if (req.query.includeUnverified !== 'true') {
-      filter.verificationStatus = 'VERIFIED';
-    }
-
-    if (role) {
-      filter.professionalRole = role;
-    } else {
-      filter.professionalRole = ROLES.LAWYER;
-    }
-
-    if (practiceArea) {
-      filter.practiceAreas = { $in: [new RegExp(practiceArea, 'i')] };
-    }
-
-    if (city) {
-      filter['location.city'] = new RegExp(city, 'i');
-    }
-
-    if (state) {
-      filter['location.state'] = new RegExp(state, 'i');
-    }
-
-    if (minExperience) {
-      filter.experienceYears = { $gte: parseInt(minExperience, 10) };
-    }
-
-    if (search) {
-      filter.$text = { $search: search };
-    }
-
-    const skip = (page - 1) * limit;
-    const [lawyers, total] = await Promise.all([
-      ProfessionalProfile.find(filter)
-        .populate('user', 'email role isVerified createdAt')
-        .sort({ 'rating.average': -1, experienceYears: -1 })
-        .skip(skip)
-        .limit(parseInt(limit, 10)),
-      ProfessionalProfile.countDocuments(filter),
-    ]);
-
-    return sendSuccess(res, lawyers, 'Lawyer directory retrieved', 200, {
-      total,
-      page: parseInt(page, 10),
-      limit: parseInt(limit, 10),
-      totalPages: Math.ceil(total / limit),
-    });
-  } catch (error) {
-    next(error);
-  }
-};
-
-/**
- * GET /api/lawyers/:id
- */
-const getLawyerDetails = async (req, res, next) => {
-  try {
-    const profile = await ProfessionalProfile.findById(req.params.id)
-      .populate('user', 'email role isVerified createdAt');
-
-    if (!profile) {
-      return sendError(res, 'Lawyer profile not found', 404);
-    }
-
-    const caseStudies = await CaseStudy.find({ professional: profile.user._id }).sort({ createdAt: -1 });
-
-    return sendSuccess(res, { profile, caseStudies }, 'Lawyer details retrieved');
-  } catch (error) {
-    next(error);
-  }
-};
-
-/**
  * POST /api/lawyers/extract-case-profile
  * Automatically analyzes document validity, legal relevance, and extracts parameters
  */
 const extractCaseProfileFromDocument = async (req, res, next) => {
   try {
     const { fileName = '', fileText = '', fileSize = 0 } = req.body;
-    const combinedStr = `${fileName} ${fileText}`.toLowerCase().replace(/[_\-]+/g, ' ').trim();
+    const combinedStr = `${fileName} ${fileText}`.toLowerCase().replace(/[_-]+/g, ' ').trim();
 
     // 1. Explicit Non-Legal / Inappropriate Negative Lexicon
     const nonLegalPatterns = [
@@ -446,17 +752,13 @@ const extractCaseProfileFromDocument = async (req, res, next) => {
       'ndps', 'posh', 'quashing', 'probate', 'succession', 'power of attorney', 'poa'
     ];
 
-    // Find all positive legal matches using word boundaries
     const matchedLegalTerms = legalKeywords.filter((kw) => {
       const regex = new RegExp(`\\b${kw}\\b`, 'i');
       return regex.test(combinedStr);
     });
 
-    // Check negative non-legal triggers
     const matchedNonLegal = nonLegalPatterns.some((pattern) => pattern.test(combinedStr));
 
-    // Decisive Relevance Filter:
-    // If explicit non-legal indicator found OR if combined text has zero recognized legal terms.
     const isInvalidOrInappropriate =
       matchedNonLegal ||
       matchedLegalTerms.length === 0;
@@ -478,7 +780,6 @@ const extractCaseProfileFromDocument = async (req, res, next) => {
       );
     }
 
-    // 3. Document is VALID & LEGAL -> Proceed to Domain Classification
     let category = 'Civil Litigation';
     let defaultSummary = 'Legal petition seeking representation and judicial remedy.';
     let defaultBudget = 100000;
@@ -517,11 +818,10 @@ const extractCaseProfileFromDocument = async (req, res, next) => {
       defaultBudget = 200000;
     }
 
-    // 4. Format Human-Friendly Case Title
     let rawName = fileName
       .replace(/\.[^/.]+$/, '')
-      .replace(/[_\-\.]+/g, ' ')
-      .replace(/\b\d{6,}\b/g, '') // remove random timestamp numbers
+      .replace(/[_-\.]+/g, ' ')
+      .replace(/\b\d{6,}\b/g, '')
       .trim();
 
     let formattedTitle = rawName
@@ -536,13 +836,11 @@ const extractCaseProfileFromDocument = async (req, res, next) => {
       formattedTitle = `${category} Grievance Petition`;
     }
 
-    // 5. Extract Summary from text if substantial text is provided
     let issueSummary = defaultSummary;
     if (fileText && fileText.trim().length > 30) {
       issueSummary = fileText.trim().slice(0, 600);
     }
 
-    // 6. Detect Jurisdiction from text or default to Delhi
     let jurisdiction = 'Delhi';
     if (/mumbai|bombay|maharashtra/i.test(combinedStr)) jurisdiction = 'Mumbai';
     else if (/bengaluru|bangalore|karnataka/i.test(combinedStr)) jurisdiction = 'Bengaluru';
@@ -576,11 +874,118 @@ const extractCaseProfileFromDocument = async (req, res, next) => {
   }
 };
 
+/**
+ * POST /api/lawyers/case-studies
+ */
+const publishCaseStudy = async (req, res, next) => {
+  try {
+    const { title, practiceArea, forum, summary, challenge, strategy, outcome, year } = req.body;
+
+    const caseStudy = await CaseStudy.create({
+      professional: req.user._id,
+      title,
+      practiceArea: practiceArea || 'General Law',
+      forum,
+      summary,
+      challenge,
+      strategy,
+      outcome,
+      anonymizedDetails: true,
+      year: year || new Date().getFullYear(),
+    });
+
+    return sendSuccess(res, caseStudy, 'Case study published successfully', 201);
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * PUT /api/lawyers/case-studies/:id
+ */
+const updateCaseStudy = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const { title, practiceArea, forum, summary, challenge, strategy, outcome, year } = req.body;
+
+    const caseStudy = await CaseStudy.findOne({ _id: id, professional: req.user._id });
+    if (!caseStudy) {
+      return sendError(res, 'Case study not found or unauthorized', 404);
+    }
+
+    if (title) caseStudy.title = title;
+    if (practiceArea) caseStudy.practiceArea = practiceArea;
+    if (forum) caseStudy.forum = forum;
+    if (summary) caseStudy.summary = summary;
+    if (challenge) caseStudy.challenge = challenge;
+    if (strategy) caseStudy.strategy = strategy;
+    if (outcome) caseStudy.outcome = outcome;
+    if (year) caseStudy.year = year;
+
+    await caseStudy.save();
+    return sendSuccess(res, caseStudy, 'Case study updated successfully');
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * DELETE /api/lawyers/case-studies/:id
+ */
+const deleteCaseStudy = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const caseStudy = await CaseStudy.findOneAndDelete({ _id: id, professional: req.user._id });
+    if (!caseStudy) {
+      return sendError(res, 'Case study not found or unauthorized', 404);
+    }
+    return sendSuccess(res, null, 'Case study deleted successfully');
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * GET /api/lawyers/case-studies
+ */
+const listCaseStudies = async (req, res, next) => {
+  try {
+    const { practiceArea, professionalId } = req.query;
+    const filter = {};
+    if (practiceArea) filter.practiceArea = new RegExp(practiceArea, 'i');
+    if (professionalId) filter.professional = professionalId;
+
+    const caseStudies = await CaseStudy.find(filter)
+      .populate('professional', 'email role')
+      .sort({ createdAt: -1 });
+
+    return sendSuccess(res, caseStudies, 'Case studies retrieved');
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
-  matchLawyersForCase,
-  publishCaseStudy,
-  listCaseStudies,
+  updateLawyerProfile,
+  addExperience,
+  updateExperience,
+  deleteExperience,
+  reorderExperiences,
+  addCaseHistory,
+  updateCaseHistory,
+  deleteCaseHistory,
   searchLawyersDirectory,
   getLawyerDetails,
+  requestConsultation,
+  getIncomingRequests,
+  respondToRequest,
+  getOngoingCases,
+  getCitizenRequests,
+  getCitizenCases,
+  matchLawyersForCase,
+  publishCaseStudy,
+  updateCaseStudy,
+  deleteCaseStudy,
+  listCaseStudies,
   extractCaseProfileFromDocument,
 };

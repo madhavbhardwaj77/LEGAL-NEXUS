@@ -194,10 +194,10 @@ export default function VoiceAssistantWidget({ onTranscriptReady }) {
               ? 'bg-red-600 ring-4 ring-red-200 scale-110'
               : isProcessing
               ? 'bg-slate-400'
-              : 'bg-gradient-to-r from-legal-blue to-blue-700 hover:scale-105 shadow-legal-blue/25'
+              : 'bg-blue-600 hover:bg-blue-700 hover:scale-105 shadow-md'
           }`}
         >
-          {isRecording ? <MicOff className="w-5 h-5 animate-pulse" /> : <Mic className="w-5 h-5 text-legal-gold" />}
+          {isRecording ? <MicOff className="w-5 h-5 animate-pulse text-white" /> : <Mic className="w-5 h-5 text-white" />}
         </button>
 
         <p className="text-xs text-slate-600 text-center font-semibold">

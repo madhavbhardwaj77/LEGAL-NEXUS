@@ -17,6 +17,15 @@ import {
   Scale,
   Sparkles,
   ShieldCheck,
+  Plus,
+  Trash2,
+  Edit2,
+  Eye,
+  Calendar,
+  Building,
+  Gavel,
+  FileCheck2,
+  X,
 } from 'lucide-react';
 import api from '../services/api';
 
@@ -29,15 +38,23 @@ export default function UserProfile({ user }) {
 
   // Form Fields
   const [fullName, setFullName] = useState('');
+  const [title, setTitle] = useState('');
   const [phone, setPhone] = useState('');
   const [bio, setBio] = useState('');
   const [city, setCity] = useState('');
   const [state, setState] = useState('');
+  const [primaryCourts, setPrimaryCourts] = useState('');
+  const [languages, setLanguages] = useState('');
   const [practiceAreas, setPracticeAreas] = useState('');
   const [experienceYears, setExperienceYears] = useState(0);
   const [education, setEducation] = useState('');
   const [barRegNumber, setBarRegNumber] = useState('');
+  const [stateBarCouncil, setStateBarCouncil] = useState('');
+  const [yearOfEnrollment, setYearOfEnrollment] = useState('');
   const [institution, setInstitution] = useState('');
+  const [feeMin, setFeeMin] = useState(0);
+  const [feeMax, setFeeMax] = useState(0);
+  const [feeModel, setFeeModel] = useState('FIXED_PER_CONSULTATION');
 
   // Networking state
   const [networkingTab, setNetworkingTab] = useState('profile'); // profile | network | verification
@@ -64,10 +81,10 @@ export default function UserProfile({ user }) {
   }, [user]);
 
   useEffect(() => {
-    if (networkingTab === 'network') {
+    if (activeSubTab === 'network') {
       loadNetwork();
     }
-  }, [networkingTab]);
+  }, [activeSubTab]);
 
   const loadProfile = async () => {
     if (!user) return;
@@ -84,10 +101,13 @@ export default function UserProfile({ user }) {
       setProfile(data);
       if (data) {
         setFullName(data.fullName || '');
+        setTitle(data.title || '');
         setPhone(data.contactInfo?.phone || user.phone || '');
         setBio(data.bio || '');
         setCity(data.location?.city || '');
         setState(data.location?.state || '');
+        setPrimaryCourts(data.location?.primaryCourts ? data.location.primaryCourts.join(', ') : '');
+        setLanguages(data.languages ? data.languages.join(', ') : 'English, Hindi');
         setPracticeAreas(data.practiceAreas ? data.practiceAreas.join(', ') : '');
         setExperienceYears(data.experienceYears || 0);
         const educationString = Array.isArray(data.education)
@@ -103,7 +123,14 @@ export default function UserProfile({ user }) {
           : (typeof data.education === 'string' ? data.education : '');
         setEducation(educationString);
         setBarRegNumber(data.barCouncilRegistration?.registrationNumber || '');
+        setStateBarCouncil(data.barCouncilRegistration?.stateBarCouncil || '');
+        setYearOfEnrollment(data.barCouncilRegistration?.yearOfEnrollment || '');
         setInstitution(data.lawStudentDetails?.institution || '');
+        setFeeMin(data.feeRange?.min || 0);
+        setFeeMax(data.feeRange?.max || 0);
+        setFeeModel(data.feeRange?.model || 'FIXED_PER_CONSULTATION');
+        setExperiences(data.experiences || []);
+        setCaseHistories(data.caseHistories || []);
       }
     } catch (err) {
       if (err.response?.status === 404) {
@@ -128,8 +155,8 @@ export default function UserProfile({ user }) {
     }
   };
 
-  const handleSave = async (e) => {
-    e.preventDefault();
+  const handleSaveProfile = async (e) => {
+    if (e) e.preventDefault();
     setSaving(true);
     setSuccess(false);
     setError(null);
@@ -138,14 +165,20 @@ export default function UserProfile({ user }) {
       const payload = {
         fullName,
         bio,
-        location: { city, state },
+        location: {
+          city,
+          state,
+          primaryCourts: primaryCourts.split(',').map((s) => s.trim()).filter(Boolean),
+        },
       };
 
       if (user.role === 'CITIZEN') {
         payload.contactInfo = { phone };
         await api.put('/profiles/citizen', payload);
       } else {
+        payload.title = title || (isLawyer ? 'Advocate on Record' : 'Law Student');
         payload.practiceAreas = practiceAreas.split(',').map((s) => s.trim()).filter(Boolean);
+        payload.languages = languages.split(',').map((s) => s.trim()).filter(Boolean);
         payload.experienceYears = parseInt(experienceYears) || 0;
         payload.education = education
           .split(',')
@@ -153,7 +186,11 @@ export default function UserProfile({ user }) {
           .filter(Boolean)
           .map((deg) => ({ degree: deg }));
         if (user.role === 'LAWYER') {
-          payload.barCouncilRegistration = { registrationNumber: barRegNumber };
+          payload.barCouncilRegistration = {
+            registrationNumber: barRegNumber,
+            stateBarCouncil,
+            yearOfEnrollment: parseInt(yearOfEnrollment) || undefined,
+          };
         } else if (user.role === 'LAW_STUDENT') {
           payload.lawStudentDetails = { institution };
         }
@@ -168,6 +205,148 @@ export default function UserProfile({ user }) {
     } finally {
       setSaving(false);
     }
+  };
+
+  // Experience Actions
+  const openAddExp = () => {
+    setEditingExpIndex(null);
+    setExpRole('');
+    setExpOrg('');
+    setExpLoc(city || '');
+    setExpFrom(new Date().getFullYear() - 2);
+    setExpTo(new Date().getFullYear());
+    setExpCurrent(true);
+    setExpDesc('');
+    setExpModalOpen(true);
+  };
+
+  const openEditExp = (idx) => {
+    const item = experiences[idx];
+    setEditingExpIndex(idx);
+    setExpRole(item.role || '');
+    setExpOrg(item.organization || '');
+    setExpLoc(item.location || '');
+    setExpFrom(item.fromYear || '');
+    setExpTo(item.toYear || '');
+    setExpCurrent(!!item.isCurrent);
+    setExpDesc(item.description || '');
+    setExpModalOpen(true);
+  };
+
+  const saveExperience = async () => {
+    if (!expRole || !expOrg) {
+      alert('Please fill in Role and Organization / Law Firm.');
+      return;
+    }
+    const newExp = {
+      role: expRole,
+      organization: expOrg,
+      location: expLoc,
+      fromYear: parseInt(expFrom) || undefined,
+      toYear: expCurrent ? undefined : (parseInt(expTo) || undefined),
+      isCurrent: expCurrent,
+      description: expDesc,
+    };
+
+    let updated = [...experiences];
+    if (editingExpIndex !== null) {
+      updated[editingExpIndex] = newExp;
+    } else {
+      updated = [newExp, ...updated];
+    }
+    setExperiences(updated);
+    setExpModalOpen(false);
+
+    // Persist directly
+    try {
+      await api.put('/profiles/professional', { experiences: updated });
+      setSuccess(true);
+      setTimeout(() => setSuccess(false), 3000);
+    } catch {
+      // Ignored; will save on main save
+    }
+  };
+
+  const deleteExperience = async (idx) => {
+    if (!confirm('Are you sure you want to delete this experience record?')) return;
+    const updated = experiences.filter((_, i) => i !== idx);
+    setExperiences(updated);
+    try {
+      await api.put('/profiles/professional', { experiences: updated });
+    } catch {}
+  };
+
+  // Case History Actions
+  const openAddCase = () => {
+    setEditingCaseIndex(null);
+    setCaseTitle('');
+    setCaseForum('Delhi High Court');
+    setCaseCategory(practiceAreas.split(',')[0]?.trim() || 'Civil & Commercial');
+    setCaseYear(new Date().getFullYear());
+    setCaseSummary('');
+    setCaseChallenge('');
+    setCaseStrategy('');
+    setCaseOutcome('');
+    setCaseAnonymized(true);
+    setCaseModalOpen(true);
+  };
+
+  const openEditCase = (idx) => {
+    const item = caseHistories[idx];
+    setEditingCaseIndex(idx);
+    setCaseTitle(item.title || '');
+    setCaseForum(item.forum || '');
+    setCaseCategory(item.category || 'General Law');
+    setCaseYear(item.year || new Date().getFullYear());
+    setCaseSummary(item.summary || '');
+    setCaseChallenge(item.challenge || '');
+    setCaseStrategy(item.strategy || '');
+    setCaseOutcome(item.outcome || '');
+    setCaseAnonymized(item.anonymized !== false);
+    setCaseModalOpen(true);
+  };
+
+  const saveCaseHistory = async () => {
+    if (!caseTitle || !caseSummary || !caseOutcome) {
+      alert('Please fill in Case Title, Summary, and Outcome.');
+      return;
+    }
+    const newCase = {
+      title: caseTitle,
+      forum: caseForum,
+      category: caseCategory,
+      year: parseInt(caseYear) || new Date().getFullYear(),
+      summary: caseSummary,
+      challenge: caseChallenge,
+      strategy: caseStrategy,
+      outcome: caseOutcome,
+      anonymized: caseAnonymized,
+    };
+
+    let updated = [...caseHistories];
+    if (editingCaseIndex !== null) {
+      updated[editingCaseIndex] = newCase;
+    } else {
+      updated = [newCase, ...updated];
+    }
+    setCaseHistories(updated);
+    setCaseModalOpen(false);
+
+    // Persist directly
+    try {
+      await api.put('/profiles/professional', { caseHistories: updated });
+      setSuccess(true);
+      setTimeout(() => setSuccess(false), 3000);
+    } catch {}
+  };
+
+  const deleteCaseHistory = async (idx) => {
+    if (!confirm('Are you sure you want to delete this case history?')) return;
+    const updated = caseHistories.filter((_, i) => i !== idx);
+    setCaseHistories(updated);
+    try {
+      await api.put('/profiles/professional', { caseHistories: updated });
+    } catch {}
   };
 
   const handleConnect = (id) => {
@@ -226,7 +405,7 @@ export default function UserProfile({ user }) {
     return (
       <div className="text-center py-20 bg-white rounded-3xl border border-slate-200/80 shadow-subtle">
         <RefreshCw className="animate-spin w-8 h-8 text-legal-blue mx-auto mb-3" />
-        <p className="text-xs text-slate-500 font-medium">Loading user center profile...</p>
+        <p className="text-xs text-slate-500 font-medium">Loading advocate center profile...</p>
       </div>
     );
   }
@@ -246,41 +425,97 @@ export default function UserProfile({ user }) {
         <div>
           <div className="flex items-center gap-2 mb-1">
             <span className="px-3 py-0.5 bg-legal-blue/20 text-sky-300 border border-legal-blue/30 text-[10px] font-bold rounded-full uppercase tracking-wider">
-              User Center & Identity
+              {isLawyer ? 'Advocate Hub & Portfolio' : 'User Center & Identity'}
             </span>
           </div>
           <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-white">
-            Profile & Professional Network
+            {isLawyer ? 'Advocate Profile, Experiences & Case Histories' : 'Profile & Identity Settings'}
           </h2>
-          <p className="text-xs sm:text-sm text-slate-400 mt-1 max-w-xl">
-            Manage your personal profile details, set professional credentials, and build your collaborative legal networks.
+          <p className="text-xs sm:text-sm text-slate-400 mt-1 max-w-2xl">
+            {isLawyer
+              ? 'Manage your Bar Council verified credentials, upload past professional experiences and courtroom case histories for prospective clients and colleagues.'
+              : 'Manage your personal profile details and statutory notification preferences.'}
           </p>
         </div>
+
+        {isLawyer && (
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setActiveSubTab('preview')}
+              className="px-4 py-2.5 bg-slate-800/80 hover:bg-slate-700 text-slate-200 font-bold text-xs rounded-xl border border-slate-700 transition flex items-center gap-2"
+            >
+              <Eye className="w-4 h-4 text-sky-400" />
+              <span>Public Profile Preview</span>
+            </button>
+          </div>
+        )}
       </div>
 
-      {/* Navigation tabs if professional */}
+      {/* Navigation Sub-tabs */}
       {isProfessional && (
         <div className="flex items-center gap-2 border-b border-slate-200 pb-2 text-sm font-semibold flex-wrap">
           <button
-            onClick={() => setNetworkingTab('profile')}
-            className={`px-4 py-2 rounded-xl transition ${
-              networkingTab === 'profile'
+            onClick={() => setActiveSubTab('profile')}
+            className={`px-4 py-2 rounded-xl transition flex items-center gap-1.5 ${
+              activeSubTab === 'profile'
                 ? 'bg-legal-blue text-white shadow-subtle'
                 : 'text-slate-600 hover:bg-slate-100'
             }`}
           >
-            My Profile Settings
+            <User className="w-4 h-4" />
+            <span>Profile & Credentials</span>
           </button>
+
+          {isLawyer && (
+            <>
+              <button
+                onClick={() => setActiveSubTab('experiences')}
+                className={`px-4 py-2 rounded-xl transition flex items-center gap-1.5 ${
+                  activeSubTab === 'experiences'
+                    ? 'bg-legal-blue text-white shadow-subtle'
+                    : 'text-slate-600 hover:bg-slate-100'
+                }`}
+              >
+                <Briefcase className="w-4 h-4" />
+                <span>Past Experiences ({experiences.length})</span>
+              </button>
+
+              <button
+                onClick={() => setActiveSubTab('caseHistories')}
+                className={`px-4 py-2 rounded-xl transition flex items-center gap-1.5 ${
+                  activeSubTab === 'caseHistories'
+                    ? 'bg-legal-blue text-white shadow-subtle'
+                    : 'text-slate-600 hover:bg-slate-100'
+                }`}
+              >
+                <Gavel className="w-4 h-4" />
+                <span>Case Histories ({caseHistories.length})</span>
+              </button>
+
+              <button
+                onClick={() => setActiveSubTab('preview')}
+                className={`px-4 py-2 rounded-xl transition flex items-center gap-1.5 ${
+                  activeSubTab === 'preview'
+                    ? 'bg-legal-blue text-white shadow-subtle'
+                    : 'text-slate-600 hover:bg-slate-100'
+                }`}
+              >
+                <Eye className="w-4 h-4" />
+                <span>Public View Preview</span>
+              </button>
+            </>
+          )}
+
           <button
-            onClick={() => setNetworkingTab('network')}
+            onClick={() => setActiveSubTab('network')}
             className={`px-4 py-2 rounded-xl transition flex items-center gap-1.5 ${
-              networkingTab === 'network'
+              activeSubTab === 'network'
                 ? 'bg-legal-blue text-white shadow-subtle'
                 : 'text-slate-600 hover:bg-slate-100'
             }`}
           >
             <Users className="w-4 h-4" />
-            <span>Professional Network Hub</span>
+            <span>Advocate Network Hub</span>
           </button>
           {user?.role === 'LAWYER' && (
             <button
@@ -307,7 +542,7 @@ export default function UserProfile({ user }) {
 
       {networkingTab === 'profile' ? (
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-          {/* Profile Overview Card (4 columns) */}
+          {/* Overview summary card (4 cols) */}
           <div className="lg:col-span-4 bg-white p-6 rounded-3xl border border-slate-200/90 shadow-subtle flex flex-col items-center text-center space-y-4">
             <div className="w-20 h-20 rounded-3xl bg-[#0B1F33] text-legal-gold flex items-center justify-center font-extrabold text-2xl relative shadow-md border border-slate-700">
               {fullName?.charAt(0) || user?.email?.charAt(0).toUpperCase()}
@@ -323,7 +558,7 @@ export default function UserProfile({ user }) {
 
             <div>
               <h3 className="text-base font-bold text-slate-900">{fullName || 'Authorized User'}</h3>
-              <p className="text-xs text-slate-400 mt-0.5">{user?.email}</p>
+              <p className="text-xs text-legal-blue font-semibold">{title || (isLawyer ? 'Advocate on Record' : user?.email)}</p>
               <span className="inline-block mt-2 px-3 py-0.5 bg-blue-50 text-legal-blue text-[10px] font-extrabold rounded-full border border-blue-200 uppercase tracking-wider">
                 {user?.role}
               </span>
@@ -348,15 +583,34 @@ export default function UserProfile({ user }) {
                   </span>
                 </div>
               )}
+              {barRegNumber && (
+                <div className="flex items-center gap-2">
+                  <Award className="w-4 h-4 text-legal-gold shrink-0" />
+                  <span className="font-mono">Enrol: {barRegNumber}</span>
+                </div>
+              )}
             </div>
+
+            {isLawyer && (
+              <div className="w-full bg-slate-50 p-4 rounded-2xl border border-slate-200/80 text-left text-xs space-y-2">
+                <div className="flex justify-between items-center text-slate-700">
+                  <span className="font-medium">Experiences Uploaded:</span>
+                  <span className="font-bold text-legal-blue">{experiences.length}</span>
+                </div>
+                <div className="flex justify-between items-center text-slate-700">
+                  <span className="font-medium">Case Histories Uploaded:</span>
+                  <span className="font-bold text-emerald-600">{caseHistories.length}</span>
+                </div>
+              </div>
+            )}
           </div>
 
-          {/* Profile Form (8 columns) */}
+          {/* Form (8 cols) */}
           <div className="lg:col-span-8 bg-white p-6 sm:p-8 rounded-3xl border border-slate-200/90 shadow-subtle">
-            <form onSubmit={handleSave} className="space-y-5">
+            <form onSubmit={handleSaveProfile} className="space-y-5">
               <h3 className="text-sm font-bold text-slate-900 border-b border-slate-100 pb-3 flex items-center gap-2">
                 <User className="w-4 h-4 text-legal-blue" />
-                Profile Information
+                <span>Advocate Credentials & Information</span>
               </h3>
 
               {success && (
@@ -389,6 +643,19 @@ export default function UserProfile({ user }) {
 
                 <div>
                   <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
+                    Professional Title / Designation
+                  </label>
+                  <input
+                    type="text"
+                    value={title}
+                    onChange={(e) => setTitle(e.target.value)}
+                    className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm focus:ring-2 focus:ring-legal-blue focus:outline-none"
+                    placeholder="e.g. Advocate on Record, High Court"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
                     Phone Number
                   </label>
                   <input
@@ -401,49 +668,106 @@ export default function UserProfile({ user }) {
                 </div>
 
                 <div>
-                  <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">City</label>
-                  <input
-                    type="text"
-                    value={city}
-                    onChange={(e) => setCity(e.target.value)}
-                    className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm focus:ring-2 focus:ring-legal-blue focus:outline-none"
-                    placeholder="Delhi"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">State</label>
-                  <input
-                    type="text"
-                    value={state}
-                    onChange={(e) => setState(e.target.value)}
-                    className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm focus:ring-2 focus:ring-legal-blue focus:outline-none"
-                    placeholder="Delhi"
-                  />
+                  <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
+                    City & State
+                  </label>
+                  <div className="grid grid-cols-2 gap-2">
+                    <input
+                      type="text"
+                      value={city}
+                      onChange={(e) => setCity(e.target.value)}
+                      className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm focus:ring-2 focus:ring-legal-blue focus:outline-none"
+                      placeholder="Delhi"
+                    />
+                    <input
+                      type="text"
+                      value={state}
+                      onChange={(e) => setState(e.target.value)}
+                      className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm focus:ring-2 focus:ring-legal-blue focus:outline-none"
+                      placeholder="Delhi"
+                    />
+                  </div>
                 </div>
               </div>
 
               <div>
                 <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
-                  Bio / Professional Summary
+                  Bio / Advocate Profile Summary
                 </label>
                 <textarea
                   rows={3}
                   value={bio}
                   onChange={(e) => setBio(e.target.value)}
                   className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm focus:ring-2 focus:ring-legal-blue focus:outline-none resize-none leading-relaxed"
-                  placeholder="Provide a brief background on your legal experience..."
+                  placeholder="Provide an overview of your trial advocacy experience, specialization, and judicial chambers background..."
                 />
               </div>
 
               {/* Professional Specific Fields */}
               {isProfessional && (
                 <div className="space-y-4 pt-4 border-t border-slate-100">
-                  <h4 className="text-xs font-bold text-slate-900 uppercase tracking-wider">
-                    Professional Credentials
+                  <h4 className="text-xs font-bold text-slate-900 uppercase tracking-wider flex items-center gap-1.5">
+                    <Award className="w-4 h-4 text-legal-gold" />
+                    <span>Bar Council & Court Credentials</span>
                   </h4>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {user.role === 'LAWYER' && (
+                      <>
+                        <div>
+                          <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
+                            Bar Council Enrolment Number
+                          </label>
+                          <input
+                            type="text"
+                            value={barRegNumber}
+                            onChange={(e) => setBarRegNumber(e.target.value)}
+                            className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm focus:ring-2 focus:ring-legal-blue focus:outline-none"
+                            placeholder="e.g. D/1234/2020"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
+                            State Bar Council
+                          </label>
+                          <input
+                            type="text"
+                            value={stateBarCouncil}
+                            onChange={(e) => setStateBarCouncil(e.target.value)}
+                            className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm focus:ring-2 focus:ring-legal-blue focus:outline-none"
+                            placeholder="e.g. Bar Council of Delhi"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
+                            Primary Courts & Forums (comma separated)
+                          </label>
+                          <input
+                            type="text"
+                            value={primaryCourts}
+                            onChange={(e) => setPrimaryCourts(e.target.value)}
+                            className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm focus:ring-2 focus:ring-legal-blue focus:outline-none"
+                            placeholder="Delhi High Court, Tis Hazari, Supreme Court"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
+                            Year of Enrollment
+                          </label>
+                          <input
+                            type="number"
+                            value={yearOfEnrollment}
+                            onChange={(e) => setYearOfEnrollment(e.target.value)}
+                            className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm focus:ring-2 focus:ring-legal-blue focus:outline-none"
+                            placeholder="2020"
+                          />
+                        </div>
+                      </>
+                    )}
+
                     <div>
                       <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
                         Practice Areas (comma separated)
@@ -453,13 +777,13 @@ export default function UserProfile({ user }) {
                         value={practiceAreas}
                         onChange={(e) => setPracticeAreas(e.target.value)}
                         className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm focus:ring-2 focus:ring-legal-blue focus:outline-none"
-                        placeholder="Employment, Property, Criminal"
+                        placeholder="Employment, Property, Criminal, Consumer"
                       />
                     </div>
 
                     <div>
                       <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
-                        Years of Experience
+                        Total Years of Active Experience
                       </label>
                       <input
                         type="number"
@@ -472,7 +796,20 @@ export default function UserProfile({ user }) {
 
                     <div>
                       <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
-                        Education / Degrees (comma separated)
+                        Languages Spoken (comma separated)
+                      </label>
+                      <input
+                        type="text"
+                        value={languages}
+                        onChange={(e) => setLanguages(e.target.value)}
+                        className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm focus:ring-2 focus:ring-legal-blue focus:outline-none"
+                        placeholder="English, Hindi, Punjabi"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
+                        Education & Qualifications (comma separated)
                       </label>
                       <input
                         type="text"
@@ -482,36 +819,6 @@ export default function UserProfile({ user }) {
                         placeholder="LL.B (Delhi University), LL.M"
                       />
                     </div>
-
-                    {user.role === 'LAWYER' && (
-                      <div>
-                        <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
-                          Bar Council Registration Number
-                        </label>
-                        <input
-                          type="text"
-                          value={barRegNumber}
-                          onChange={(e) => setBarRegNumber(e.target.value)}
-                          className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm focus:ring-2 focus:ring-legal-blue focus:outline-none"
-                          placeholder="e.g. D/1234/2020"
-                        />
-                      </div>
-                    )}
-
-                    {user.role === 'LAW_STUDENT' && (
-                      <div>
-                        <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
-                          Law College / Institution
-                        </label>
-                        <input
-                          type="text"
-                          value={institution}
-                          onChange={(e) => setInstitution(e.target.value)}
-                          className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm focus:ring-2 focus:ring-legal-blue focus:outline-none"
-                          placeholder="e.g. Faculty of Law, DU"
-                        />
-                      </div>
-                    )}
                   </div>
                 </div>
               )}
@@ -519,29 +826,370 @@ export default function UserProfile({ user }) {
               <button
                 type="submit"
                 disabled={saving}
-                className="w-full py-3 bg-gradient-to-r from-legal-blue to-blue-700 hover:from-blue-600 hover:to-blue-800 text-white font-bold text-xs rounded-2xl shadow-md transition flex items-center justify-center gap-2"
+                className="w-full py-3.5 bg-gradient-to-r from-legal-blue to-blue-700 hover:from-blue-600 hover:to-blue-800 text-white font-bold text-xs rounded-2xl shadow-md transition flex items-center justify-center gap-2 cursor-pointer disabled:bg-slate-300 disabled:text-slate-500"
               >
                 {saving ? (
                   <RefreshCw className="animate-spin w-4 h-4" />
                 ) : (
                   <>
                     <Save className="w-4 h-4 text-legal-gold" />
-                    <span>Save Changes</span>
+                    <span>Save Profile & Credentials</span>
                   </>
                 )}
               </button>
             </form>
           </div>
         </div>
-      ) : (
-        /* Professional Networking Hub UI */
+      )}
+
+      {/* ── SUB-TAB 2: PAST EXPERIENCES ─────────────────────────── */}
+      {activeSubTab === 'experiences' && (
+        <div className="space-y-5">
+          <div className="bg-white p-6 rounded-3xl border border-slate-200/90 shadow-subtle flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div>
+              <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
+                <Briefcase className="w-5 h-5 text-legal-blue" />
+                <span>Past Work Experiences & Chambers</span>
+              </h3>
+              <p className="text-xs text-slate-500 mt-1">
+                Upload your history at law firms, judicial clerkships, senior advocate chambers, or corporate legal counsel roles.
+              </p>
+            </div>
+            <button
+              onClick={openAddExp}
+              className="px-4 py-2.5 bg-gradient-to-r from-legal-blue to-blue-700 text-white text-xs font-bold rounded-xl shadow transition flex items-center gap-1.5 shrink-0"
+            >
+              <Plus className="w-4 h-4 text-legal-gold" />
+              <span>Add Past Experience</span>
+            </button>
+          </div>
+
+          {experiences.length === 0 ? (
+            <div className="text-center py-16 bg-white rounded-3xl border border-slate-200/80 shadow-subtle p-6 max-w-md mx-auto space-y-3">
+              <Building className="w-12 h-12 text-slate-300 mx-auto" />
+              <h4 className="text-sm font-bold text-slate-800">No Past Experiences Added Yet</h4>
+              <p className="text-xs text-slate-500">
+                Add your previous law firms, chamber associations, or judicial clerkships to establish authority.
+              </p>
+              <button
+                onClick={openAddExp}
+                className="px-4 py-2 bg-legal-blue text-white text-xs font-bold rounded-xl"
+              >
+                Add First Experience
+              </button>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {experiences.map((exp, idx) => (
+                <div
+                  key={idx}
+                  className="bg-white p-6 rounded-3xl border border-slate-200/90 hover:border-legal-blue/50 shadow-subtle hover:shadow-card transition flex flex-col justify-between space-y-4"
+                >
+                  <div className="space-y-2.5">
+                    <div className="flex items-start justify-between gap-2">
+                      <div>
+                        <span className="text-[10px] font-bold text-legal-blue bg-blue-50 px-2 py-0.5 rounded border border-blue-200 uppercase">
+                          {exp.isCurrent ? 'Current Position' : `${exp.fromYear || 'Past'} — ${exp.toYear || 'Present'}`}
+                        </span>
+                        <h4 className="text-sm font-bold text-slate-900 mt-1">{exp.role}</h4>
+                        <p className="text-xs font-semibold text-slate-700 flex items-center gap-1">
+                          <Building className="w-3.5 h-3.5 text-slate-400" />
+                          <span>{exp.organization}</span>
+                        </p>
+                      </div>
+
+                      <div className="flex items-center gap-1">
+                        <button
+                          onClick={() => openEditExp(idx)}
+                          className="p-1.5 text-slate-400 hover:text-legal-blue hover:bg-slate-100 rounded-lg transition"
+                          title="Edit"
+                        >
+                          <Edit2 className="w-3.5 h-3.5" />
+                        </button>
+                        <button
+                          onClick={() => deleteExperience(idx)}
+                          className="p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition"
+                          title="Delete"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    </div>
+
+                    {exp.description && (
+                      <p className="text-xs text-slate-600 leading-relaxed bg-slate-50 p-3 rounded-2xl border border-slate-100">
+                        {exp.description}
+                      </p>
+                    )}
+                  </div>
+
+                  {exp.location && (
+                    <div className="pt-2 border-t border-slate-100 flex items-center gap-1 text-[11px] text-slate-500">
+                      <MapPin className="w-3.5 h-3.5 text-slate-400" />
+                      <span>{exp.location}</span>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ── SUB-TAB 3: CASE HISTORIES ───────────────────────────── */}
+      {activeSubTab === 'caseHistories' && (
+        <div className="space-y-5">
+          <div className="bg-white p-6 rounded-3xl border border-slate-200/90 shadow-subtle flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div>
+              <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
+                <Gavel className="w-5 h-5 text-legal-blue" />
+                <span>Case Histories & Precedent Decisions</span>
+              </h3>
+              <p className="text-xs text-slate-500 mt-1">
+                Upload your previous litigation victories, arbitration awards, and tribunal decisions with anonymized client confidentiality.
+              </p>
+            </div>
+            <button
+              onClick={openAddCase}
+              className="px-4 py-2.5 bg-gradient-to-r from-legal-blue to-blue-700 text-white text-xs font-bold rounded-xl shadow transition flex items-center gap-1.5 shrink-0"
+            >
+              <Plus className="w-4 h-4 text-legal-gold" />
+              <span>Upload Case History</span>
+            </button>
+          </div>
+
+          {caseHistories.length === 0 ? (
+            <div className="text-center py-16 bg-white rounded-3xl border border-slate-200/80 shadow-subtle p-6 max-w-md mx-auto space-y-3">
+              <FileCheck2 className="w-12 h-12 text-slate-300 mx-auto" />
+              <h4 className="text-sm font-bold text-slate-800">No Case Histories Uploaded Yet</h4>
+              <p className="text-xs text-slate-500">
+                Upload precedent cases you have argued to showcase your domain competence to prospective clients.
+              </p>
+              <button
+                onClick={openAddCase}
+                className="px-4 py-2 bg-legal-blue text-white text-xs font-bold rounded-xl"
+              >
+                Upload First Case History
+              </button>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {caseHistories.map((ch, idx) => (
+                <div
+                  key={idx}
+                  className="bg-white p-6 rounded-3xl border border-slate-200/90 hover:border-legal-blue/50 shadow-subtle hover:shadow-card transition flex flex-col justify-between space-y-4"
+                >
+                  <div className="space-y-3">
+                    <div className="flex items-start justify-between gap-2">
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <span className="text-[10px] font-bold text-legal-blue bg-blue-50 px-2 py-0.5 rounded border border-blue-200 uppercase">
+                            {ch.category || 'General Law'}
+                          </span>
+                          <span className="text-xs text-slate-400 font-mono">{ch.year || 2026}</span>
+                        </div>
+                        <h4 className="text-sm font-bold text-slate-900 mt-1.5">{ch.title}</h4>
+                        {ch.forum && (
+                          <p className="text-[11px] text-slate-500 flex items-center gap-1 mt-0.5">
+                            <Scale className="w-3 h-3 text-legal-gold" />
+                            <span>{ch.forum}</span>
+                          </p>
+                        )}
+                      </div>
+
+                      <div className="flex items-center gap-1">
+                        <button
+                          onClick={() => openEditCase(idx)}
+                          className="p-1.5 text-slate-400 hover:text-legal-blue hover:bg-slate-100 rounded-lg transition"
+                          title="Edit"
+                        >
+                          <Edit2 className="w-3.5 h-3.5" />
+                        </button>
+                        <button
+                          onClick={() => deleteCaseHistory(idx)}
+                          className="p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition"
+                          title="Delete"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    </div>
+
+                    <p className="text-xs text-slate-600 leading-relaxed">
+                      {ch.summary}
+                    </p>
+
+                    {ch.strategy && (
+                      <div className="p-3 bg-slate-50 rounded-2xl border border-slate-100 text-xs">
+                        <strong className="text-slate-800 block text-[11px] uppercase tracking-wider mb-0.5">Legal Strategy:</strong>
+                        <span className="text-slate-600">{ch.strategy}</span>
+                      </div>
+                    )}
+
+                    <div className="p-3 bg-emerald-50 rounded-2xl border border-emerald-200/80 text-xs">
+                      <strong className="text-emerald-900 block text-[11px] uppercase tracking-wider mb-0.5">Judicial Outcome / Order:</strong>
+                      <span className="text-emerald-800 font-medium">{ch.outcome}</span>
+                    </div>
+                  </div>
+
+                  <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-[10px] text-slate-400">
+                    <span className="flex items-center gap-1 text-emerald-600 font-semibold">
+                      <ShieldCheck className="w-3.5 h-3.5" />
+                      {ch.anonymized !== false ? 'Confidentiality Anonymized' : 'Public Precedent'}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ── SUB-TAB 4: PUBLIC VIEW PREVIEW ──────────────────────── */}
+      {activeSubTab === 'preview' && (
+        <div className="space-y-6">
+          <div className="p-4 bg-sky-50 border border-sky-200 rounded-2xl text-xs text-sky-900 flex items-center justify-between">
+            <span className="flex items-center gap-2">
+              <Eye className="w-4 h-4 text-legal-blue" />
+              <strong>Public Profile Preview:</strong> This is how your profile, experiences, and case histories appear to Citizens and other Advocates in the directory.
+            </span>
+            <button
+              onClick={() => setActiveSubTab('profile')}
+              className="text-xs font-bold text-legal-blue hover:underline"
+            >
+              Back to Editing
+            </button>
+          </div>
+
+          <div className="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200/90 shadow-card space-y-6">
+            {/* Header / Identity */}
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-6 border-b border-slate-100">
+              <div className="flex items-center gap-4">
+                <div className="w-16 h-16 rounded-2xl bg-[#0B1F33] text-legal-gold flex items-center justify-center font-extrabold text-2xl shadow-md border border-slate-700">
+                  {fullName?.charAt(0) || user?.email?.charAt(0).toUpperCase()}
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h3 className="text-lg font-bold text-slate-900">{fullName || 'Advocate'}</h3>
+                    <span className="px-2.5 py-0.5 bg-blue-50 text-legal-blue text-[10px] font-bold rounded-full border border-blue-200 uppercase">
+                      🔵 Bar Verified Advocate
+                    </span>
+                  </div>
+                  <p className="text-xs font-medium text-legal-blue mt-0.5">{title || 'Advocate on Record'}</p>
+                  <p className="text-xs text-slate-500 mt-1 flex items-center gap-2">
+                    <MapPin className="w-3.5 h-3.5 text-slate-400" />
+                    <span>{city || 'Delhi'}, {state || 'India'}</span>
+                    <span className="text-slate-300">•</span>
+                    <Award className="w-3.5 h-3.5 text-legal-gold" />
+                    <span>{experienceYears || 0} Years Experience</span>
+                  </p>
+                </div>
+              </div>
+
+              {barRegNumber && (
+                <div className="bg-slate-50 p-3 rounded-2xl border border-slate-200 text-right text-xs">
+                  <span className="text-slate-400 block text-[10px] uppercase font-bold">Bar Council Registration</span>
+                  <span className="font-mono font-bold text-slate-800">{barRegNumber}</span>
+                  {stateBarCouncil && <span className="block text-[10px] text-slate-500">{stateBarCouncil}</span>}
+                </div>
+              )}
+            </div>
+
+            {/* Bio */}
+            <div>
+              <h4 className="text-xs font-bold text-slate-900 uppercase tracking-wider mb-1.5">About & Legal Counsel</h4>
+              <p className="text-xs text-slate-600 leading-relaxed bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                {bio || 'Experienced legal counsel offering assistance across judicial forums and tribunals.'}
+              </p>
+            </div>
+
+            {/* Practice areas & Courts */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <h4 className="text-xs font-bold text-slate-900 uppercase tracking-wider mb-2">Practice Areas</h4>
+                <div className="flex flex-wrap gap-1.5">
+                  {practiceAreas ? practiceAreas.split(',').map((pa, i) => (
+                    <span key={i} className="text-xs font-semibold bg-blue-50 text-legal-blue px-3 py-1 rounded-lg border border-blue-200">
+                      {pa.trim()}
+                    </span>
+                  )) : <span className="text-xs text-slate-400">Not specified</span>}
+                </div>
+              </div>
+
+              <div>
+                <h4 className="text-xs font-bold text-slate-900 uppercase tracking-wider mb-2">Primary Courts & Forums</h4>
+                <p className="text-xs text-slate-700">{primaryCourts || 'District Courts & High Court'}</p>
+              </div>
+            </div>
+
+            {/* Past Experiences Section */}
+            <div>
+              <h4 className="text-xs font-bold text-slate-900 uppercase tracking-wider mb-3 flex items-center gap-2">
+                <Briefcase className="w-4 h-4 text-legal-blue" />
+                <span>Past Work Experience ({experiences.length})</span>
+              </h4>
+              {experiences.length === 0 ? (
+                <p className="text-xs text-slate-400 italic">No past experiences added yet.</p>
+              ) : (
+                <div className="space-y-3">
+                  {experiences.map((exp, idx) => (
+                    <div key={idx} className="p-4 bg-slate-50 rounded-2xl border border-slate-200/80 space-y-1 text-xs">
+                      <div className="flex justify-between items-center">
+                        <span className="font-bold text-slate-900">{exp.role}</span>
+                        <span className="text-[10px] text-slate-500 font-mono">
+                          {exp.isCurrent ? 'Present' : `${exp.fromYear} - ${exp.toYear}`}
+                        </span>
+                      </div>
+                      <p className="font-semibold text-slate-700">{exp.organization} • {exp.location}</p>
+                      {exp.description && <p className="text-slate-600 mt-1">{exp.description}</p>}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Case Histories Section */}
+            <div>
+              <h4 className="text-xs font-bold text-slate-900 uppercase tracking-wider mb-3 flex items-center gap-2">
+                <Gavel className="w-4 h-4 text-legal-blue" />
+                <span>Uploaded Case Histories & Precedents ({caseHistories.length})</span>
+              </h4>
+              {caseHistories.length === 0 ? (
+                <p className="text-xs text-slate-400 italic">No case histories uploaded yet.</p>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {caseHistories.map((ch, idx) => (
+                    <div key={idx} className="p-4 bg-slate-50 rounded-2xl border border-slate-200/80 space-y-2 text-xs">
+                      <div className="flex justify-between items-center">
+                        <span className="text-[10px] font-bold text-legal-blue bg-blue-50 px-2 py-0.5 rounded border border-blue-200">
+                          {ch.category}
+                        </span>
+                        <span className="text-[10px] text-slate-400 font-mono">{ch.year}</span>
+                      </div>
+                      <h5 className="font-bold text-slate-900">{ch.title}</h5>
+                      <p className="text-[11px] text-slate-500">{ch.forum}</p>
+                      <p className="text-slate-600">{ch.summary}</p>
+                      <div className="p-2.5 bg-emerald-50 rounded-xl border border-emerald-200 text-emerald-900 text-xs">
+                        <strong>Outcome: </strong>{ch.outcome}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── SUB-TAB 5: NETWORKING HUB ───────────────────────────── */}
+      {activeSubTab === 'network' && (
         <div className="space-y-4">
           <div className="bg-white p-5 rounded-3xl border border-slate-200/90 shadow-subtle flex flex-col md:flex-row items-start md:items-center justify-between gap-3">
             <div className="flex-1 w-full relative">
               <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-3" />
               <input
                 type="text"
-                placeholder="Search colleagues by name, title, or location..."
+                placeholder="Search colleagues by name, court, or city..."
                 value={netSearch}
                 onChange={(e) => setNetSearch(e.target.value)}
                 className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-legal-blue"
@@ -560,7 +1208,7 @@ export default function UserProfile({ user }) {
           {loadingNetwork ? (
             <div className="text-center py-20 bg-white rounded-3xl border border-slate-200/80 shadow-subtle">
               <RefreshCw className="animate-spin w-8 h-8 text-legal-blue mx-auto mb-3" />
-              <p className="text-xs text-slate-500 font-medium">Searching network directory...</p>
+              <p className="text-xs text-slate-500 font-medium">Searching directory...</p>
             </div>
           ) : filteredNetwork.length === 0 ? (
             <div className="text-center py-20 bg-white rounded-3xl border border-slate-200/80 shadow-subtle p-6 max-w-md mx-auto space-y-3">
@@ -623,7 +1271,7 @@ export default function UserProfile({ user }) {
                           ? 'bg-slate-100 text-slate-600 hover:bg-slate-200'
                           : connectedUsers[prof._id] === 'pending'
                           ? 'bg-amber-50 text-amber-800 border border-amber-200 hover:bg-amber-100'
-                          : 'bg-legal-blue text-white hover:bg-blue-700'
+                          : 'bg-blue-600 text-white hover:bg-blue-700 font-bold'
                       }`}
                     >
                       {connectedUsers[prof._id] === 'connected'

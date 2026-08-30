@@ -172,11 +172,11 @@ export default function LandingPage({ onGetStarted, onOpenAuth, onSelectFeature,
               <div className="flex flex-wrap items-center gap-3.5 pt-1">
                 <button
                   onClick={onGetStarted}
-                  className="btn-shimmer px-7 py-3.5 bg-gradient-to-r from-legal-blue to-blue-700 hover:from-blue-600 hover:to-blue-800 text-white font-bold text-sm rounded-2xl shadow-lg shadow-legal-blue/30 hover:shadow-blue-glow transition-all transform active:scale-95 flex items-center gap-2"
+                  className="btn-shimmer px-7 py-3.5 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-bold text-sm rounded-2xl shadow-lg transition-all transform active:scale-95 flex items-center gap-2"
                 >
-                  <Sparkles className="w-4 h-4 text-legal-gold" />
+                  <Sparkles className="w-4 h-4 text-amber-300" />
                   <span>Launch AI Assistant</span>
-                  <ArrowRight className="w-4 h-4 text-legal-gold" />
+                  <ArrowRight className="w-4 h-4 text-amber-300" />
                 </button>
 
                 <button

@@ -363,6 +363,34 @@ export default function CaseDetailModal({ selectedCase, isOpen, onClose, onCaseU
                 </div>
               </div>
 
+              {/* Layer 2.5: Assigned Advocate / Counsel */}
+              {selectedCase.assignedLawyer && (
+                <div className="p-4 bg-emerald-50 rounded-2xl border border-emerald-200 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <h4 className="text-xs font-bold text-emerald-950 uppercase tracking-wider flex items-center gap-1.5">
+                      <Scale className="w-3.5 h-3.5 text-emerald-600" />
+                      Assigned Legal Counsel
+                    </h4>
+                    <span className="px-2.5 py-0.5 bg-emerald-100 text-emerald-800 text-[10px] font-bold rounded-full border border-emerald-300">
+                      ✓ Formal Representation Active
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-3 bg-white p-3 rounded-xl border border-emerald-200">
+                    <div className="w-10 h-10 rounded-xl bg-[#0B1F33] text-legal-gold flex items-center justify-center font-bold text-sm shadow-sm">
+                      {selectedCase.assignedLawyer.fullName?.charAt(0) || 'A'}
+                    </div>
+                    <div>
+                      <p className="text-xs font-bold text-slate-900">
+                        {selectedCase.assignedLawyer.fullName || selectedCase.assignedLawyer.email || 'Advocate on Record'}
+                      </p>
+                      <p className="text-[11px] text-slate-500">
+                        {selectedCase.assignedLawyer.email} {selectedCase.assignedLawyer.phone ? `• ${selectedCase.assignedLawyer.phone}` : ''}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
               {/* Layer 3: Statutory Legal Basis & Charges */}
               {details && (
                 <div className="p-4 bg-slate-50 rounded-2xl border border-slate-200 space-y-2.5">

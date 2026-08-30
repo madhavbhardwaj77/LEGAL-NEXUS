@@ -65,11 +65,56 @@ const professionalProfileSchema = new mongoose.Schema(
       currentYear: { type: Number },
       studentIdNumber: { type: String, trim: true },
     },
+    avatar: {
+      type: String,
+      trim: true,
+    },
+    contactPhone: {
+      type: String,
+      trim: true,
+    },
+    contactEmail: {
+      type: String,
+      trim: true,
+    },
     education: [
       {
         degree: String,
         institution: String,
         year: Number,
+      }
+    ],
+    experiences: [
+      {
+        role: { type: String, trim: true, required: true },
+        organization: { type: String, trim: true, required: true },
+        location: { type: String, trim: true },
+        fromYear: { type: Number },
+        toYear: { type: Number },
+        isCurrent: { type: Boolean, default: false },
+        practiceArea: { type: String, trim: true },
+        description: { type: String, trim: true },
+        orderIndex: { type: Number, default: 0 },
+      }
+    ],
+    caseHistories: [
+      {
+        title: { type: String, trim: true, required: true },
+        caseType: { type: String, trim: true },
+        practiceArea: { type: String, trim: true },
+        court: { type: String, trim: true },
+        forum: { type: String, trim: true },
+        year: { type: Number },
+        description: { type: String, trim: true },
+        summary: { type: String, trim: true },
+        challenge: { type: String, trim: true },
+        strategy: { type: String, trim: true },
+        lawyerRole: { type: String, trim: true },
+        outcome: { type: String, trim: true },
+        isPublic: { type: Boolean, default: true },
+        anonymized: { type: Boolean, default: true },
+        clientPrivacyNote: { type: String, default: 'Client identity withheld for privacy.' },
+        caseNumberRef: { type: String, trim: true },
       }
     ],
     certifications: [

@@ -14,6 +14,11 @@ const lawyerMatchSchema = new mongoose.Schema(
       required: true,
       index: true,
     },
+    citizen: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+      index: true,
+    },
     matchScore: {
       type: Number,
       min: 0,
@@ -29,8 +34,8 @@ const lawyerMatchSchema = new mongoose.Schema(
     ],
     status: {
       type: String,
-      enum: ['SUGGESTED', 'SENT_TO_LAWYER', 'ACCEPTED', 'DECLINED', 'EXPIRED'],
-      default: 'SUGGESTED',
+      enum: ['SUGGESTED', 'PENDING', 'SENT_TO_LAWYER', 'ACCEPTED', 'REJECTED', 'DECLINED', 'EXPIRED'],
+      default: 'PENDING',
       index: true,
     },
     citizenViewed: {
@@ -39,6 +44,17 @@ const lawyerMatchSchema = new mongoose.Schema(
     },
     notes: {
       type: String,
+    },
+    requestMessage: {
+      type: String,
+      trim: true,
+    },
+    rejectionReason: {
+      type: String,
+      trim: true,
+    },
+    respondedAt: {
+      type: Date,
     },
   },
   {

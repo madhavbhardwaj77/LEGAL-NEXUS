@@ -13,6 +13,8 @@ import LegalResearchPortal from './components/LegalResearchPortal';
 import CaseStoryIntake from './components/CaseStoryIntake';
 import LegalDraftGenerator from './components/LegalDraftGenerator';
 import DocumentIntelligenceModal from './components/DocumentIntelligenceModal';
+import CaseComparator from './components/CaseComparator';
+import ResearchNotebook from './components/ResearchNotebook';
 import UserProfile from './components/UserProfile';
 import SettingsView from './components/SettingsView';
 import AdminDashboard from './components/AdminDashboard';
@@ -77,7 +79,6 @@ export default function App() {
       const res = await api.get('/auth/me');
       const authUser = res.data.data.user;
       setUser(authUser);
-
       const savedTab = localStorage.getItem('nyaya_active_tab');
       const hash = window.location.hash.replace('#', '');
       const candidateTab = hash || savedTab;
@@ -90,9 +91,10 @@ export default function App() {
           setActiveTab(candidateTab);
         }
       } else {
-        const defaultTab = authUser.role === 'ADMIN' ? 'admin' : 'cases';
+        const defaultTab = authUser.role === 'ADMIN' ? 'admin' : (authUser.role === 'LAWYER' ? 'lawyers' : 'cases');
         setActiveTab(defaultTab);
         localStorage.setItem('nyaya_active_tab', defaultTab);
+      }
       }
     } catch {
       localStorage.removeItem('nyaya_access_token');
@@ -137,17 +139,20 @@ export default function App() {
     const savedTab = localStorage.getItem('nyaya_active_tab');
     const targetTab = savedTab && savedTab !== 'login' && savedTab !== 'signup' && savedTab !== 'landing'
       ? savedTab
-      : (authUser.role === 'ADMIN' ? 'admin' : 'cases');
+      : (authUser.role === 'ADMIN' ? 'admin' : (authUser.role === 'LAWYER' ? 'lawyers' : 'cases'));
 
     if (authUser.role === 'ADMIN') {
       setActiveTab('admin');
       localStorage.setItem('nyaya_active_tab', 'admin');
       window.location.hash = 'admin';
     } else {
-      loadCases();
+      if (authUser.role !== 'LAWYER') {
+        loadCases();
+      }
       setActiveTab(targetTab);
       localStorage.setItem('nyaya_active_tab', targetTab);
       window.location.hash = targetTab;
+    }
     }
   };
 
@@ -173,6 +178,12 @@ export default function App() {
     if (!user) {
       localStorage.setItem('nyaya_active_tab', tab);
       setActiveTab('login');
+      return;
+    }
+
+    // Disallow Case Management and AI Legal Assistant for LAWYER role
+    if (user.role === 'LAWYER' && (tab === 'cases' || tab === 'intake')) {
+      setActiveTab('lawyers');
       return;
     }
 
@@ -216,18 +227,19 @@ export default function App() {
         {isMobileMenuOpen && !isPublicView && user && (
           <div className="md:hidden bg-[#0B1F33] text-white border-b border-slate-800 px-4 py-4 space-y-1.5 absolute w-full left-0 top-0 z-40 shadow-2xl animate-in fade-in duration-200">
             {[
-              { id: 'cases', label: 'Case Management', icon: LayoutDashboard },
-              { id: 'intake', label: 'AI Legal Assistant', icon: Bot },
+              { id: 'cases', label: 'Case Management', icon: LayoutDashboard, hideForRoles: ['LAWYER'] },
+              { id: 'intake', label: 'AI Legal Assistant', icon: Bot, hideForRoles: ['LAWYER'] },
+              { id: 'lawyers', label: user.role === 'LAWYER' ? 'Advocate Hub & Requests' : 'Advocate Directory', icon: UserCheck },
               { id: 'documents', label: 'Document Intelligence', icon: FileText },
               { id: 'drafts', label: 'Smart Legal Drafting', icon: PenTool },
               { id: 'research', label: 'Statutory Research', icon: BookOpen },
-              { id: 'lawyers', label: 'Advocate Directory', icon: UserCheck },
-              { id: 'profile', label: 'Profile & Network', icon: Users, requireAuth: true },
+              { id: 'profile', label: user.role === 'LAWYER' ? 'Profile & Case History' : 'Profile & Network', icon: Users, requireAuth: true },
               { id: 'settings', label: 'Platform Settings', icon: Settings },
               { id: 'system', label: 'System Status', icon: Activity, requireRole: ['LAWYER', 'ADMIN', 'LAW_STUDENT'] },
             ].map((item) => {
               if (item.requireAuth && !user) return null;
               if (item.requireRole && (!user || !item.requireRole.includes(user.role))) return null;
+              if (item.hideForRoles && user && item.hideForRoles.includes(user.role)) return null;
               const Icon = item.icon;
               const active = activeTab === item.id;
               return (
@@ -256,7 +268,14 @@ export default function App() {
           {/* PUBLIC ROUTES */}
           {activeTab === 'landing' && (
             <LandingPage
-              onGetStarted={() => { if (user) setActiveTab('intake'); else setActiveTab('login'); }}
+              onGetStarted={() => {
+                if (user) {
+                  if (user.role === 'LAWYER') setActiveTab('lawyers');
+                  else setActiveTab('intake');
+                } else {
+                  setActiveTab('login');
+                }
+              }}
               onOpenAuth={() => setActiveTab('login')}
               onSelectFeature={(feat) => handleSelectTab(feat)}
               user={user}
@@ -328,6 +347,38 @@ export default function App() {
           {activeTab === 'lawyers' && (
             user ? (
               <LawyerDirectory user={user} onOpenAuth={() => setActiveTab('login')} />
+            ) : (
+              <LoginPage onAuthSuccess={handleAuthSuccess} onNavigateToSignup={() => setActiveTab('signup')} />
+            )
+          )}
+
+          {activeTab === 'comparator' && (
+            user ? (
+              user.role === 'LAWYER' ? (
+                <CaseComparator
+                  user={user}
+                  onOpenAuth={() => setActiveTab('login')}
+                  onSaveToNotebook={() => setActiveTab('notebook')}
+                />
+              ) : (
+                <LawyerDirectory user={user} onOpenAuth={() => setActiveTab('login')} />
+              )
+            ) : (
+              <LoginPage onAuthSuccess={handleAuthSuccess} onNavigateToSignup={() => setActiveTab('signup')} />
+            )
+          )}
+
+          {activeTab === 'notebook' && (
+            user ? (
+              user.role === 'LAWYER' ? (
+                <ResearchNotebook
+                  user={user}
+                  onOpenAuth={() => setActiveTab('login')}
+                  onSelectTab={handleSelectTab}
+                />
+              ) : (
+                <LawyerDirectory user={user} onOpenAuth={() => setActiveTab('login')} />
+              )
             ) : (
               <LoginPage onAuthSuccess={handleAuthSuccess} onNavigateToSignup={() => setActiveTab('signup')} />
             )

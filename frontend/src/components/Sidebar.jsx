@@ -14,7 +14,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Sparkles,
-  ShieldCheck,
+
 } from 'lucide-react';
 
 export default function Sidebar({
@@ -26,34 +26,14 @@ export default function Sidebar({
   collapsed = false,
   onToggleCollapse,
 }) {
-  const isAdmin = user?.role === 'ADMIN';
-
-  const adminWorkspaceItems = [
-    { id: 'admin',     label: 'Admin Command Center', shortLabel: 'Admin',   icon: ShieldCheck,     badge: 'Console', highlight: true },
-    { id: 'lawyers',   label: 'Advocate Directory',   shortLabel: 'Lawyers', icon: UserCheck,       badge: 'Verified' },
-    { id: 'cases',     label: 'Case Overview',        shortLabel: 'Cases',   icon: LayoutDashboard, badge: null },
-    { id: 'documents', label: 'Document Intelligence',shortLabel: 'Doc AI',  icon: FileText,        badge: 'Audit' },
-    { id: 'research',  label: 'Statutory Research',   shortLabel: 'Research',icon: BookOpen,        badge: 'RAG' },
-  ];
-
-  const adminSecondaryItems = [
-    { id: 'system',   label: 'System Status',      shortLabel: 'System',   icon: Activity, requireRole: ['ADMIN'] },
-    { id: 'settings', label: 'Platform Settings',  shortLabel: 'Settings', icon: Settings },
-  ];
-
-  const mainWorkspaceItems = isAdmin ? adminWorkspaceItems : [
-    { id: 'cases',     label: 'Case Management',     shortLabel: 'Cases',    icon: LayoutDashboard, badge: null },
-    { id: 'intake',    label: 'AI Legal Assistant',   shortLabel: 'AI Chat',  icon: Bot,             badge: 'Agentic', highlight: true },
-    { id: 'documents', label: 'Document Intelligence',shortLabel: 'Doc AI',   icon: FileText,        badge: 'Audit' },
-    { id: 'drafts',    label: 'Smart Legal Drafting', shortLabel: 'Drafting', icon: PenTool,         badge: '7 Forms' },
-    { id: 'research',  label: 'Statutory Research',   shortLabel: 'Research', icon: BookOpen,        badge: 'RAG' },
-    { id: 'lawyers',   label: 'Advocate Directory',   shortLabel: 'Lawyers',  icon: UserCheck,       badge: 'Verified' },
-  ];
-
-  const secondaryItems = isAdmin ? adminSecondaryItems : [
-    { id: 'profile',  label: 'Profile & Network',       shortLabel: 'Profile',  icon: Users,        requireAuth: true },
-    { id: 'settings', label: 'Platform Settings',        shortLabel: 'Settings', icon: Settings },
-    { id: 'system',   label: 'System Status',            shortLabel: 'System',   icon: Activity,     requireRole: ['LAWYER', 'ADMIN', 'LAW_STUDENT'] },
+      { id: 'cases', label: 'Case Management', icon: LayoutDashboard, role: 'all' },
+      { id: 'intake', label: 'Case Story Intake', icon: Bot, role: 'CITIZEN' },
+      { id: 'documents', label: 'Document Intelligence', icon: FileText, role: 'all' },
+      { id: 'drafts', label: 'Legal Drafts Generator', icon: PenTool, role: 'all' },
+      { id: 'comparator', label: 'Case Comparator', icon: GitCompare, role: 'LAWYER' },
+      { id: 'notebook', label: 'Advocate Notebook', icon: BookOpen, role: 'LAWYER' },
+      { id: 'research', label: 'Legal Research Portal', icon: Sparkles, role: 'all' },
+      { id: 'lawyers', label: 'Advocate Directory', icon: Scale, role: 'all' },
   ];
 
   // Role → gradient for avatar
@@ -73,9 +53,9 @@ export default function Sidebar({
         key={item.id}
         onClick={() => onSelectTab(item.id)}
         title={collapsed ? item.label : undefined}
-        className={`sidebar-nav-item w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold transition-all duration-150 relative group ${
+        className={`sidebar-nav-item w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold transition-all duration-150 relative group cursor-pointer ${
           active
-            ? 'bg-gradient-to-r from-legal-blue/90 to-blue-700/80 text-white shadow-nav-active font-bold'
+            ? 'bg-blue-600 text-white shadow-md font-bold'
             : 'text-slate-400 hover:bg-slate-800/60 hover:text-slate-100'
         }`}
       >
@@ -236,9 +216,9 @@ export default function Sidebar({
         ) : (
           <button
             onClick={onOpenAuth}
-            className={`w-full py-2.5 px-3 btn-shimmer bg-gradient-to-r from-legal-blue to-blue-700 hover:from-blue-600 hover:to-blue-800 text-white font-bold text-xs rounded-xl shadow-md transition flex items-center justify-center gap-2`}
+            className={`w-full py-2.5 px-3 btn-shimmer bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl shadow-md transition flex items-center justify-center gap-2 cursor-pointer`}
           >
-            <Sparkles className="w-3.5 h-3.5 text-legal-gold shrink-0" />
+            <Sparkles className="w-3.5 h-3.5 text-amber-300 shrink-0" />
             {!collapsed && <span>Sign In / Register</span>}
           </button>
         )}

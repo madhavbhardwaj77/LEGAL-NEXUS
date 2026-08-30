@@ -438,9 +438,11 @@ export default function CaseStoryIntake({ user, onOpenAuth, onCaseCreated }) {
               <button
                 onClick={() => handleSendMessage()}
                 disabled={loading || !inputStory.trim()}
-                className="absolute right-2.5 bottom-3 p-2 bg-legal-blue hover:bg-blue-700 disabled:bg-slate-300 text-white rounded-xl transition shadow-md"
+                title="Send narrative"
+                className="absolute right-2.5 bottom-2.5 px-3.5 py-2 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 disabled:bg-slate-200 disabled:text-slate-400 disabled:shadow-none text-white font-bold rounded-xl transition-all shadow-md flex items-center gap-1.5 cursor-pointer disabled:cursor-not-allowed"
               >
-                <Send className="w-4 h-4 text-legal-gold" />
+                <Send className="w-4 h-4 text-white" />
+                <span className="text-xs hidden sm:inline">Send</span>
               </button>
             </div>
 
@@ -585,13 +587,13 @@ export default function CaseStoryIntake({ user, onOpenAuth, onCaseCreated }) {
                 <button
                   onClick={handleCreateFormalCase}
                   disabled={creatingCase || !!successNotice}
-                  className="w-full py-3 bg-gradient-to-r from-legal-blue to-blue-700 hover:from-blue-600 hover:to-blue-800 disabled:opacity-50 text-white font-bold text-xs rounded-2xl shadow-md transition flex items-center justify-center gap-2"
+                  className="w-full py-3 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 disabled:bg-slate-300 disabled:text-slate-500 disabled:opacity-50 text-white font-bold text-xs rounded-2xl shadow-md transition flex items-center justify-center gap-2 cursor-pointer"
                 >
                   {creatingCase ? (
                     <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
                   ) : (
                     <>
-                      <FolderPlus className="w-4 h-4 text-legal-gold" />
+                      <FolderPlus className="w-4 h-4 text-amber-300" />
                       <span>Save & Create Formal Case Record</span>
                     </>
                   )}
@@ -666,10 +668,10 @@ export default function CaseStoryIntake({ user, onOpenAuth, onCaseCreated }) {
                 className={`w-14 h-14 rounded-full flex items-center justify-center text-white shadow-lg transition-all duration-200 ${
                   isRecording
                     ? 'bg-red-600 ring-4 ring-red-200 scale-110'
-                    : 'bg-gradient-to-r from-legal-blue to-blue-700 hover:scale-105 shadow-legal-blue/30'
+                    : 'bg-blue-600 hover:bg-blue-700 hover:scale-105 shadow-md'
                 }`}
               >
-                {isRecording ? <MicOff className="w-5 h-5 animate-pulse" /> : <Mic className="w-5 h-5 text-legal-gold" />}
+                {isRecording ? <MicOff className="w-5 h-5 animate-pulse text-white" /> : <Mic className="w-5 h-5 text-white" />}
               </button>
               <span className="text-[11px] font-bold text-slate-700">
                 {isRecording ? 'Listening... Speak your case now' : 'Click to Speak'}
@@ -678,16 +680,16 @@ export default function CaseStoryIntake({ user, onOpenAuth, onCaseCreated }) {
 
             {voiceTranscript && (
               <div className="p-3 bg-blue-50 text-slate-800 rounded-xl border border-blue-100 text-xs space-y-2">
-                <span className="text-[10px] font-bold text-legal-blue uppercase block">Transcript:</span>
+                <span className="text-[10px] font-bold text-blue-700 uppercase block">Transcript:</span>
                 <p className="italic font-medium">"{voiceTranscript}"</p>
                 <button
                   onClick={() => {
                     handleSendMessage(voiceTranscript);
                     setIsVoiceOpen(false);
                   }}
-                  className="w-full py-2 bg-legal-blue text-white rounded-xl text-xs font-bold shadow transition flex items-center justify-center gap-1"
+                  className="w-full py-2 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white rounded-xl text-xs font-bold shadow-md transition flex items-center justify-center gap-1.5"
                 >
-                  <Send className="w-3.5 h-3.5" />
+                  <Send className="w-3.5 h-3.5 text-white" />
                   <span>Send to AI Assistant</span>
                 </button>
               </div>
@@ -698,14 +700,11 @@ export default function CaseStoryIntake({ user, onOpenAuth, onCaseCreated }) {
         {/* Floating Animated Mic Button */}
         <button
           onClick={() => setIsVoiceOpen(!isVoiceOpen)}
-          className="relative group p-4 bg-gradient-to-r from-legal-blue to-blue-700 hover:from-blue-600 hover:to-blue-800 text-white rounded-full shadow-2xl hover:shadow-legal-blue/50 transition-all duration-300 transform hover:scale-110 active:scale-95 flex items-center justify-center animate-bounce hover:animate-none ring-4 ring-blue-400/30"
+          className="relative group p-4 bg-blue-600 hover:bg-blue-700 text-white rounded-full shadow-2xl transition-all duration-300 transform hover:scale-110 active:scale-95 flex items-center justify-center ring-4 ring-blue-400/30 cursor-pointer"
           title="Speak to Legal Assistant (Voice)"
         >
-          {/* Animated ripple glow */}
-          <span className="absolute -inset-1 rounded-full bg-gradient-to-r from-legal-gold to-sky-400 opacity-75 blur-sm group-hover:opacity-100 transition animate-pulse pointer-events-none"></span>
-
-          <span className="relative flex items-center gap-2 text-xs font-bold">
-            <Mic className="w-6 h-6 text-legal-gold" />
+          <span className="relative flex items-center gap-2 text-xs font-bold text-white">
+            <Mic className="w-6 h-6 text-white" />
             <span className="hidden sm:inline-block pr-1">Speak Case</span>
           </span>
         </button>

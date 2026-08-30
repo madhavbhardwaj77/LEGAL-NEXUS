@@ -229,7 +229,7 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess }) {
                     <button
                       type="submit"
                       disabled={loading}
-                      className="w-full py-2.5 bg-legal-blue hover:bg-blue-700 text-white font-bold text-xs rounded-xl shadow transition flex items-center justify-center gap-2"
+                      className="w-full py-2.5 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-bold text-xs rounded-xl shadow-md transition flex items-center justify-center gap-2 cursor-pointer disabled:bg-slate-300 disabled:text-slate-500"
                     >
                       {loading ? (
                         <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
@@ -383,19 +383,19 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess }) {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full py-2.5 px-4 bg-gradient-to-r from-legal-blue to-blue-700 hover:from-blue-600 hover:to-blue-800 text-white rounded-xl font-bold text-xs shadow-md shadow-legal-blue/20 transition duration-150 disabled:opacity-50 flex items-center justify-center gap-2 mt-2"
+                  className="w-full py-3 px-4 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white rounded-xl font-bold text-xs shadow-md transition duration-150 disabled:bg-slate-300 disabled:text-slate-500 disabled:opacity-50 flex items-center justify-center gap-2 mt-2 cursor-pointer"
                 >
                   {loading ? (
                     <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
                   ) : authMode === 'signup' ? (
                     <>
                       <span>Complete Registration</span>
-                      <ArrowRight className="w-4 h-4 text-legal-gold" />
+                      <ArrowRight className="w-4 h-4 text-white" />
                     </>
                   ) : (
                     <>
                       <span>Sign In to Platform</span>
-                      <ArrowRight className="w-4 h-4 text-legal-gold" />
+                      <ArrowRight className="w-4 h-4 text-white" />
                     </>
                   )}
                 </button>

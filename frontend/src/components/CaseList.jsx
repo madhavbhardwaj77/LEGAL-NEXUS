@@ -191,9 +191,9 @@ export default function CaseList({ cases = [], loading, onSelectCase, onNewCase,
         {user && (
           <button
             onClick={onNewCase}
-            className="btn-shimmer inline-flex items-center justify-center gap-2 px-5 py-3 bg-gradient-to-r from-legal-blue to-blue-700 hover:from-blue-600 hover:to-blue-800 text-white font-bold text-xs rounded-2xl shadow-md shadow-legal-blue/20 transition shrink-0"
+            className="btn-shimmer inline-flex items-center justify-center gap-2 px-5 py-3 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-bold text-xs rounded-2xl shadow-md transition shrink-0"
           >
-            <PlusCircle className="w-4 h-4 text-legal-gold" />
+            <PlusCircle className="w-4 h-4 text-amber-300" />
             <span>File New Legal Case</span>
           </button>
         )}
@@ -418,6 +418,19 @@ export default function CaseList({ cases = [], loading, onSelectCase, onNewCase,
                     <span className="text-slate-400 font-medium">Disputed Quantum:</span>
                     <span className="font-extrabold text-slate-900 font-mono">
                       ₹{Number(c.financialDetails.disputedAmount).toLocaleString('en-IN')}
+                    </span>
+                  </div>
+                )}
+
+                {/* Assigned Advocate Pill */}
+                {c.assignedLawyer && (
+                  <div className="p-2.5 bg-emerald-50 rounded-xl border border-emerald-200 flex items-center justify-between text-[11px]">
+                    <span className="font-semibold text-emerald-900 flex items-center gap-1.5">
+                      <Scale className="w-3.5 h-3.5 text-emerald-600" />
+                      Assigned Counsel: {c.assignedLawyer.fullName || c.assignedLawyer.email || 'Verified Advocate'}
+                    </span>
+                    <span className="text-[10px] font-bold text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded-full">
+                      Active
                     </span>
                   </div>
                 )}
