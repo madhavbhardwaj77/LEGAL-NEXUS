@@ -18,22 +18,6 @@ import ResearchNotebook from './components/ResearchNotebook';
 import UserProfile from './components/UserProfile';
 import SettingsView from './components/SettingsView';
 import AdminDashboard from './components/AdminDashboard';
-import {
-  LayoutDashboard,
-  Bot,
-  FileText,
-  PenTool,
-  BookOpen,
-  UserCheck,
-  Users,
-  Activity,
-  Settings,
-  Scale,
-  LogOut,
-  Sparkles,
-  ShieldCheck,
-  ChevronRight,
-} from 'lucide-react';
 import api from './services/api';
 
 export default function App() {
@@ -141,16 +125,12 @@ export default function App() {
       : (authUser.role === 'ADMIN' ? 'admin' : (authUser.role === 'LAWYER' ? 'lawyers' : 'cases'));
 
     if (authUser.role === 'ADMIN') {
-      setActiveTab('admin');
-      localStorage.setItem('nyaya_active_tab', 'admin');
-      window.location.hash = 'admin';
+      handleSelectTab('admin');
     } else {
       if (authUser.role !== 'LAWYER') {
         loadCases();
       }
-      setActiveTab(targetTab);
-      localStorage.setItem('nyaya_active_tab', targetTab);
-      window.location.hash = targetTab;
+      handleSelectTab(targetTab);
     }
   };
 
@@ -166,51 +146,51 @@ export default function App() {
     window.location.hash = tabId;
   };
 
+  const isAuthenticated = Boolean(user && localStorage.getItem('nyaya_access_token'));
+
   return (
     <div className="min-h-screen bg-[#070D14] text-slate-100 flex flex-col font-sans selection:bg-legal-blue selection:text-white">
       {/* Top Navbar */}
       <Navbar
         user={user}
         activeTab={activeTab}
-        setActiveTab={handleSelectTab}
+        onSelectTab={handleSelectTab}
         onLogout={handleLogout}
-        onOpenNewCase={() => setIsNewCaseOpen(true)}
-        isMobileMenuOpen={isMobileMenuOpen}
-        setIsMobileMenuOpen={setIsMobileMenuOpen}
-        healthStatus={healthStatus}
+        onOpenAuth={() => handleSelectTab('login')}
+        isMobileOpen={isMobileMenuOpen}
+        onToggleMobileMenu={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+        showToggle={Boolean(user)}
       />
 
       {/* Main Layout Area */}
       <div className="flex-1 flex overflow-hidden relative">
-        {user && activeTab !== 'landing' && activeTab !== 'login' && activeTab !== 'signup' && (
+        {isAuthenticated && activeTab !== 'landing' && activeTab !== 'login' && activeTab !== 'signup' && (
           <Sidebar
             user={user}
             activeTab={activeTab}
-            setActiveTab={handleSelectTab}
-            isCollapsed={isSidebarCollapsed}
-            setIsCollapsed={setIsSidebarCollapsed}
-            isMobileOpen={isMobileMenuOpen}
-            setIsMobileOpen={setIsMobileMenuOpen}
-            onOpenNewCase={() => setIsNewCaseOpen(true)}
-            caseCount={cases.length}
+            onSelectTab={handleSelectTab}
+            collapsed={isSidebarCollapsed}
+            onToggleCollapse={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+            onLogout={handleLogout}
+            onOpenAuth={() => handleSelectTab('login')}
           />
         )}
 
         <main className="flex-1 overflow-y-auto bg-slate-900/50 p-4 sm:p-6 lg:p-8">
           {activeTab === 'landing' && (
             <LandingPage
+              user={user}
               onGetStarted={() => handleSelectTab(user ? 'cases' : 'signup')}
-              onLogin={() => handleSelectTab('login')}
-              onFindLawyers={() => handleSelectTab('lawyers')}
-              onResearch={() => handleSelectTab('research')}
+              onOpenAuth={() => handleSelectTab('login')}
+              onSelectFeature={(feat) => handleSelectTab(feat)}
             />
           )}
 
           {activeTab === 'login' && (
             <div className="max-w-md mx-auto py-12">
               <LoginPage
-                onSuccess={handleAuthSuccess}
-                onSwitchToSignup={() => handleSelectTab('signup')}
+                onAuthSuccess={handleAuthSuccess}
+                onNavigateToSignup={() => handleSelectTab('signup')}
               />
             </div>
           )}
@@ -218,14 +198,15 @@ export default function App() {
           {activeTab === 'signup' && (
             <div className="max-w-md mx-auto py-12">
               <SignupPage
-                onSuccess={handleAuthSuccess}
-                onSwitchToLogin={() => handleSelectTab('login')}
+                onAuthSuccess={handleAuthSuccess}
+                onNavigateToLogin={() => handleSelectTab('login')}
               />
             </div>
           )}
 
           {activeTab === 'cases' && (
             <CaseList
+              user={user}
               cases={cases}
               loading={loadingCases}
               onSelectCase={(c) => setSelectedCase(c)}
@@ -237,42 +218,46 @@ export default function App() {
           {activeTab === 'intake' && (
             <CaseStoryIntake
               user={user}
+              onOpenAuth={() => handleSelectTab('login')}
               onCaseCreated={handleCaseCreated}
-              onViewCases={() => handleSelectTab('cases')}
             />
           )}
 
           {activeTab === 'documents' && (
             <DocumentIntelligenceModal
-              isOpen={true}
-              onClose={() => handleSelectTab('cases')}
-              cases={cases}
+              user={user}
+              onOpenAuth={() => handleSelectTab('login')}
             />
           )}
 
           {activeTab === 'drafts' && (
             <LegalDraftGenerator
               user={user}
-              cases={cases}
+              onOpenAuth={() => handleSelectTab('login')}
             />
           )}
 
           {activeTab === 'comparator' && (
             <CaseComparator
               user={user}
-              cases={cases}
+              onOpenAuth={() => handleSelectTab('login')}
+              onSaveToNotebook={() => handleSelectTab('notebook')}
             />
           )}
 
           {activeTab === 'notebook' && (
             <ResearchNotebook
               user={user}
+              onOpenAuth={() => handleSelectTab('login')}
+              onSelectTab={handleSelectTab}
             />
           )}
 
           {activeTab === 'research' && (
             <LegalResearchPortal
               user={user}
+              onOpenAuth={() => handleSelectTab('login')}
+              onNavigateToComparator={() => handleSelectTab('comparator')}
             />
           )}
 
@@ -293,6 +278,7 @@ export default function App() {
           {activeTab === 'settings' && (
             <SettingsView
               user={user}
+              onSelectTab={handleSelectTab}
             />
           )}
 
