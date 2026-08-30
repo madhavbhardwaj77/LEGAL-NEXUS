@@ -6,6 +6,7 @@ const {
   listCaseStudies,
   searchLawyersDirectory,
   getLawyerDetails,
+  extractCaseProfileFromDocument,
 } = require('../controllers/lawyerController');
 const { authenticateJWT, optionalAuth } = require('../middleware/auth');
 const { validate } = require('../middleware/validate');
@@ -14,7 +15,10 @@ const { auditLogMiddleware } = require('../middleware/auditLog');
 const router = express.Router();
 
 // POST /api/lawyers/match (Multi-factor weighted lawyer matching)
-router.post('/match', authenticateJWT, matchLawyersForCase);
+router.post('/match', optionalAuth, matchLawyersForCase);
+
+// POST /api/lawyers/extract-case-profile (Auto-extract case parameters from uploaded PDF / doc)
+router.post('/extract-case-profile', optionalAuth, extractCaseProfileFromDocument);
 
 // POST /api/lawyers/case-studies (Publish anonymized case study)
 router.post(

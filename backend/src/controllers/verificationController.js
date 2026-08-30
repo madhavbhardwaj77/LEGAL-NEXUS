@@ -46,10 +46,15 @@ const submitVerificationRequest = async (req, res, next) => {
       status: 'PENDING',
     });
 
-    // Update profile status
+    // Update profile status & bar details
     await ProfessionalProfile.findOneAndUpdate(
       { user: req.user._id },
-      { verificationStatus: 'PENDING' }
+      {
+        verificationStatus: 'PENDING',
+        ...(barRegistrationNumber && { 'barCouncilRegistration.registrationNumber': barRegistrationNumber }),
+        ...(stateBarCouncil && { 'barCouncilRegistration.stateBarCouncil': stateBarCouncil }),
+        ...(enrollmentYear && { 'barCouncilRegistration.yearOfEnrollment': enrollmentYear }),
+      }
     );
 
     return sendSuccess(res, verification, 'Verification request submitted successfully', 201);
@@ -63,7 +68,32 @@ const submitVerificationRequest = async (req, res, next) => {
  */
 const listVerificationRequests = async (req, res, next) => {
   try {
-    const { status = 'PENDING', page = 1, limit = 20 } = req.query;
+    const { status = 'PENDING', page = 1, limit = 50 } = req.query;
+
+    // Auto-sync: Ensure every unverified lawyer with PENDING status has a VerificationRequest
+    const pendingProfiles = await ProfessionalProfile.find({
+      verificationStatus: 'PENDING',
+    }).populate('user');
+
+    for (const prof of pendingProfiles) {
+      if (prof.user) {
+        const existingReq = await VerificationRequest.findOne({ professional: prof.user._id });
+        if (!existingReq) {
+          await VerificationRequest.create({
+            professional: prof.user._id,
+            requestedRole: prof.professionalRole || 'LAWYER',
+            submittedData: {
+              fullName: prof.fullName || prof.user.email?.split('@')[0],
+              barRegistrationNumber: prof.barCouncilRegistration?.registrationNumber || 'Pending Submission',
+              stateBarCouncil: prof.barCouncilRegistration?.stateBarCouncil || prof.location?.state || 'State Bar Council',
+              enrollmentYear: prof.barCouncilRegistration?.yearOfEnrollment || (prof.experienceYears ? new Date().getFullYear() - prof.experienceYears : undefined),
+            },
+            status: 'PENDING',
+          });
+        }
+      }
+    }
+
     const filter = {};
     if (status) filter.status = status;
 
@@ -97,8 +127,8 @@ const reviewVerificationRequest = async (req, res, next) => {
     const { id } = req.params;
     const { status, reviewNotes, rejectionReason } = req.body;
 
-    if (!['VERIFIED', 'REJECTED'].includes(status)) {
-      return sendError(res, 'Status must be either VERIFIED or REJECTED', 400);
+    if (!['IN_REVIEW', 'VERIFIED', 'REJECTED'].includes(status)) {
+      return sendError(res, 'Status must be IN_REVIEW, VERIFIED, or REJECTED', 400);
     }
 
     const request = await VerificationRequest.findById(id);
@@ -115,7 +145,9 @@ const reviewVerificationRequest = async (req, res, next) => {
 
     // Update user & profile
     const isApproved = status === 'VERIFIED';
-    await User.findByIdAndUpdate(request.professional, { isVerified: isApproved });
+    if (status === 'VERIFIED' || status === 'REJECTED') {
+      await User.findByIdAndUpdate(request.professional, { isVerified: isApproved });
+    }
     
     await ProfessionalProfile.findOneAndUpdate(
       { user: request.professional },
@@ -132,9 +164,11 @@ const reviewVerificationRequest = async (req, res, next) => {
       recipient: request.professional,
       sender: req.user._id,
       type: 'VERIFICATION_STATUS_CHANGED',
-      title: `Verification Request ${status}`,
+      title: `Verification Request ${status.replace('_', ' ')}`,
       message: isApproved
         ? 'Congratulations! Your Bar Council / Professional verification has been approved.'
+        : status === 'IN_REVIEW'
+        ? 'Your Bar ID verification request is now under active administrative review.'
         : `Your verification request was rejected: ${rejectionReason || 'Please check submitted documents.'}`,
     });
 
@@ -144,8 +178,30 @@ const reviewVerificationRequest = async (req, res, next) => {
   }
 };
 
+/**
+ * GET /api/verification/my-status
+ * Lawyer checks their own verification status
+ */
+const getMyVerificationStatus = async (req, res, next) => {
+  try {
+    const [request, profile] = await Promise.all([
+      VerificationRequest.findOne({ professional: req.user._id }).sort({ createdAt: -1 }),
+      ProfessionalProfile.findOne({ user: req.user._id }),
+    ]);
+
+    return sendSuccess(res, {
+      verificationStatus: profile?.verificationStatus || 'PENDING',
+      barCouncilRegistration: profile?.barCouncilRegistration || {},
+      latestRequest: request || null,
+    }, 'Verification status fetched');
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   submitVerificationRequest,
   listVerificationRequests,
   reviewVerificationRequest,
+  getMyVerificationStatus,
 };

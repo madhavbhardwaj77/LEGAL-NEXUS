@@ -34,6 +34,7 @@ export default function Navbar({
       case 'profile':   return 'User Profile & Network Hub';
       case 'settings':  return 'Platform Settings';
       case 'system':    return 'System Infrastructure Monitor';
+      case 'admin':     return 'Super Admin Command Center';
       default:          return 'Legal Intelligence Platform';
     }
   };

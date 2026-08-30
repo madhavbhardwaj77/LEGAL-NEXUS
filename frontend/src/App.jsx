@@ -15,6 +15,7 @@ import LegalDraftGenerator from './components/LegalDraftGenerator';
 import DocumentIntelligenceModal from './components/DocumentIntelligenceModal';
 import UserProfile from './components/UserProfile';
 import SettingsView from './components/SettingsView';
+import AdminDashboard from './components/AdminDashboard';
 import {
   LayoutDashboard,
   Bot,
@@ -34,7 +35,21 @@ import {
 import api from './services/api';
 
 export default function App() {
-  const [activeTab, setActiveTab] = useState('landing'); // landing | login | signup | cases | intake | documents | drafts | research | lawyers | profile | settings | system
+  const getInitialTab = () => {
+    const hash = window.location.hash.replace('#', '');
+    const saved = localStorage.getItem('nyaya_active_tab');
+    const token = localStorage.getItem('nyaya_access_token');
+    
+    if (hash && hash !== 'landing' && hash !== 'login' && hash !== 'signup') {
+      return token ? hash : 'login';
+    }
+    if (saved && saved !== 'landing' && saved !== 'login' && saved !== 'signup') {
+      return token ? saved : 'landing';
+    }
+    return token ? 'cases' : 'landing';
+  };
+
+  const [activeTab, setActiveTab] = useState(getInitialTab); // landing | login | signup | cases | intake | documents | drafts | research | lawyers | profile | settings | system | admin
   const [user, setUser] = useState(null);
   const [isNewCaseOpen, setIsNewCaseOpen] = useState(false);
   const [selectedCase, setSelectedCase] = useState(null);
@@ -60,13 +75,29 @@ export default function App() {
     if (!token) return;
     try {
       const res = await api.get('/auth/me');
-      setUser(res.data.data.user);
-      if (activeTab === 'landing' || activeTab === 'login' || activeTab === 'signup') {
-        setActiveTab('cases');
+      const authUser = res.data.data.user;
+      setUser(authUser);
+
+      const savedTab = localStorage.getItem('nyaya_active_tab');
+      const hash = window.location.hash.replace('#', '');
+      const candidateTab = hash || savedTab;
+
+      if (candidateTab && candidateTab !== 'landing' && candidateTab !== 'login' && candidateTab !== 'signup') {
+        if (candidateTab === 'admin' && authUser.role !== 'ADMIN') {
+          setActiveTab('cases');
+          localStorage.setItem('nyaya_active_tab', 'cases');
+        } else {
+          setActiveTab(candidateTab);
+        }
+      } else {
+        const defaultTab = authUser.role === 'ADMIN' ? 'admin' : 'cases';
+        setActiveTab(defaultTab);
+        localStorage.setItem('nyaya_active_tab', defaultTab);
       }
     } catch {
       localStorage.removeItem('nyaya_access_token');
       localStorage.removeItem('nyaya_refresh_token');
+      localStorage.removeItem('nyaya_active_tab');
     }
   };
 
@@ -94,6 +125,8 @@ export default function App() {
   const handleLogout = () => {
     localStorage.removeItem('nyaya_access_token');
     localStorage.removeItem('nyaya_refresh_token');
+    localStorage.removeItem('nyaya_active_tab');
+    window.location.hash = '';
     setUser(null);
     setCases([]);
     setActiveTab('landing');
@@ -101,14 +134,27 @@ export default function App() {
 
   const handleAuthSuccess = (authUser) => {
     setUser(authUser);
-    loadCases();
-    setActiveTab('cases');
+    const savedTab = localStorage.getItem('nyaya_active_tab');
+    const targetTab = savedTab && savedTab !== 'login' && savedTab !== 'signup' && savedTab !== 'landing'
+      ? savedTab
+      : (authUser.role === 'ADMIN' ? 'admin' : 'cases');
+
+    if (authUser.role === 'ADMIN') {
+      setActiveTab('admin');
+      localStorage.setItem('nyaya_active_tab', 'admin');
+      window.location.hash = 'admin';
+    } else {
+      loadCases();
+      setActiveTab(targetTab);
+      localStorage.setItem('nyaya_active_tab', targetTab);
+      window.location.hash = targetTab;
+    }
   };
 
   const handleCaseCreated = (newCase) => {
     setCases([newCase, ...cases]);
     setSelectedCase(newCase);
-    setActiveTab('cases');
+    handleSelectTab('cases');
   };
 
   const handleSelectTab = (tab) => {
@@ -116,16 +162,23 @@ export default function App() {
     // Public routes: landing, login, signup
     if (tab === 'landing' || tab === 'login' || tab === 'signup') {
       setActiveTab(tab);
+      if (tab === 'landing') {
+        localStorage.removeItem('nyaya_active_tab');
+        window.location.hash = '';
+      }
       return;
     }
 
     // Protected routes: redirect to login if not authenticated
     if (!user) {
+      localStorage.setItem('nyaya_active_tab', tab);
       setActiveTab('login');
       return;
     }
 
     setActiveTab(tab);
+    localStorage.setItem('nyaya_active_tab', tab);
+    window.location.hash = tab;
   };
 
   const isPublicView = activeTab === 'landing' || activeTab === 'login' || activeTab === 'signup';
@@ -299,6 +352,14 @@ export default function App() {
           {activeTab === 'system' && (
             user ? (
               <SystemHealth healthStatus={healthStatus} onRefresh={checkHealth} />
+            ) : (
+              <LoginPage onAuthSuccess={handleAuthSuccess} onNavigateToSignup={() => setActiveTab('signup')} />
+            )
+          )}
+
+          {activeTab === 'admin' && (
+            user?.role === 'ADMIN' ? (
+              <AdminDashboard user={user} onSelectTab={handleSelectTab} />
             ) : (
               <LoginPage onAuthSuccess={handleAuthSuccess} onNavigateToSignup={() => setActiveTab('signup')} />
             )

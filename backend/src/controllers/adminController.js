@@ -1,4 +1,4 @@
-const { User, Case, VerificationRequest, Document, AuditLog } = require('../models');
+const { User, Case, VerificationRequest, ProfessionalProfile, Document, AuditLog } = require('../models');
 const { sendSuccess } = require('../utils/apiResponse');
 
 /**
@@ -17,7 +17,7 @@ const getAdminStats = async (req, res, next) => {
       User.countDocuments(),
       Case.countDocuments(),
       Case.countDocuments({ status: { $in: ['OPEN', 'UNDER_REVIEW', 'IN_PROGRESS'] } }),
-      VerificationRequest.countDocuments({ status: 'PENDING' }),
+      ProfessionalProfile.countDocuments({ verificationStatus: 'PENDING' }),
       Document.countDocuments(),
       AuditLog.find().sort({ createdAt: -1 }).limit(10),
     ]);

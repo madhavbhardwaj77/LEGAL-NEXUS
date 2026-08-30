@@ -4,6 +4,7 @@ const {
   submitVerificationRequest,
   listVerificationRequests,
   reviewVerificationRequest,
+  getMyVerificationStatus,
 } = require('../controllers/verificationController');
 const { authenticateJWT } = require('../middleware/auth');
 const { authorizeRoles } = require('../middleware/rbac');
@@ -39,11 +40,18 @@ router.patch(
   '/requests/:id',
   authorizeRoles(ROLES.ADMIN),
   [
-    body('status').isIn(['VERIFIED', 'REJECTED']).withMessage('Status must be VERIFIED or REJECTED'),
+    body('status').isIn(['IN_REVIEW', 'VERIFIED', 'REJECTED']).withMessage('Status must be IN_REVIEW, VERIFIED, or REJECTED'),
     validate,
   ],
   auditLogMiddleware('VERIFICATION_REVIEWED', 'VERIFICATION'),
   reviewVerificationRequest
+);
+
+// Lawyer checks their own verification status
+router.get(
+  '/my-status',
+  authorizeRoles(...PROFESSIONAL_ROLES),
+  getMyVerificationStatus
 );
 
 module.exports = router;

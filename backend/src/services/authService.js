@@ -1,6 +1,6 @@
 const jwt = require('jsonwebtoken');
 const config = require('../config/env');
-const { User, CitizenProfile, ProfessionalProfile } = require('../models');
+const { User, CitizenProfile, ProfessionalProfile, VerificationRequest } = require('../models');
 const { ROLES, PROFESSIONAL_ROLES } = require('../config/roles');
 
 /**
@@ -88,6 +88,21 @@ const registerUser = async ({ email, password, role = ROLES.CITIZEN, phone, prof
       feeRange: profileData.feeRange || {},
       verificationStatus: 'PENDING',
     });
+
+    // Auto-create pending verification request if bar details were provided
+    if (role === ROLES.LAWYER && profileData.barCouncilRegistration?.registrationNumber) {
+      await VerificationRequest.create({
+        professional: user._id,
+        requestedRole: ROLES.LAWYER,
+        submittedData: {
+          fullName: profileData.fullName || email.split('@')[0],
+          barRegistrationNumber: profileData.barCouncilRegistration.registrationNumber,
+          stateBarCouncil: profileData.barCouncilRegistration.stateBarCouncil || '',
+          enrollmentYear: profileData.barCouncilRegistration.yearOfEnrollment,
+        },
+        status: 'PENDING',
+      });
+    }
   }
 
   const tokens = generateTokens(user);

@@ -50,6 +50,7 @@ export default function SignupPage({ onAuthSuccess, onNavigateToLogin }) {
   const [city, setCity]               = useState('');
   const [state, setState]             = useState('');
   const [barRegNumber, setBarReg]     = useState('');
+  const [stateBarCouncil, setStateBar] = useState('Bar Council of Delhi');
   const [institution, setInstitution] = useState('');
   const [showPassword, setShowPass]   = useState(false);
   const [loading, setLoading]         = useState(false);
@@ -68,7 +69,7 @@ export default function SignupPage({ onAuthSuccess, onNavigateToLogin }) {
         profileData: {
           fullName,
           location: { city, state },
-          ...(role === 'LAWYER'      && { barCouncilRegistration: { registrationNumber: barRegNumber } }),
+          ...(role === 'LAWYER'      && { barCouncilRegistration: { registrationNumber: barRegNumber, stateBarCouncil } }),
           ...(role === 'LAW_STUDENT' && { lawStudentDetails: { institution } }),
         },
       };
@@ -257,18 +258,34 @@ export default function SignupPage({ onAuthSuccess, onNavigateToLogin }) {
 
             {/* Role-specific fields */}
             {role === 'LAWYER' && (
-              <div className="p-4 bg-amber-50 border border-amber-200 rounded-2xl space-y-2 animate-in fade-in">
-                <label className="block text-xs font-bold text-amber-700 uppercase tracking-wider">
-                  Bar Council Enrolment Number
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={barRegNumber}
-                  onChange={(e) => setBarReg(e.target.value)}
-                  placeholder="e.g. D/1234/2020"
-                  className="w-full px-4 py-2.5 bg-white border border-amber-200 rounded-xl text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-amber-400"
-                />
+              <div className="p-4 bg-amber-50 border border-amber-200 rounded-2xl space-y-3 animate-in fade-in">
+                <div>
+                  <label className="block text-xs font-bold text-amber-700 uppercase tracking-wider mb-1.5">
+                    Bar Council Enrolment Number <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={barRegNumber}
+                    onChange={(e) => setBarReg(e.target.value)}
+                    placeholder="e.g. D/1234/2020"
+                    className="w-full px-4 py-2.5 bg-white border border-amber-200 rounded-xl text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-amber-400 font-mono"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-amber-700 uppercase tracking-wider mb-1.5">
+                    State Bar Council
+                  </label>
+                  <select
+                    value={stateBarCouncil}
+                    onChange={(e) => setStateBar(e.target.value)}
+                    className="w-full px-4 py-2.5 bg-white border border-amber-200 rounded-xl text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-amber-400 font-medium"
+                  >
+                    {['Bar Council of Delhi','Bar Council of Maharashtra & Goa','Bar Council of Uttar Pradesh','Bar Council of Karnataka','Bar Council of Tamil Nadu & Puducherry','Bar Council of Rajasthan','Bar Council of Gujarat','Bar Council of West Bengal','Bar Council of Andhra Pradesh','Bar Council of Telangana','Bar Council of Kerala','Bar Council of Punjab & Haryana','Bar Council of Madhya Pradesh','Bar Council of Bihar','Bar Council of Jharkhand','Bar Council of Odisha','Bar Council of Assam, Nagaland, Mizoram & Arunachal Pradesh','Bar Council of Himachal Pradesh','Bar Council of Chhattisgarh','Bar Council of Uttarakhand','Bar Council of Jammu & Kashmir'].map((bc) => (
+                      <option key={bc} value={bc}>{bc}</option>
+                    ))}
+                  </select>
+                </div>
               </div>
             )}
             {role === 'LAW_STUDENT' && (

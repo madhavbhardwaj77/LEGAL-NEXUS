@@ -40,11 +40,22 @@ export default function UserProfile({ user }) {
   const [institution, setInstitution] = useState('');
 
   // Networking state
-  const [networkingTab, setNetworkingTab] = useState('profile'); // profile | network
+  const [networkingTab, setNetworkingTab] = useState('profile'); // profile | network | verification
   const [networkUsers, setNetworkUsers] = useState([]);
   const [loadingNetwork, setLoadingNetwork] = useState(false);
   const [netSearch, setNetSearch] = useState('');
   const [connectedUsers, setConnectedUsers] = useState({});
+
+  // Verification state (Lawyer only)
+  const [verificationStatus, setVerificationStatus] = useState(null);
+  const [verificationLoading, setVerificationLoading] = useState(false);
+  const [verificationSubmitting, setVerificationSubmitting] = useState(false);
+  const [verificationToast, setVerificationToast] = useState(null);
+  const [barRegInput, setBarRegInput] = useState('');
+  const [stateBarCouncil, setStateBarCouncil] = useState('');
+  const [enrollmentYear, setEnrollmentYear] = useState('');
+  const [additionalNotes, setAdditionalNotes] = useState('');
+
 
   const isProfessional = user?.role === 'LAWYER' || user?.role === 'LAW_STUDENT';
 
@@ -79,7 +90,18 @@ export default function UserProfile({ user }) {
         setState(data.location?.state || '');
         setPracticeAreas(data.practiceAreas ? data.practiceAreas.join(', ') : '');
         setExperienceYears(data.experienceYears || 0);
-        setEducation(data.education ? data.education.join(', ') : '');
+        const educationString = Array.isArray(data.education)
+          ? data.education
+              .map((item) => {
+                if (typeof item === 'string') return item;
+                if (!item) return '';
+                const parts = [item.degree, item.institution].filter(Boolean);
+                return parts.join(' - ');
+              })
+              .filter(Boolean)
+              .join(', ')
+          : (typeof data.education === 'string' ? data.education : '');
+        setEducation(educationString);
         setBarRegNumber(data.barCouncilRegistration?.registrationNumber || '');
         setInstitution(data.lawStudentDetails?.institution || '');
       }
@@ -125,7 +147,11 @@ export default function UserProfile({ user }) {
       } else {
         payload.practiceAreas = practiceAreas.split(',').map((s) => s.trim()).filter(Boolean);
         payload.experienceYears = parseInt(experienceYears) || 0;
-        payload.education = education.split(',').map((s) => s.trim()).filter(Boolean);
+        payload.education = education
+          .split(',')
+          .map((s) => s.trim())
+          .filter(Boolean)
+          .map((deg) => ({ degree: deg }));
         if (user.role === 'LAWYER') {
           payload.barCouncilRegistration = { registrationNumber: barRegNumber };
         } else if (user.role === 'LAW_STUDENT') {
@@ -150,6 +176,51 @@ export default function UserProfile({ user }) {
       [id]: prev[id] === 'connected' ? 'none' : prev[id] === 'pending' ? 'none' : 'pending',
     }));
   };
+
+  const loadVerificationStatus = async () => {
+    try {
+      setVerificationLoading(true);
+      const res = await api.get('/verification/my-status');
+      const data = res.data.data;
+      setVerificationStatus(data);
+      setBarRegInput(data.barCouncilRegistration?.registrationNumber || '');
+      setStateBarCouncil(data.barCouncilRegistration?.stateBarCouncil || '');
+      setEnrollmentYear(data.barCouncilRegistration?.yearOfEnrollment || '');
+    } catch (err) {
+      console.error('Failed to load verification status:', err);
+    } finally {
+      setVerificationLoading(false);
+    }
+  };
+
+  const handleSubmitVerification = async (e) => {
+    e.preventDefault();
+    if (!barRegInput.trim() || !stateBarCouncil.trim()) {
+      setVerificationToast({ type: 'error', message: 'Bar Registration Number and State Bar Council are required.' });
+      setTimeout(() => setVerificationToast(null), 3000);
+      return;
+    }
+    try {
+      setVerificationSubmitting(true);
+      await api.post('/verification/request', {
+        fullName,
+        barRegistrationNumber: barRegInput.trim(),
+        stateBarCouncil: stateBarCouncil.trim(),
+        enrollmentYear: parseInt(enrollmentYear) || undefined,
+        additionalNotes: additionalNotes.trim(),
+      });
+      setVerificationToast({ type: 'success', message: 'Verification request submitted! Admin will review shortly.' });
+      setTimeout(() => setVerificationToast(null), 4000);
+      loadVerificationStatus();
+      loadProfile();
+    } catch (err) {
+      setVerificationToast({ type: 'error', message: err.response?.data?.message || 'Submission failed. Try again.' });
+      setTimeout(() => setVerificationToast(null), 3000);
+    } finally {
+      setVerificationSubmitting(false);
+    }
+  };
+
 
   if (loading) {
     return (
@@ -189,7 +260,7 @@ export default function UserProfile({ user }) {
 
       {/* Navigation tabs if professional */}
       {isProfessional && (
-        <div className="flex items-center gap-2 border-b border-slate-200 pb-2 text-sm font-semibold">
+        <div className="flex items-center gap-2 border-b border-slate-200 pb-2 text-sm font-semibold flex-wrap">
           <button
             onClick={() => setNetworkingTab('profile')}
             className={`px-4 py-2 rounded-xl transition ${
@@ -211,8 +282,28 @@ export default function UserProfile({ user }) {
             <Users className="w-4 h-4" />
             <span>Professional Network Hub</span>
           </button>
+          {user?.role === 'LAWYER' && (
+            <button
+              onClick={() => { setNetworkingTab('verification'); loadVerificationStatus(); }}
+              className={`px-4 py-2 rounded-xl transition flex items-center gap-1.5 ${
+                networkingTab === 'verification'
+                  ? 'bg-legal-blue text-white shadow-subtle'
+                  : 'text-slate-600 hover:bg-slate-100'
+              }`}
+            >
+              <ShieldCheck className="w-4 h-4" />
+              <span>Bar ID Verification</span>
+              {profile?.verificationStatus === 'VERIFIED' && (
+                <span className="w-2 h-2 rounded-full bg-emerald-400 inline-block"></span>
+              )}
+              {profile?.verificationStatus === 'PENDING' && (
+                <span className="w-2 h-2 rounded-full bg-yellow-400 inline-block"></span>
+              )}
+            </button>
+          )}
         </div>
       )}
+
 
       {networkingTab === 'profile' ? (
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
@@ -545,6 +636,161 @@ export default function UserProfile({ user }) {
                 </div>
               ))}
             </div>
+          )}
+        </div>
+      )}
+
+      {/* Bar ID Verification Tab */}
+      {networkingTab === 'verification' && user?.role === 'LAWYER' && (
+        <div className="space-y-5">
+          {/* Toast */}
+          {verificationToast && (
+            <div className={`px-5 py-3 rounded-2xl text-sm font-bold text-white animate-in fade-in ${verificationToast.type === 'success' ? 'bg-emerald-600' : 'bg-red-600'}`}>
+              {verificationToast.message}
+            </div>
+          )}
+
+          {verificationLoading ? (
+            <div className="text-center py-16 bg-white rounded-3xl border border-slate-200/80 shadow-subtle">
+              <RefreshCw className="animate-spin w-8 h-8 text-legal-blue mx-auto mb-3" />
+              <p className="text-xs text-slate-500 font-medium">Loading verification status...</p>
+            </div>
+          ) : (
+            <>
+              {/* Current Status Card */}
+              <div className={`p-5 rounded-3xl border shadow-subtle flex items-center gap-4 ${
+                verificationStatus?.verificationStatus === 'VERIFIED'
+                  ? 'bg-emerald-50 border-emerald-200'
+                  : verificationStatus?.verificationStatus === 'REJECTED'
+                  ? 'bg-red-50 border-red-200'
+                  : verificationStatus?.verificationStatus === 'IN_REVIEW'
+                  ? 'bg-blue-50 border-blue-200'
+                  : 'bg-yellow-50 border-yellow-200'
+              }`}>
+                <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${
+                  verificationStatus?.verificationStatus === 'VERIFIED' ? 'bg-emerald-500' :
+                  verificationStatus?.verificationStatus === 'REJECTED' ? 'bg-red-500' :
+                  verificationStatus?.verificationStatus === 'IN_REVIEW' ? 'bg-blue-500' : 'bg-yellow-500'
+                }`}>
+                  <ShieldCheck className="w-6 h-6 text-white" />
+                </div>
+                <div>
+                  <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">Verification Status</p>
+                  <p className={`text-lg font-extrabold ${
+                    verificationStatus?.verificationStatus === 'VERIFIED' ? 'text-emerald-800' :
+                    verificationStatus?.verificationStatus === 'REJECTED' ? 'text-red-800' :
+                    verificationStatus?.verificationStatus === 'IN_REVIEW' ? 'text-blue-800' : 'text-yellow-800'
+                  }`}>
+                    {verificationStatus?.verificationStatus === 'VERIFIED' ? '✅ Verified Advocate' :
+                     verificationStatus?.verificationStatus === 'REJECTED' ? '❌ Rejected' :
+                     verificationStatus?.verificationStatus === 'IN_REVIEW' ? '🔵 Under Review' :
+                     '⏳ Pending Submission'}
+                  </p>
+                  {verificationStatus?.latestRequest?.rejectionReason && (
+                    <p className="text-xs text-red-700 mt-1">Reason: {verificationStatus.latestRequest.rejectionReason}</p>
+                  )}
+                  {verificationStatus?.verificationStatus === 'VERIFIED' && (
+                    <p className="text-xs text-emerald-700 mt-1">Your Bar ID has been verified. ✅ Verified badge is now visible on your profile.</p>
+                  )}
+                </div>
+              </div>
+
+              {/* Submission Form — hide if already verified or in review */}
+              {(verificationStatus?.verificationStatus === 'PENDING' || verificationStatus?.verificationStatus === 'REJECTED' || !verificationStatus) && (
+                <div className="bg-white p-6 rounded-3xl border border-slate-200/90 shadow-subtle space-y-5">
+                  <div>
+                    <h3 className="text-sm font-bold text-slate-900">Submit Bar Council Verification</h3>
+                    <p className="text-xs text-slate-500 mt-0.5">Enter your Bar Registration details. An admin will verify and approve your request.</p>
+                  </div>
+
+                  <form onSubmit={handleSubmitVerification} className="space-y-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-xs font-bold text-slate-700 mb-1.5">Bar Registration Number <span className="text-red-500">*</span></label>
+                        <input
+                          type="text"
+                          value={barRegInput}
+                          onChange={(e) => setBarRegInput(e.target.value)}
+                          placeholder="e.g. D/1234/2019"
+                          className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-legal-blue font-mono"
+                          required
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-bold text-slate-700 mb-1.5">State Bar Council <span className="text-red-500">*</span></label>
+                        <select
+                          value={stateBarCouncil}
+                          onChange={(e) => setStateBarCouncil(e.target.value)}
+                          className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-legal-blue"
+                          required
+                        >
+                          <option value="">Select State Bar Council</option>
+                          {['Bar Council of Delhi','Bar Council of Maharashtra & Goa','Bar Council of Uttar Pradesh','Bar Council of Karnataka','Bar Council of Tamil Nadu & Puducherry','Bar Council of Rajasthan','Bar Council of Gujarat','Bar Council of West Bengal','Bar Council of Andhra Pradesh','Bar Council of Telangana','Bar Council of Kerala','Bar Council of Punjab & Haryana','Bar Council of Madhya Pradesh','Bar Council of Bihar','Bar Council of Jharkhand','Bar Council of Odisha','Bar Council of Assam, Nagaland, Mizoram & Arunachal Pradesh','Bar Council of Himachal Pradesh','Bar Council of Chhattisgarh','Bar Council of Uttarakhand','Bar Council of Jammu & Kashmir'].map((bc) => (
+                            <option key={bc} value={bc}>{bc}</option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-xs font-bold text-slate-700 mb-1.5">Year of Enrollment</label>
+                        <input
+                          type="number"
+                          value={enrollmentYear}
+                          onChange={(e) => setEnrollmentYear(e.target.value)}
+                          placeholder="e.g. 2019"
+                          min="1950"
+                          max={new Date().getFullYear()}
+                          className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-legal-blue"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-bold text-slate-700 mb-1.5">Full Name (as on Bar ID)</label>
+                        <input
+                          type="text"
+                          value={fullName}
+                          readOnly
+                          className="w-full px-3.5 py-2.5 bg-slate-100 border border-slate-200 rounded-xl text-xs text-slate-500 cursor-not-allowed"
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 mb-1.5">Additional Notes (optional)</label>
+                      <textarea
+                        value={additionalNotes}
+                        onChange={(e) => setAdditionalNotes(e.target.value)}
+                        placeholder="Any additional information for the admin reviewer..."
+                        rows={2}
+                        className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-legal-blue resize-none"
+                      />
+                    </div>
+
+                    <button
+                      type="submit"
+                      disabled={verificationSubmitting}
+                      className="w-full py-3 bg-gradient-to-r from-legal-blue to-blue-700 hover:from-blue-600 hover:to-blue-800 text-white font-bold text-xs rounded-2xl shadow-md transition flex items-center justify-center gap-2 disabled:opacity-60"
+                    >
+                      {verificationSubmitting ? (
+                        <><RefreshCw className="w-4 h-4 animate-spin" /> Submitting...</>
+                      ) : (
+                        <><ShieldCheck className="w-4 h-4" /> Submit for Verification</>
+                      )}
+                    </button>
+                  </form>
+                </div>
+              )}
+
+              {/* Already submitted info */}
+              {verificationStatus?.verificationStatus === 'IN_REVIEW' && (
+                <div className="bg-blue-50 border border-blue-200 rounded-2xl p-4 text-xs text-blue-800">
+                  <p className="font-bold mb-1">🔵 Your request is under admin review.</p>
+                  <p>Bar Reg. No.: <span className="font-mono font-bold">{verificationStatus.latestRequest?.submittedData?.barRegistrationNumber}</span></p>
+                  <p className="mt-1 text-blue-600">You'll receive a notification once approved or rejected.</p>
+                </div>
+              )}
+            </>
           )}
         </div>
       )}

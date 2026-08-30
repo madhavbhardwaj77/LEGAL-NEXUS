@@ -14,6 +14,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Sparkles,
+  ShieldCheck,
 } from 'lucide-react';
 
 export default function Sidebar({
@@ -25,7 +26,22 @@ export default function Sidebar({
   collapsed = false,
   onToggleCollapse,
 }) {
-  const mainWorkspaceItems = [
+  const isAdmin = user?.role === 'ADMIN';
+
+  const adminWorkspaceItems = [
+    { id: 'admin',     label: 'Admin Command Center', shortLabel: 'Admin',   icon: ShieldCheck,     badge: 'Console', highlight: true },
+    { id: 'lawyers',   label: 'Advocate Directory',   shortLabel: 'Lawyers', icon: UserCheck,       badge: 'Verified' },
+    { id: 'cases',     label: 'Case Overview',        shortLabel: 'Cases',   icon: LayoutDashboard, badge: null },
+    { id: 'documents', label: 'Document Intelligence',shortLabel: 'Doc AI',  icon: FileText,        badge: 'Audit' },
+    { id: 'research',  label: 'Statutory Research',   shortLabel: 'Research',icon: BookOpen,        badge: 'RAG' },
+  ];
+
+  const adminSecondaryItems = [
+    { id: 'system',   label: 'System Status',      shortLabel: 'System',   icon: Activity, requireRole: ['ADMIN'] },
+    { id: 'settings', label: 'Platform Settings',  shortLabel: 'Settings', icon: Settings },
+  ];
+
+  const mainWorkspaceItems = isAdmin ? adminWorkspaceItems : [
     { id: 'cases',     label: 'Case Management',     shortLabel: 'Cases',    icon: LayoutDashboard, badge: null },
     { id: 'intake',    label: 'AI Legal Assistant',   shortLabel: 'AI Chat',  icon: Bot,             badge: 'Agentic', highlight: true },
     { id: 'documents', label: 'Document Intelligence',shortLabel: 'Doc AI',   icon: FileText,        badge: 'Audit' },
@@ -34,10 +50,10 @@ export default function Sidebar({
     { id: 'lawyers',   label: 'Advocate Directory',   shortLabel: 'Lawyers',  icon: UserCheck,       badge: 'Verified' },
   ];
 
-  const secondaryItems = [
-    { id: 'profile',  label: 'Profile & Network',  shortLabel: 'Profile',  icon: Users,    requireAuth: true },
-    { id: 'settings', label: 'Platform Settings',  shortLabel: 'Settings', icon: Settings },
-    { id: 'system',   label: 'System Status',      shortLabel: 'System',   icon: Activity, requireRole: ['LAWYER', 'ADMIN', 'LAW_STUDENT'] },
+  const secondaryItems = isAdmin ? adminSecondaryItems : [
+    { id: 'profile',  label: 'Profile & Network',       shortLabel: 'Profile',  icon: Users,        requireAuth: true },
+    { id: 'settings', label: 'Platform Settings',        shortLabel: 'Settings', icon: Settings },
+    { id: 'system',   label: 'System Status',            shortLabel: 'System',   icon: Activity,     requireRole: ['LAWYER', 'ADMIN', 'LAW_STUDENT'] },
   ];
 
   // Role → gradient for avatar
@@ -154,7 +170,7 @@ export default function Sidebar({
             <div className="px-3 pb-2 flex items-center gap-2">
               <div className="h-px flex-1 bg-slate-800/80" />
               <span className="text-[9px] font-bold text-slate-600 uppercase tracking-widest whitespace-nowrap">
-                Workspace
+                {isAdmin ? 'Admin Console' : 'Workspace'}
               </span>
               <div className="h-px flex-1 bg-slate-800/80" />
             </div>
@@ -170,7 +186,7 @@ export default function Sidebar({
             <div className="px-3 pb-2 flex items-center gap-2">
               <div className="h-px flex-1 bg-slate-800/80" />
               <span className="text-[9px] font-bold text-slate-600 uppercase tracking-widest whitespace-nowrap">
-                Account
+                {isAdmin ? 'System & Config' : 'Account'}
               </span>
               <div className="h-px flex-1 bg-slate-800/80" />
             </div>
