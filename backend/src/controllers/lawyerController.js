@@ -820,7 +820,7 @@ const extractCaseProfileFromDocument = async (req, res, next) => {
 
     let rawName = fileName
       .replace(/\.[^/.]+$/, '')
-      .replace(/[_-\.]+/g, ' ')
+      .replace(/[_\-.]+/g, ' ')
       .replace(/\b\d{6,}\b/g, '')
       .trim();
 
