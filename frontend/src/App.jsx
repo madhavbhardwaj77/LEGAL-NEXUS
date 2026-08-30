@@ -51,7 +51,7 @@ export default function App() {
     return token ? 'cases' : 'landing';
   };
 
-  const [activeTab, setActiveTab] = useState(getInitialTab); // landing | login | signup | cases | intake | documents | drafts | research | lawyers | profile | settings | system | admin
+  const [activeTab, setActiveTab] = useState(getInitialTab);
   const [user, setUser] = useState(null);
   const [isNewCaseOpen, setIsNewCaseOpen] = useState(false);
   const [selectedCase, setSelectedCase] = useState(null);
@@ -94,7 +94,6 @@ export default function App() {
         const defaultTab = authUser.role === 'ADMIN' ? 'admin' : (authUser.role === 'LAWYER' ? 'lawyers' : 'cases');
         setActiveTab(defaultTab);
         localStorage.setItem('nyaya_active_tab', defaultTab);
-      }
       }
     } catch {
       localStorage.removeItem('nyaya_access_token');
@@ -153,7 +152,6 @@ export default function App() {
       localStorage.setItem('nyaya_active_tab', targetTab);
       window.location.hash = targetTab;
     }
-    }
   };
 
   const handleCaseCreated = (newCase) => {
@@ -162,328 +160,178 @@ export default function App() {
     handleSelectTab('cases');
   };
 
-  const handleSelectTab = (tab) => {
-    setIsMobileMenuOpen(false);
-    // Public routes: landing, login, signup
-    if (tab === 'landing' || tab === 'login' || tab === 'signup') {
-      setActiveTab(tab);
-      if (tab === 'landing') {
-        localStorage.removeItem('nyaya_active_tab');
-        window.location.hash = '';
-      }
-      return;
-    }
-
-    // Protected routes: redirect to login if not authenticated
-    if (!user) {
-      localStorage.setItem('nyaya_active_tab', tab);
-      setActiveTab('login');
-      return;
-    }
-
-    // Disallow Case Management and AI Legal Assistant for LAWYER role
-    if (user.role === 'LAWYER' && (tab === 'cases' || tab === 'intake')) {
-      setActiveTab('lawyers');
-      return;
-    }
-
-    setActiveTab(tab);
-    localStorage.setItem('nyaya_active_tab', tab);
-    window.location.hash = tab;
+  const handleSelectTab = (tabId) => {
+    setActiveTab(tabId);
+    localStorage.setItem('nyaya_active_tab', tabId);
+    window.location.hash = tabId;
   };
 
-  const isPublicView = activeTab === 'landing' || activeTab === 'login' || activeTab === 'signup';
-
   return (
-    <div className="min-h-screen bg-[#F8FAFC] flex flex-col font-sans text-slate-900 selection:bg-legal-blue selection:text-white">
-      {/* Top Navigation Bar */}
+    <div className="min-h-screen bg-[#070D14] text-slate-100 flex flex-col font-sans selection:bg-legal-blue selection:text-white">
+      {/* Top Navbar */}
       <Navbar
         user={user}
-        onOpenAuth={() => setActiveTab('login')}
-        onLogout={handleLogout}
-        isMobileOpen={isMobileMenuOpen}
-        onToggleMobileMenu={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-        showToggle={!isPublicView}
         activeTab={activeTab}
-        onSelectTab={handleSelectTab}
+        setActiveTab={handleSelectTab}
+        onLogout={handleLogout}
+        onOpenNewCase={() => setIsNewCaseOpen(true)}
+        isMobileMenuOpen={isMobileMenuOpen}
+        setIsMobileMenuOpen={setIsMobileMenuOpen}
+        healthStatus={healthStatus}
       />
 
-      {/* Main Workspace Layout */}
-      <div className="flex-grow flex flex-col md:flex-row relative overflow-hidden">
-        {/* Enterprise Collapsible Sidebar (visible on protected views) */}
-        {!isPublicView && user && (
+      {/* Main Layout Area */}
+      <div className="flex-1 flex overflow-hidden relative">
+        {user && activeTab !== 'landing' && activeTab !== 'login' && activeTab !== 'signup' && (
           <Sidebar
-            activeTab={activeTab}
-            onSelectTab={handleSelectTab}
             user={user}
-            onLogout={handleLogout}
-            onOpenAuth={() => setActiveTab('login')}
-            collapsed={isSidebarCollapsed}
-            onToggleCollapse={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+            activeTab={activeTab}
+            setActiveTab={handleSelectTab}
+            isCollapsed={isSidebarCollapsed}
+            setIsCollapsed={setIsSidebarCollapsed}
+            isMobileOpen={isMobileMenuOpen}
+            setIsMobileOpen={setIsMobileMenuOpen}
+            onOpenNewCase={() => setIsNewCaseOpen(true)}
+            caseCount={cases.length}
           />
         )}
 
-        {/* Mobile Navigation Drawer */}
-        {isMobileMenuOpen && !isPublicView && user && (
-          <div className="md:hidden bg-[#0B1F33] text-white border-b border-slate-800 px-4 py-4 space-y-1.5 absolute w-full left-0 top-0 z-40 shadow-2xl animate-in fade-in duration-200">
-            {[
-              { id: 'cases', label: 'Case Management', icon: LayoutDashboard, hideForRoles: ['LAWYER'] },
-              { id: 'intake', label: 'AI Legal Assistant', icon: Bot, hideForRoles: ['LAWYER'] },
-              { id: 'lawyers', label: user.role === 'LAWYER' ? 'Advocate Hub & Requests' : 'Advocate Directory', icon: UserCheck },
-              { id: 'documents', label: 'Document Intelligence', icon: FileText },
-              { id: 'drafts', label: 'Smart Legal Drafting', icon: PenTool },
-              { id: 'research', label: 'Statutory Research', icon: BookOpen },
-              { id: 'profile', label: user.role === 'LAWYER' ? 'Profile & Case History' : 'Profile & Network', icon: Users, requireAuth: true },
-              { id: 'settings', label: 'Platform Settings', icon: Settings },
-              { id: 'system', label: 'System Status', icon: Activity, requireRole: ['LAWYER', 'ADMIN', 'LAW_STUDENT'] },
-            ].map((item) => {
-              if (item.requireAuth && !user) return null;
-              if (item.requireRole && (!user || !item.requireRole.includes(user.role))) return null;
-              if (item.hideForRoles && user && item.hideForRoles.includes(user.role)) return null;
-              const Icon = item.icon;
-              const active = activeTab === item.id;
-              return (
-                <button
-                  key={item.id}
-                  onClick={() => handleSelectTab(item.id)}
-                  className={`w-full text-left px-4 py-3 rounded-2xl text-xs font-bold flex items-center gap-3 transition ${
-                    active ? 'bg-legal-blue text-white shadow-md' : 'text-slate-300 hover:bg-slate-800'
-                  }`}
-                >
-                  <Icon className="w-4 h-4" />
-                  <span>{item.label}</span>
-                </button>
-              );
-            })}
-          </div>
-        )}
-
-        {/* Primary Content Viewport — key prop triggers page-enter animation on tab change */}
-        <main
-          key={activeTab}
-          className={`flex-1 w-full mx-auto overflow-y-auto page-enter ${
-            isPublicView ? 'max-w-7xl px-4 sm:px-6 lg:px-8 py-8' : 'p-4 sm:p-6 lg:p-8 max-w-7xl'
-          }`}
-        >
-          {/* PUBLIC ROUTES */}
+        <main className="flex-1 overflow-y-auto bg-slate-900/50 p-4 sm:p-6 lg:p-8">
           {activeTab === 'landing' && (
             <LandingPage
-              onGetStarted={() => {
-                if (user) {
-                  if (user.role === 'LAWYER') setActiveTab('lawyers');
-                  else setActiveTab('intake');
-                } else {
-                  setActiveTab('login');
-                }
-              }}
-              onOpenAuth={() => setActiveTab('login')}
-              onSelectFeature={(feat) => handleSelectTab(feat)}
-              user={user}
+              onGetStarted={() => handleSelectTab(user ? 'cases' : 'signup')}
+              onLogin={() => handleSelectTab('login')}
+              onFindLawyers={() => handleSelectTab('lawyers')}
+              onResearch={() => handleSelectTab('research')}
             />
           )}
 
           {activeTab === 'login' && (
-            <LoginPage
-              onAuthSuccess={handleAuthSuccess}
-              onNavigateToSignup={() => setActiveTab('signup')}
-              onForgotPassword={() => alert('Password reset link has been dispatched to your email address.')}
-            />
+            <div className="max-w-md mx-auto py-12">
+              <LoginPage
+                onSuccess={handleAuthSuccess}
+                onSwitchToSignup={() => handleSelectTab('signup')}
+              />
+            </div>
           )}
 
           {activeTab === 'signup' && (
-            <SignupPage
-              onAuthSuccess={handleAuthSuccess}
-              onNavigateToLogin={() => setActiveTab('login')}
+            <div className="max-w-md mx-auto py-12">
+              <SignupPage
+                onSuccess={handleAuthSuccess}
+                onSwitchToLogin={() => handleSelectTab('login')}
+              />
+            </div>
+          )}
+
+          {activeTab === 'cases' && (
+            <CaseList
+              cases={cases}
+              loading={loadingCases}
+              onSelectCase={(c) => setSelectedCase(c)}
+              onNewCase={() => setIsNewCaseOpen(true)}
+              onRefresh={loadCases}
             />
           )}
 
-          {/* PROTECTED ROUTES (Require Authentication) */}
-          {activeTab === 'cases' && (
-            user ? (
-              <CaseList
-                cases={cases}
-                loading={loadingCases}
-                user={user}
-                onSelectCase={(c) => setSelectedCase(c)}
-                onNewCase={() => setIsNewCaseOpen(true)}
-              />
-            ) : (
-              <LoginPage onAuthSuccess={handleAuthSuccess} onNavigateToSignup={() => setActiveTab('signup')} />
-            )
-          )}
-
           {activeTab === 'intake' && (
-            user ? (
-              <CaseStoryIntake user={user} onOpenAuth={() => setActiveTab('login')} onCaseCreated={handleCaseCreated} />
-            ) : (
-              <LoginPage onAuthSuccess={handleAuthSuccess} onNavigateToSignup={() => setActiveTab('signup')} />
-            )
+            <CaseStoryIntake
+              user={user}
+              onCaseCreated={handleCaseCreated}
+              onViewCases={() => handleSelectTab('cases')}
+            />
           )}
 
           {activeTab === 'documents' && (
-            user ? (
-              <DocumentIntelligenceModal user={user} onOpenAuth={() => setActiveTab('login')} />
-            ) : (
-              <LoginPage onAuthSuccess={handleAuthSuccess} onNavigateToSignup={() => setActiveTab('signup')} />
-            )
+            <DocumentIntelligenceModal
+              isOpen={true}
+              onClose={() => handleSelectTab('cases')}
+              cases={cases}
+            />
           )}
 
           {activeTab === 'drafts' && (
-            user ? (
-              <LegalDraftGenerator user={user} onOpenAuth={() => setActiveTab('login')} />
-            ) : (
-              <LoginPage onAuthSuccess={handleAuthSuccess} onNavigateToSignup={() => setActiveTab('signup')} />
-            )
-          )}
-
-          {activeTab === 'research' && (
-            user ? (
-              <LegalResearchPortal user={user} onOpenAuth={() => setActiveTab('login')} />
-            ) : (
-              <LoginPage onAuthSuccess={handleAuthSuccess} onNavigateToSignup={() => setActiveTab('signup')} />
-            )
-          )}
-
-          {activeTab === 'lawyers' && (
-            user ? (
-              <LawyerDirectory user={user} onOpenAuth={() => setActiveTab('login')} />
-            ) : (
-              <LoginPage onAuthSuccess={handleAuthSuccess} onNavigateToSignup={() => setActiveTab('signup')} />
-            )
+            <LegalDraftGenerator
+              user={user}
+              cases={cases}
+            />
           )}
 
           {activeTab === 'comparator' && (
-            user ? (
-              user.role === 'LAWYER' ? (
-                <CaseComparator
-                  user={user}
-                  onOpenAuth={() => setActiveTab('login')}
-                  onSaveToNotebook={() => setActiveTab('notebook')}
-                />
-              ) : (
-                <LawyerDirectory user={user} onOpenAuth={() => setActiveTab('login')} />
-              )
-            ) : (
-              <LoginPage onAuthSuccess={handleAuthSuccess} onNavigateToSignup={() => setActiveTab('signup')} />
-            )
+            <CaseComparator
+              user={user}
+              cases={cases}
+            />
           )}
 
           {activeTab === 'notebook' && (
-            user ? (
-              user.role === 'LAWYER' ? (
-                <ResearchNotebook
-                  user={user}
-                  onOpenAuth={() => setActiveTab('login')}
-                  onSelectTab={handleSelectTab}
-                />
-              ) : (
-                <LawyerDirectory user={user} onOpenAuth={() => setActiveTab('login')} />
-              )
-            ) : (
-              <LoginPage onAuthSuccess={handleAuthSuccess} onNavigateToSignup={() => setActiveTab('signup')} />
-            )
+            <ResearchNotebook
+              user={user}
+            />
+          )}
+
+          {activeTab === 'research' && (
+            <LegalResearchPortal
+              user={user}
+            />
+          )}
+
+          {activeTab === 'lawyers' && (
+            <LawyerDirectory
+              user={user}
+              onOpenAuth={() => handleSelectTab('login')}
+            />
           )}
 
           {activeTab === 'profile' && (
-            user ? (
-              <UserProfile user={user} />
-            ) : (
-              <LoginPage onAuthSuccess={handleAuthSuccess} onNavigateToSignup={() => setActiveTab('signup')} />
-            )
+            <UserProfile
+              user={user}
+              onUpdateUser={(updated) => setUser(updated)}
+            />
           )}
 
           {activeTab === 'settings' && (
-            user ? (
-              <SettingsView user={user} onSelectTab={handleSelectTab} />
-            ) : (
-              <LoginPage onAuthSuccess={handleAuthSuccess} onNavigateToSignup={() => setActiveTab('signup')} />
-            )
-          )}
-
-          {activeTab === 'system' && (
-            user ? (
-              <SystemHealth healthStatus={healthStatus} onRefresh={checkHealth} />
-            ) : (
-              <LoginPage onAuthSuccess={handleAuthSuccess} onNavigateToSignup={() => setActiveTab('signup')} />
-            )
+            <SettingsView
+              user={user}
+            />
           )}
 
           {activeTab === 'admin' && (
-            user?.role === 'ADMIN' ? (
-              <AdminDashboard user={user} onSelectTab={handleSelectTab} />
-            ) : (
-              <LoginPage onAuthSuccess={handleAuthSuccess} onNavigateToSignup={() => setActiveTab('signup')} />
-            )
+            <AdminDashboard
+              user={user}
+            />
+          )}
+
+          {activeTab === 'system' && (
+            <SystemHealth
+              healthStatus={healthStatus}
+              onRefreshHealth={checkHealth}
+            />
           )}
         </main>
       </div>
 
-      {/* Global Modals for Cases */}
-      <CaseFormModal
-        isOpen={isNewCaseOpen}
-        onClose={() => setIsNewCaseOpen(false)}
-        onCaseCreated={handleCaseCreated}
-      />
+      {/* Case Creation Modal */}
+      {isNewCaseOpen && (
+        <CaseFormModal
+          isOpen={isNewCaseOpen}
+          onClose={() => setIsNewCaseOpen(false)}
+          onCaseCreated={handleCaseCreated}
+        />
+      )}
 
-      <CaseDetailModal
-        selectedCase={selectedCase}
-        isOpen={!!selectedCase}
-        onClose={() => setSelectedCase(null)}
-        onCaseUpdated={loadCases}
-        user={user}
-      />
-
-      {/* Upgraded Footer */}
-      <footer className="bg-white border-t border-slate-200 py-8 shrink-0">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col md:flex-row items-center justify-between gap-6">
-            {/* Brand */}
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-legal-blue to-sky-400 flex items-center justify-center shadow-sm">
-                <Scale className="w-4 h-4 text-white" />
-              </div>
-              <div>
-                <div className="flex items-center gap-1.5">
-                  <span className="text-sm font-extrabold text-slate-900 tracking-tight">Legal Nexus</span>
-                  <span className="text-[9px] font-bold text-legal-gold bg-legal-gold/10 px-1.5 py-0.5 rounded border border-legal-gold/20 tracking-wider uppercase">AI</span>
-                </div>
-                <p className="text-[10px] text-slate-400 font-medium">AI-Powered Legal Access & Case Navigation</p>
-              </div>
-            </div>
-
-            {/* Quick links */}
-            <div className="flex items-center gap-6 text-xs text-slate-500">
-              {[
-                { label: 'AI Assistant', tab: 'intake' },
-                { label: 'Research', tab: 'research' },
-                { label: 'Advocates', tab: 'lawyers' },
-                { label: 'Document AI', tab: 'documents' },
-              ].map((link) => (
-                <button
-                  key={link.tab}
-                  onClick={() => handleSelectTab(link.tab)}
-                  className="hover:text-legal-blue transition font-medium"
-                >
-                  {link.label}
-                </button>
-              ))}
-            </div>
-
-            {/* Trust + copyright */}
-            <div className="flex flex-col items-end gap-1.5">
-              <div className="flex items-center gap-2 text-[10px] text-slate-400">
-                <span className="flex items-center gap-1 text-emerald-500 font-semibold">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
-                  All systems operational
-                </span>
-                <span className="text-slate-300">•</span>
-                <span>256-bit encrypted</span>
-              </div>
-              <span className="text-[10px] text-slate-400">© 2026 Legal Nexus Platform. All rights reserved.</span>
-            </div>
-          </div>
-        </div>
-      </footer>
+      {/* Case Detail Modal */}
+      {selectedCase && (
+        <CaseDetailModal
+          isOpen={Boolean(selectedCase)}
+          onClose={() => setSelectedCase(null)}
+          caseItem={selectedCase}
+          onUpdateCase={(updated) => {
+            setCases(cases.map((c) => (c._id === updated._id ? updated : c)));
+            setSelectedCase(updated);
+          }}
+        />
+      )}
     </div>
   );
 }

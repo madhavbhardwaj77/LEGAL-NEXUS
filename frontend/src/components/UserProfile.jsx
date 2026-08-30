@@ -69,7 +69,6 @@ export default function UserProfile({ user }) {
   const [verificationSubmitting, setVerificationSubmitting] = useState(false);
   const [verificationToast, setVerificationToast] = useState(null);
   const [barRegInput, setBarRegInput] = useState('');
-  const [stateBarCouncil, setStateBarCouncil] = useState('');
   const [enrollmentYear, setEnrollmentYear] = useState('');
   const [additionalNotes, setAdditionalNotes] = useState('');
 
@@ -540,7 +539,7 @@ export default function UserProfile({ user }) {
       )}
 
 
-      {networkingTab === 'profile' ? (
+      {activeSubTab === 'profile' && (
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           {/* Overview summary card (4 cols) */}
           <div className="lg:col-span-4 bg-white p-6 rounded-3xl border border-slate-200/90 shadow-subtle flex flex-col items-center text-center space-y-4">
